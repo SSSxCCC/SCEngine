@@ -3,9 +3,11 @@
 #
 cmake_minimum_required (VERSION 3.12)
 
-project ("SCEngine" VERSION 0.1 LANGUAGES CXX)
+project ("SCEngine" VERSION 0.1)
 
-# Include sub-projects.
 add_subdirectory ("SCEngine")
 
 add_subdirectory ("Dependency/box2d/src")
+add_subdirectory ("Dependency/glad")
+add_subdirectory ("Dependency/glfw")
+add_subdirectory ("Dependency/imgui")
