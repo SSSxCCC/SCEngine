@@ -1,5 +1,13 @@
-﻿#include<iostream>
-#include<box2d/box2d.h>
+﻿#include <iostream>
+#include "box2d/box2d.h"
+#include "imgui/imgui.h"
+#include "imgui_backends/imgui_impl_glfw.h"
+#include "imgui_backends/imgui_impl_opengl3.h"
+#include "GLFW/glfw3.h"
+
+void glfwErrorCallback(int error, const char* description) {
+	fprintf(stderr, "GLFW error occured. Code: %d. Description: %s\n", error, description);
+}
 
 int main() {
 	b2Vec2 gravity(0.0f, -10.0f);
@@ -29,13 +37,14 @@ int main() {
 	int32 velocityIterations = 8;
 	int32 positionIterations = 3;
 
-	for (int32 i = 0; i < 360; ++i)
-	{
+	for (int32 i = 0; i < 360; ++i) {
 		world.Step(timeStep, velocityIterations, positionIterations);
 		b2Vec2 position = body->GetPosition();
 		float angle = body->GetAngle();
 		printf("%4.2f %4.2f %4.2f\n", position.x, position.y, angle);
 	}
+	
+	glfwSetErrorCallback(glfwErrorCallback);
 
 	std::cout << "Hello CMake." << std::endl;
 	return 0;
