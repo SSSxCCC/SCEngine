@@ -12,3 +12,8 @@ target_link_libraries(SCEngine PUBLIC box2d)
 target_link_libraries(SCEngine PUBLIC glfw)
 target_link_libraries(SCEngine PUBLIC glad)
 target_link_libraries(SCEngine PUBLIC imgui)
+
+install(TARGETS SCEngine DESTINATION bin)
+install(FILES "shader.vs" "shader.fs"
+  DESTINATION bin
+  )
