@@ -11,6 +11,7 @@ set_property(TARGET SCEngine PROPERTY CXX_STANDARD 20)
 target_link_libraries(SCEngine PUBLIC box2d)
 target_link_libraries(SCEngine PUBLIC glfw)
 target_link_libraries(SCEngine PUBLIC glad)
+target_link_libraries(SCEngine PUBLIC glm)
 target_link_libraries(SCEngine PUBLIC imgui)
 
 install(TARGETS SCEngine DESTINATION bin)
