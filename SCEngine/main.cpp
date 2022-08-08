@@ -1,4 +1,5 @@
 ﻿#include <iostream>
+#include "glad/gl.h"
 #include "box2d/box2d.h"
 #include "imgui/imgui.h"
 #include "imgui_backends/imgui_impl_glfw.h"
@@ -44,7 +45,83 @@ int main() {
 		printf("%4.2f %4.2f %4.2f\n", position.x, position.y, angle);
 	}
 	
+	printf("Box2D Version %d.%d.%d\n", b2_version.major, b2_version.minor, b2_version.revision);
+
 	glfwSetErrorCallback(glfwErrorCallback);
+
+	if (glfwInit() != GLFW_TRUE) {
+		fprintf(stderr, "Failed to initialize GLFW\n");
+		return -1;
+	}
+
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	int width = 800, height = 600;
+	GLFWwindow* mainWindow = glfwCreateWindow(width, height, "SCEngine", NULL, NULL);
+
+	if (mainWindow == NULL) {
+		fprintf(stderr, "Failed to create GLFW window.\n");
+		glfwTerminate();
+		return -1;
+	}
+
+	glfwMakeContextCurrent(mainWindow);
+
+	int version = gladLoadGL(glfwGetProcAddress);
+	printf("GLAD %d.%d\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
+	printf("OpenGL %s, GLSL %s\n", glGetString(GL_VERSION), glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+	/*glfwSetScrollCallback(mainWindow, ScrollCallback);
+	glfwSetWindowSizeCallback(mainWindow, ResizeWindowCallback);
+	glfwSetKeyCallback(mainWindow, KeyCallback);
+	glfwSetCharCallback(mainWindow, CharCallback);
+	glfwSetMouseButtonCallback(mainWindow, MouseButtonCallback);
+	glfwSetCursorPosCallback(mainWindow, MouseMotionCallback);*/
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+
+	if (!ImGui_ImplGlfw_InitForOpenGL(mainWindow, false)) {
+		printf("ImGui_ImplGlfw_InitForOpenGL failed\n");
+		assert(false);
+	}
+
+	if (!ImGui_ImplOpenGL3_Init(NULL)) {
+		printf("ImGui_ImplOpenGL3_Init failed\n");
+		assert(false);
+	}
+
+	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+
+	while (!glfwWindowShouldClose(mainWindow)) {
+		//glfwGetWindowSize(mainWindow, &width, &height);
+		glfwGetFramebufferSize(mainWindow, &width, &height);
+		glViewport(0, 0, width, height);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
+		ImGui::Begin("imgui");
+		ImGui::Text("Text");
+		ImGui::End();
+
+
+
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+		glfwSwapBuffers(mainWindow);
+		glfwPollEvents();
+	}
+
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	glfwTerminate();
 
 	std::cout << "Hello CMake." << std::endl;
 	return 0;
