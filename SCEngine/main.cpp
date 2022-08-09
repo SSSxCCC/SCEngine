@@ -199,7 +199,7 @@ struct GLRenderLines
 		if (m_count == 0)
 			return;
 
-		m_shader.destroy();
+		m_shader.use();
 
 		glm::mat4 proj = gCamera.buildProjectionMatrix();
 		glUniformMatrix4fv(m_projectionUniform, 1, GL_FALSE, glm::value_ptr(proj));
@@ -336,7 +336,7 @@ struct GLRenderTriangles
 	GLuint m_vaoId;
 	GLuint m_vboIds[2];
 	//GLuint m_programId;
-	Shader m_shader = Shader("shaders/shaderTriangels.vs", "shaders/shaderTriangels.fs");
+	Shader m_shader = Shader("shaders/shaderTriangles.vs", "shaders/shaderTriangles.fs");
 	GLint m_projectionUniform;
 	GLint m_vertexAttribute;
 	GLint m_colorAttribute;
@@ -344,36 +344,209 @@ struct GLRenderTriangles
 
 // This class implements debug drawing callbacks that are invoked
 // inside b2World::Step.
-class DebugDraw : public b2Draw
-{
+class DebugDraw : public b2Draw {
 public:
-	DebugDraw();
-	~DebugDraw();
+	DebugDraw() {
+		m_showUI = true;
+		m_points = NULL;
+		m_lines = NULL;
+		m_triangles = NULL;
+	}
 
-	void Create();
-	void Destroy();
+	~DebugDraw() {
+		b2Assert(m_points == NULL);
+		b2Assert(m_lines == NULL);
+		b2Assert(m_triangles == NULL);
+	}
 
-	void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) override;
+	void Create() {
+		m_points = new GLRenderPoints;
+		m_points->Create();
+		m_lines = new GLRenderLines;
+		m_lines->Create();
+		m_triangles = new GLRenderTriangles;
+		m_triangles->Create();
+	}
 
-	void DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) override;
+	void Destroy() {
+		m_points->Destroy();
+		delete m_points;
+		m_points = NULL;
 
-	void DrawCircle(const b2Vec2& center, float radius, const b2Color& color) override;
+		m_lines->Destroy();
+		delete m_lines;
+		m_lines = NULL;
 
-	void DrawSolidCircle(const b2Vec2& center, float radius, const b2Vec2& axis, const b2Color& color) override;
+		m_triangles->Destroy();
+		delete m_triangles;
+		m_triangles = NULL;
+	}
 
-	void DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color) override;
+	void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) override {
+		b2Vec2 p1 = vertices[vertexCount - 1];
+		for (int32 i = 0; i < vertexCount; ++i) {
+			b2Vec2 p2 = vertices[i];
+			m_lines->Vertex(p1, color);
+			m_lines->Vertex(p2, color);
+			p1 = p2;
+		}
+	}
 
-	void DrawTransform(const b2Transform& xf) override;
+	void DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) override {
+		b2Color fillColor(0.5f * color.r, 0.5f * color.g, 0.5f * color.b, 0.5f);
 
-	void DrawPoint(const b2Vec2& p, float size, const b2Color& color) override;
+		for (int32 i = 1; i < vertexCount - 1; ++i) {
+			m_triangles->Vertex(vertices[0], fillColor);
+			m_triangles->Vertex(vertices[i], fillColor);
+			m_triangles->Vertex(vertices[i + 1], fillColor);
+		}
 
-	void DrawString(int x, int y, const char* string, ...);
+		b2Vec2 p1 = vertices[vertexCount - 1];
+		for (int32 i = 0; i < vertexCount; ++i) {
+			b2Vec2 p2 = vertices[i];
+			m_lines->Vertex(p1, color);
+			m_lines->Vertex(p2, color);
+			p1 = p2;
+		}
+	}
 
-	void DrawString(const b2Vec2& p, const char* string, ...);
+	void DrawCircle(const b2Vec2& center, float radius, const b2Color& color) override {
+		const float k_segments = 16.0f;
+		const float k_increment = 2.0f * b2_pi / k_segments;
+		float sinInc = sinf(k_increment);
+		float cosInc = cosf(k_increment);
+		b2Vec2 r1(1.0f, 0.0f);
+		b2Vec2 v1 = center + radius * r1;
+		for (int32 i = 0; i < k_segments; ++i) {
+			// Perform rotation to avoid additional trigonometry.
+			b2Vec2 r2;
+			r2.x = cosInc * r1.x - sinInc * r1.y;
+			r2.y = sinInc * r1.x + cosInc * r1.y;
+			b2Vec2 v2 = center + radius * r2;
+			m_lines->Vertex(v1, color);
+			m_lines->Vertex(v2, color);
+			r1 = r2;
+			v1 = v2;
+		}
+	}
 
-	void DrawAABB(b2AABB* aabb, const b2Color& color);
+	void DrawSolidCircle(const b2Vec2& center, float radius, const b2Vec2& axis, const b2Color& color) override {
+		const float k_segments = 16.0f;
+		const float k_increment = 2.0f * b2_pi / k_segments;
+		float sinInc = sinf(k_increment);
+		float cosInc = cosf(k_increment);
+		b2Vec2 v0 = center;
+		b2Vec2 r1(cosInc, sinInc);
+		b2Vec2 v1 = center + radius * r1;
+		b2Color fillColor(0.5f * color.r, 0.5f * color.g, 0.5f * color.b, 0.5f);
+		for (int32 i = 0; i < k_segments; ++i) {
+			// Perform rotation to avoid additional trigonometry.
+			b2Vec2 r2;
+			r2.x = cosInc * r1.x - sinInc * r1.y;
+			r2.y = sinInc * r1.x + cosInc * r1.y;
+			b2Vec2 v2 = center + radius * r2;
+			m_triangles->Vertex(v0, fillColor);
+			m_triangles->Vertex(v1, fillColor);
+			m_triangles->Vertex(v2, fillColor);
+			r1 = r2;
+			v1 = v2;
+		}
 
-	void Flush();
+		r1.Set(1.0f, 0.0f);
+		v1 = center + radius * r1;
+		for (int32 i = 0; i < k_segments; ++i) {
+			b2Vec2 r2;
+			r2.x = cosInc * r1.x - sinInc * r1.y;
+			r2.y = sinInc * r1.x + cosInc * r1.y;
+			b2Vec2 v2 = center + radius * r2;
+			m_lines->Vertex(v1, color);
+			m_lines->Vertex(v2, color);
+			r1 = r2;
+			v1 = v2;
+		}
+
+		// Draw a line fixed in the circle to animate rotation.
+		b2Vec2 p = center + radius * axis;
+		m_lines->Vertex(center, color);
+		m_lines->Vertex(p, color);
+	}
+
+	void DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color) override {
+		m_lines->Vertex(p1, color);
+		m_lines->Vertex(p2, color);
+	}
+
+	void DrawTransform(const b2Transform& xf) override {
+		const float k_axisScale = 0.4f;
+		b2Color red(1.0f, 0.0f, 0.0f);
+		b2Color green(0.0f, 1.0f, 0.0f);
+		b2Vec2 p1 = xf.p, p2;
+
+		m_lines->Vertex(p1, red);
+		p2 = p1 + k_axisScale * xf.q.GetXAxis();
+		m_lines->Vertex(p2, red);
+
+		m_lines->Vertex(p1, green);
+		p2 = p1 + k_axisScale * xf.q.GetYAxis();
+		m_lines->Vertex(p2, green);
+	}
+
+	void DrawPoint(const b2Vec2& p, float size, const b2Color& color) override {
+		m_points->Vertex(p, color, size);
+	}
+
+	void DrawString(int x, int y, const char* string, ...) {
+		if (m_showUI == false) {
+			return;
+		}
+
+		va_list arg;
+		va_start(arg, string);
+		ImGui::Begin("Overlay", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar);
+		ImGui::SetCursorPos(ImVec2(float(x), float(y)));
+		ImGui::TextColoredV(ImColor(230, 153, 153, 255), string, arg);
+		ImGui::End();
+		va_end(arg);
+	}
+
+	void DrawString(const b2Vec2& pw, const char* string, ...) {
+		float screenX, screenY;
+		gCamera.worldToScreen(pw.x, pw.y, screenX, screenY);
+		b2Vec2 ps(screenX, screenY);
+
+		va_list arg;
+		va_start(arg, string);
+		ImGui::Begin("Overlay", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar);
+		ImGui::SetCursorPos(ImVec2(ps.x, ps.y));
+		ImGui::TextColoredV(ImColor(230, 153, 153, 255), string, arg);
+		ImGui::End();
+		va_end(arg);
+	}
+
+	void DrawAABB(b2AABB* aabb, const b2Color& c) {
+		b2Vec2 p1 = aabb->lowerBound;
+		b2Vec2 p2 = b2Vec2(aabb->upperBound.x, aabb->lowerBound.y);
+		b2Vec2 p3 = aabb->upperBound;
+		b2Vec2 p4 = b2Vec2(aabb->lowerBound.x, aabb->upperBound.y);
+
+		m_lines->Vertex(p1, c);
+		m_lines->Vertex(p2, c);
+
+		m_lines->Vertex(p2, c);
+		m_lines->Vertex(p3, c);
+
+		m_lines->Vertex(p3, c);
+		m_lines->Vertex(p4, c);
+
+		m_lines->Vertex(p4, c);
+		m_lines->Vertex(p1, c);
+	}
+
+	void Flush() {
+		m_triangles->Flush();
+		m_lines->Flush();
+		m_points->Flush();
+	}
 
 	bool m_showUI;
 	GLRenderPoints* m_points;
@@ -515,18 +688,18 @@ int main() {
 	b2World world(gravity);
 
 	b2BodyDef groundBodyDef;
-	groundBodyDef.position.Set(0.0f, -10.0f);
+	groundBodyDef.position.Set(0.0f, -100.0f);
 	b2Body* groundBody = world.CreateBody(&groundBodyDef);
 	b2PolygonShape groundBox;
-	groundBox.SetAsBox(50.0f, 10.0f);
+	groundBox.SetAsBox(500.0f, 100.0f);
 	groundBody->CreateFixture(&groundBox, 0.0f);
 
 	b2BodyDef bodyDef;
 	bodyDef.type = b2_dynamicBody;
-	bodyDef.position.Set(0.0f, 4.0f);
+	bodyDef.position.Set(0.0f, 40.0f);
 	b2Body* body = world.CreateBody(&bodyDef);
 	b2PolygonShape dynamicBox;
-	dynamicBox.SetAsBox(1.0f, 1.0f);
+	dynamicBox.SetAsBox(10.0f, 10.0f);
 	b2FixtureDef fixtureDef;
 	fixtureDef.shape = &dynamicBox;
 	fixtureDef.density = 1.0f;
@@ -537,13 +710,6 @@ int main() {
 	float timeStep = 1.0f / 60.0f;
 	int32 velocityIterations = 8;
 	int32 positionIterations = 3;
-
-	for (int32 i = 0; i < 360; ++i) {
-		world.Step(timeStep, velocityIterations, positionIterations);
-		b2Vec2 position = body->GetPosition();
-		float angle = body->GetAngle();
-		printf("%4.2f %4.2f %4.2f\n", position.x, position.y, angle);
-	}
 	
 	printf("Box2D Version %d.%d.%d\n", b2_version.major, b2_version.minor, b2_version.revision);
 
@@ -619,6 +785,10 @@ int main() {
 
 	Shader shader("shaders/shader.vs", "shaders/shader.fs");
 
+	DebugDraw debugDraw;
+	debugDraw.Create();
+	world.SetDebugDraw(&debugDraw);
+
 	float lastTime = glfwGetTime();
 	while (!glfwWindowShouldClose(mainWindow)) {
 		float currentTime = glfwGetTime();
@@ -638,13 +808,7 @@ int main() {
 		glViewport(0, 0, bufferWidth, bufferHeight);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		//glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-		//glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-		//glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-		glm::mat4 model = glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(400.0f, 300.0f, 1.0f)), glm::radians(15.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		//glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-		//glm::mat4 projection = glm::ortho((float)(-width/2), (float) (width/2), (float)(-height/2), (float) (height/2), -1000.0f, 1000.0f);
-		//std::cout << glm::to_string(projection) << std::endl;
+		/*glm::mat4 model = glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(400.0f, 300.0f, 1.0f)), glm::radians(15.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		glm::mat4 view = glm::mat4(1.0f);
 		glm::mat4 projection = gCamera.buildProjectionMatrix();
 		shader.use();
@@ -652,7 +816,16 @@ int main() {
 		shader.setMat4("view", glm::value_ptr(view));
 		shader.setMat4("projection", glm::value_ptr(projection));
 		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawArrays(GL_TRIANGLES, 0, 3);*/
+
+		uint32 flags = b2Draw::e_shapeBit | b2Draw::e_jointBit | b2Draw::e_aabbBit | b2Draw::e_centerOfMassBit;
+		debugDraw.SetFlags(flags);
+		world.Step(timeStep, velocityIterations, positionIterations);
+		world.DebugDraw();
+		debugDraw.Flush();
+		b2Vec2 position = body->GetPosition();
+		float angle = body->GetAngle();
+		printf("%4.2f %4.2f %4.2f\n", position.x, position.y, angle);
 
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -669,6 +842,7 @@ int main() {
 		glfwPollEvents();
 	}
 
+	debugDraw.Destroy();
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	glfwTerminate();

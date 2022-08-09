@@ -15,6 +15,18 @@ public:
 		glm::mat4 projection = glm::ortho((float)-mHalfWidth * mZoom, (float)mHalfWidth * mZoom, (float)-mHalfHeight * mZoom, (float)mHalfHeight * mZoom, -1000.0f, 1000.0f);
 		return projection * view;
 	}
+	void worldToScreen(float worldX, float worldY, float& screenX, float& screenY) {
+		float left = mCenterX - (float)mHalfWidth * mZoom;
+		float top = mCenterY + (float)mHalfHeight * mZoom;
+		screenX = (worldX - left) / mZoom;
+		screenY = (top - worldY) / mZoom;
+	}
+	void screenToWorld(float screenX, float screenY, float& worldX, float& worldY) {
+		float left = mCenterX - (float)mHalfWidth * mZoom;
+		float top = mCenterY + (float)mHalfHeight * mZoom;
+		worldX = left + screenX * mZoom;
+		worldY = top - screenY * mZoom;
+	}
 	const float moveSpeed = 1000.0f;
 private:
 	int mHalfWidth, mHalfHeight;
