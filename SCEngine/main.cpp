@@ -9,122 +9,378 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
 
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
+#include "Shader.hpp"
+#include "Camera.hpp"
 
 
-class Shader {
-public:
-	unsigned int ID;
-	// constructor generates the shader on the fly
-	// ------------------------------------------------------------------------
-	Shader(const char* vertexPath, const char* fragmentPath) {
-		// 1. retrieve the vertex/fragment source code from filePath
-		std::string vertexCode;
-		std::string fragmentCode;
-		std::ifstream vShaderFile;
-		std::ifstream fShaderFile;
-		// ensure ifstream objects can throw exceptions:
-		vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-		fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-		try {
-			// open files
-			vShaderFile.open(vertexPath);
-			fShaderFile.open(fragmentPath);
-			std::stringstream vShaderStream, fShaderStream;
-			// read file's buffer contents into streams
-			vShaderStream << vShaderFile.rdbuf();
-			fShaderStream << fShaderFile.rdbuf();
-			// close file handlers
-			vShaderFile.close();
-			fShaderFile.close();
-			// convert stream into string
-			vertexCode = vShaderStream.str();
-			fragmentCode = fShaderStream.str();
-		}
-		catch (std::ifstream::failure& e) {
-			std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: " << e.what() << std::endl;
-		}
-		const char* vShaderCode = vertexCode.c_str();
-		const char* fShaderCode = fragmentCode.c_str();
-		// 2. compile shaders
-		unsigned int vertex, fragment;
-		// vertex shader
-		vertex = glCreateShader(GL_VERTEX_SHADER);
-		glShaderSource(vertex, 1, &vShaderCode, NULL);
-		glCompileShader(vertex);
-		checkCompileErrors(vertex, "VERTEX");
-		// fragment Shader
-		fragment = glCreateShader(GL_FRAGMENT_SHADER);
-		glShaderSource(fragment, 1, &fShaderCode, NULL);
-		glCompileShader(fragment);
-		checkCompileErrors(fragment, "FRAGMENT");
-		// shader Program
-		ID = glCreateProgram();
-		glAttachShader(ID, vertex);
-		glAttachShader(ID, fragment);
-		glLinkProgram(ID);
-		checkCompileErrors(ID, "PROGRAM");
-		// delete the shaders as they're linked into our program now and no longer necessary
-		glDeleteShader(vertex);
-		glDeleteShader(fragment);
+
+static void sCheckGLError() {
+	GLenum errCode = glGetError();
+	if (errCode != GL_NO_ERROR) {
+		fprintf(stderr, "OpenGL error = %d\n", errCode);
+		assert(false);
 	}
-	// activate the shader
-	// ------------------------------------------------------------------------
-	void use() {
-		glUseProgram(ID);
-	}
-	// utility uniform functions
-	void setBool(const std::string& name, bool value) const {
-		glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
-	}
-	void setInt(const std::string& name, int value) const {
-		glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
-	}
-	void setFloat(const std::string& name, float value) const {
-		glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
-	}
-	void setMat4(const std::string& name, float* value) const {
-		glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, value);
+}
+
+
+struct GLRenderPoints
+{
+	void Create()
+	{
+		m_projectionUniform = glGetUniformLocation(m_shader.ID, "projectionMatrix");
+		m_vertexAttribute = 0;
+		m_colorAttribute = 1;
+		m_sizeAttribute = 2;
+
+		// Generate
+		glGenVertexArrays(1, &m_vaoId);
+		glGenBuffers(3, m_vboIds);
+
+		glBindVertexArray(m_vaoId);
+		glEnableVertexAttribArray(m_vertexAttribute);
+		glEnableVertexAttribArray(m_colorAttribute);
+		glEnableVertexAttribArray(m_sizeAttribute);
+
+		// Vertex buffer
+		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[0]);
+		glVertexAttribPointer(m_vertexAttribute, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(m_vertices), m_vertices, GL_DYNAMIC_DRAW);
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[1]);
+		glVertexAttribPointer(m_colorAttribute, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(m_colors), m_colors, GL_DYNAMIC_DRAW);
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[2]);
+		glVertexAttribPointer(m_sizeAttribute, 1, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(m_sizes), m_sizes, GL_DYNAMIC_DRAW);
+
+		sCheckGLError();
+
+		// Cleanup
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+
+		m_count = 0;
 	}
 
-private:
-	// utility function for checking shader compilation/linking errors.
-	// ------------------------------------------------------------------------
-	void checkCompileErrors(unsigned int shader, std::string type) {
-		int success;
-		char infoLog[1024];
-		if (type != "PROGRAM") {
-			glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-			if (!success) {
-				glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-				std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
-			}
+	void Destroy()
+	{
+		if (m_vaoId)
+		{
+			glDeleteVertexArrays(1, &m_vaoId);
+			glDeleteBuffers(3, m_vboIds);
+			m_vaoId = 0;
 		}
-		else {
-			glGetProgramiv(shader, GL_LINK_STATUS, &success);
-			if (!success) {
-				glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-				std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
-			}
-		}
+
+		m_shader.destroy();
 	}
+
+	void Vertex(const b2Vec2& v, const b2Color& c, float size)
+	{
+		if (m_count == e_maxVertices)
+			Flush();
+
+		m_vertices[m_count] = v;
+		m_colors[m_count] = c;
+		m_sizes[m_count] = size;
+		++m_count;
+	}
+
+	void Flush()
+	{
+		if (m_count == 0)
+			return;
+
+		m_shader.use();
+
+		glm::mat4 proj = gCamera.buildProjectionMatrix();
+		glUniformMatrix4fv(m_projectionUniform, 1, GL_FALSE, glm::value_ptr(proj));
+
+		glBindVertexArray(m_vaoId);
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[0]);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, m_count * sizeof(b2Vec2), m_vertices);
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[1]);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, m_count * sizeof(b2Color), m_colors);
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[2]);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, m_count * sizeof(float), m_sizes);
+
+		glEnable(GL_PROGRAM_POINT_SIZE);
+		glDrawArrays(GL_POINTS, 0, m_count);
+		glDisable(GL_PROGRAM_POINT_SIZE);
+
+		sCheckGLError();
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+		glUseProgram(0);
+
+		m_count = 0;
+	}
+
+	enum { e_maxVertices = 512 };
+	b2Vec2 m_vertices[e_maxVertices];
+	b2Color m_colors[e_maxVertices];
+	float m_sizes[e_maxVertices];
+
+	int32 m_count;
+
+	GLuint m_vaoId;
+	GLuint m_vboIds[3];
+	//GLuint m_programId;
+	Shader m_shader = Shader("shaders/shaderPoints.vs", "shaders/shaderPoints.fs");
+	GLint m_projectionUniform;
+	GLint m_vertexAttribute;
+	GLint m_colorAttribute;
+	GLint m_sizeAttribute;
 };
 
+//
+struct GLRenderLines
+{
+	void Create()
+	{
+		m_projectionUniform = glGetUniformLocation(m_shader.ID, "projectionMatrix");
+		m_vertexAttribute = 0;
+		m_colorAttribute = 1;
 
-class Camera {
-public:
-	Camera(int width, int height) : mWidth(width), mHeight(height) { }
-	void getSize(int& outWidth, int& outHeight) { outWidth = mWidth; outHeight = mHeight; }
-	void setSize(int width, int height) { mWidth = width; mHeight = height; }
-private:
-	int mWidth, mHeight;
-	int mCenterX = 0, mCenterY = 0;
-	float mZoom = 1.0f;
+		// Generate
+		glGenVertexArrays(1, &m_vaoId);
+		glGenBuffers(2, m_vboIds);
+
+		glBindVertexArray(m_vaoId);
+		glEnableVertexAttribArray(m_vertexAttribute);
+		glEnableVertexAttribArray(m_colorAttribute);
+
+		// Vertex buffer
+		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[0]);
+		glVertexAttribPointer(m_vertexAttribute, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(m_vertices), m_vertices, GL_DYNAMIC_DRAW);
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[1]);
+		glVertexAttribPointer(m_colorAttribute, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(m_colors), m_colors, GL_DYNAMIC_DRAW);
+
+		sCheckGLError();
+
+		// Cleanup
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+
+		m_count = 0;
+	}
+
+	void Destroy()
+	{
+		if (m_vaoId)
+		{
+			glDeleteVertexArrays(1, &m_vaoId);
+			glDeleteBuffers(2, m_vboIds);
+			m_vaoId = 0;
+		}
+
+		m_shader.destroy();
+	}
+
+	void Vertex(const b2Vec2& v, const b2Color& c)
+	{
+		if (m_count == e_maxVertices)
+			Flush();
+
+		m_vertices[m_count] = v;
+		m_colors[m_count] = c;
+		++m_count;
+	}
+
+	void Flush()
+	{
+		if (m_count == 0)
+			return;
+
+		m_shader.destroy();
+
+		glm::mat4 proj = gCamera.buildProjectionMatrix();
+		glUniformMatrix4fv(m_projectionUniform, 1, GL_FALSE, glm::value_ptr(proj));
+
+		glBindVertexArray(m_vaoId);
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[0]);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, m_count * sizeof(b2Vec2), m_vertices);
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[1]);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, m_count * sizeof(b2Color), m_colors);
+
+		glDrawArrays(GL_LINES, 0, m_count);
+
+		sCheckGLError();
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+		glUseProgram(0);
+
+		m_count = 0;
+	}
+
+	enum { e_maxVertices = 2 * 512 };
+	b2Vec2 m_vertices[e_maxVertices];
+	b2Color m_colors[e_maxVertices];
+
+	int32 m_count;
+
+	GLuint m_vaoId;
+	GLuint m_vboIds[2];
+	//GLuint m_programId;
+	Shader m_shader = Shader("shaders/shaderLines.vs", "shaders/shaderLines.fs");
+	GLint m_projectionUniform;
+	GLint m_vertexAttribute;
+	GLint m_colorAttribute;
 };
-Camera gCamera(800, 600);
+
+//
+struct GLRenderTriangles
+{
+	void Create()
+	{
+		m_projectionUniform = glGetUniformLocation(m_shader.ID, "projectionMatrix");
+		m_vertexAttribute = 0;
+		m_colorAttribute = 1;
+
+		// Generate
+		glGenVertexArrays(1, &m_vaoId);
+		glGenBuffers(2, m_vboIds);
+
+		glBindVertexArray(m_vaoId);
+		glEnableVertexAttribArray(m_vertexAttribute);
+		glEnableVertexAttribArray(m_colorAttribute);
+
+		// Vertex buffer
+		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[0]);
+		glVertexAttribPointer(m_vertexAttribute, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(m_vertices), m_vertices, GL_DYNAMIC_DRAW);
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[1]);
+		glVertexAttribPointer(m_colorAttribute, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(m_colors), m_colors, GL_DYNAMIC_DRAW);
+
+		sCheckGLError();
+
+		// Cleanup
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+
+		m_count = 0;
+	}
+
+	void Destroy()
+	{
+		if (m_vaoId)
+		{
+			glDeleteVertexArrays(1, &m_vaoId);
+			glDeleteBuffers(2, m_vboIds);
+			m_vaoId = 0;
+		}
+
+		m_shader.destroy();
+	}
+
+	void Vertex(const b2Vec2& v, const b2Color& c)
+	{
+		if (m_count == e_maxVertices)
+			Flush();
+
+		m_vertices[m_count] = v;
+		m_colors[m_count] = c;
+		++m_count;
+	}
+
+	void Flush()
+	{
+		if (m_count == 0)
+			return;
+
+		m_shader.use();
+
+		glm::mat4 proj = gCamera.buildProjectionMatrix();
+		glUniformMatrix4fv(m_projectionUniform, 1, GL_FALSE, glm::value_ptr(proj));
+
+		glBindVertexArray(m_vaoId);
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[0]);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, m_count * sizeof(b2Vec2), m_vertices);
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[1]);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, m_count * sizeof(b2Color), m_colors);
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glDrawArrays(GL_TRIANGLES, 0, m_count);
+		glDisable(GL_BLEND);
+
+		sCheckGLError();
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+		glUseProgram(0);
+
+		m_count = 0;
+	}
+
+	enum { e_maxVertices = 3 * 512 };
+	b2Vec2 m_vertices[e_maxVertices];
+	b2Color m_colors[e_maxVertices];
+
+	int32 m_count;
+
+	GLuint m_vaoId;
+	GLuint m_vboIds[2];
+	//GLuint m_programId;
+	Shader m_shader = Shader("shaders/shaderTriangels.vs", "shaders/shaderTriangels.fs");
+	GLint m_projectionUniform;
+	GLint m_vertexAttribute;
+	GLint m_colorAttribute;
+};
+
+// This class implements debug drawing callbacks that are invoked
+// inside b2World::Step.
+class DebugDraw : public b2Draw
+{
+public:
+	DebugDraw();
+	~DebugDraw();
+
+	void Create();
+	void Destroy();
+
+	void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) override;
+
+	void DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) override;
+
+	void DrawCircle(const b2Vec2& center, float radius, const b2Color& color) override;
+
+	void DrawSolidCircle(const b2Vec2& center, float radius, const b2Vec2& axis, const b2Color& color) override;
+
+	void DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color) override;
+
+	void DrawTransform(const b2Transform& xf) override;
+
+	void DrawPoint(const b2Vec2& p, float size, const b2Color& color) override;
+
+	void DrawString(int x, int y, const char* string, ...);
+
+	void DrawString(const b2Vec2& p, const char* string, ...);
+
+	void DrawAABB(b2AABB* aabb, const b2Color& color);
+
+	void Flush();
+
+	bool m_showUI;
+	GLRenderPoints* m_points;
+	GLRenderLines* m_lines;
+	GLRenderTriangles* m_triangles;
+};
+
 
 void glfwErrorCallback(int error, const char* description) {
 	fprintf(stderr, "GLFW error occured. Code: %d. Description: %s\n", error, description);
@@ -136,12 +392,11 @@ static void ScrollCallback(GLFWwindow* window, double dx, double dy) {
 		return;
 	}
 
-	//if (dy > 0) {
-	//	g_camera.m_zoom /= 1.1f;
-	//}
-	//else {
-	//	g_camera.m_zoom *= 1.1f;
-	//}
+	if (dy > 0) {
+		gCamera.zoomIn();
+	} else {
+		gCamera.zoomOut();
+	}
 }
 
 static void WindowSizeCallback(GLFWwindow*, int width, int height) {
@@ -157,32 +412,37 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 	if (action == GLFW_PRESS) {
 		switch (key) {
 		case GLFW_KEY_ESCAPE:
-			std::cout << "GLFW_KEY_ESCAPE" << std::endl;
-			// Quit
 			glfwSetWindowShouldClose(window, GL_TRUE);
 			break;
-		case GLFW_KEY_LEFT:
-			std::cout << "GLFW_KEY_LEFT" << std::endl;
-			break;
-		case GLFW_KEY_RIGHT:
-			std::cout << "GLFW_KEY_RIGHT" << std::endl;
-			break;
-		case GLFW_KEY_DOWN:
-			std::cout << "GLFW_KEY_DOWN" << std::endl;
-			break;
-		case GLFW_KEY_UP:
-			std::cout << "GLFW_KEY_UP" << std::endl;
-			break;
 		case GLFW_KEY_HOME:
-			std::cout << "GLFW_KEY_HOME" << std::endl;
+			gCamera.reset();
 			break;
 		default:
 			break;
 		}
-	} else if (action == GLFW_RELEASE) {
-		std::cout << "GLFW_RELEASE" << std::endl;
 	}
-	// else GLFW_REPEAT
+
+	if (action == GLFW_PRESS) {
+		if (key == GLFW_KEY_LEFT || key == GLFW_KEY_A) {
+			gCameraX -= 1;
+		} else if (key == GLFW_KEY_RIGHT || key == GLFW_KEY_D) {
+			gCameraX += 1;
+		} else if (key == GLFW_KEY_UP || key == GLFW_KEY_W) {
+			gCameraY += 1;
+		} else if (key == GLFW_KEY_DOWN || key == GLFW_KEY_S) {
+			gCameraY -= 1;
+		}
+	} else if (action == GLFW_RELEASE) {
+		if (key == GLFW_KEY_LEFT || key == GLFW_KEY_A) {
+			gCameraX += 1;
+		} else if (key == GLFW_KEY_RIGHT || key == GLFW_KEY_D) {
+			gCameraX -= 1;
+		} else if (key == GLFW_KEY_UP || key == GLFW_KEY_W) {
+			gCameraY -= 1;
+		} else if (key == GLFW_KEY_DOWN || key == GLFW_KEY_S) {
+			gCameraY += 1;
+		}
+	}
 }
 
 static void CharCallback(GLFWwindow* window, unsigned int c) {
@@ -235,6 +495,18 @@ static void CursorPosCallback(GLFWwindow*, double xd, double yd) {
 		g_camera.m_center.x -= diff.x;
 		g_camera.m_center.y -= diff.y;
 		s_clickPointWS = g_camera.ConvertScreenToWorld(ps);
+	}*/
+}
+
+void processInput(GLFWwindow* window) {
+	/*if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+		gCameraX -= 1;
+	} else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+		gCameraX += 1;
+	} else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+		gCameraY += 1;
+	} else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+		gCameraY -= 1;
 	}*/
 }
 
@@ -345,21 +617,36 @@ int main() {
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-	Shader shader("shader.vs", "shader.fs");
+	Shader shader("shaders/shader.vs", "shaders/shader.fs");
 
+	float lastTime = glfwGetTime();
 	while (!glfwWindowShouldClose(mainWindow)) {
+		float currentTime = glfwGetTime();
+		float deltaTime = currentTime - lastTime;
+		lastTime = currentTime;
+		processInput(mainWindow);
+		//std::cout << "deltaTime=" << deltaTime << ", gCameraXY=" << gCameraX << "," << gCameraY << std::endl;
+		gCamera.move((float)gCameraX * gCamera.moveSpeed * deltaTime, (float)gCameraY * gCamera.moveSpeed * deltaTime);
+
 		//glfwGetWindowSize(mainWindow, &width, &height);
-		glfwGetFramebufferSize(mainWindow, &width, &height);
-		glViewport(0, 0, width, height);
+		int bufferWidth, bufferHeight;
+		glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);
+		gCamera.getSize(width, height);
+		if (width != bufferWidth || height != bufferHeight) {
+			std::cout << "bufferSize=" << bufferWidth << "x" << bufferHeight << ", windowSize=" << width << "x" << height << std::endl;
+		}
+		glViewport(0, 0, bufferWidth, bufferHeight);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-		glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-		glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+		//glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+		//glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+		//glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 		glm::mat4 model = glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(400.0f, 300.0f, 1.0f)), glm::radians(15.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-		glm::mat4 projection = glm::ortho((float)(-width/2), (float) (width/2), (float)(-height/2), (float) (height/2), -1000.0f, 1000.0f);
-		std::cout << glm::to_string(projection) << std::endl;
+		//glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+		//glm::mat4 projection = glm::ortho((float)(-width/2), (float) (width/2), (float)(-height/2), (float) (height/2), -1000.0f, 1000.0f);
+		//std::cout << glm::to_string(projection) << std::endl;
+		glm::mat4 view = glm::mat4(1.0f);
+		glm::mat4 projection = gCamera.buildProjectionMatrix();
 		shader.use();
 		shader.setMat4("model", glm::value_ptr(model));
 		shader.setMat4("view", glm::value_ptr(view));

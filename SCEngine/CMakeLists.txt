@@ -15,6 +15,6 @@ target_link_libraries(SCEngine PUBLIC glm)
 target_link_libraries(SCEngine PUBLIC imgui)
 
 install(TARGETS SCEngine DESTINATION bin)
-install(FILES "shader.vs" "shader.fs"
+install(DIRECTORY "shaders"
   DESTINATION bin
   )
