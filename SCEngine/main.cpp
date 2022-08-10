@@ -9,6 +9,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
 
+// scale for high dpi
+const float gScale = 3.0f;
+
 #include "Shader.hpp"
 #include "Camera.hpp"
 #include "DebugDraw.hpp"
@@ -248,13 +251,18 @@ int main() {
 	debugDraw.Create();
 	world.SetDebugDraw(&debugDraw);
 
+	ImFontConfig fontConfig;
+	fontConfig.SizePixels = 13.0f * gScale;
+	ImFont* font = ImGui::GetIO().Fonts->AddFontDefault(&fontConfig);
+	//ImGui::GetStyle().ScaleAllSizes(gScale);
+
 	float lastTime = glfwGetTime();
 	while (!glfwWindowShouldClose(mainWindow)) {
 		float currentTime = glfwGetTime();
 		float deltaTime = currentTime - lastTime;
 		lastTime = currentTime;
 		processInput(mainWindow);
-		//std::cout << "deltaTime=" << deltaTime << ", gCameraXY=" << gCameraX << "," << gCameraY << std::endl;
+		//std::cout << "currentTime=" << currentTime << ", gCameraXY=" << gCameraX << "," << gCameraY << std::endl;
 		gCamera.move((float)gCameraX * gCamera.moveSpeed * deltaTime, (float)gCameraY * gCamera.moveSpeed * deltaTime);
 
 		//glfwGetWindowSize(mainWindow, &width, &height);
@@ -285,6 +293,7 @@ int main() {
 		float angle = body->GetAngle();
 		printf("%4.2f %4.2f %4.2f\n", position.x, position.y, angle);
 
+		
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
@@ -292,6 +301,12 @@ int main() {
 		ImGui::Begin("imgui");
 		ImGui::Text("Text");
 		ImGui::End();
+
+		ImGui::Begin("imgui2");
+		ImGui::Text("Text2");
+		ImGui::End();
+
+		ImGui::ShowDemoWindow();
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
