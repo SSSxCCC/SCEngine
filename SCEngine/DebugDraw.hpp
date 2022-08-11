@@ -1,3 +1,6 @@
+#ifndef _DEBUG_DRAW_H_
+#define _DEBUG_DRAW_H_
+
 static void sCheckGLError() {
 	GLenum errCode = glGetError();
 	if (errCode != GL_NO_ERROR) {
@@ -490,3 +493,5 @@ public:
 	GLRenderLines* m_lines;
 	GLRenderTriangles* m_triangles;
 };
+
+#endif // _DEBUG_DRAW_H_

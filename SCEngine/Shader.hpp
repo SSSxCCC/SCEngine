@@ -1,3 +1,6 @@
+#ifndef _SHADER_H_
+#define _SHADER_H_
+
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -103,3 +106,5 @@ private:
 		}
 	}
 };
+
+#endif // _SHADER_H_

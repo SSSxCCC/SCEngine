@@ -10,12 +10,14 @@
 #include <glm/gtx/string_cast.hpp>
 
 // scale for high dpi
-const float gScale = 3.0f;
+const float gScale = 2.0f;
 
 #include "Shader.hpp"
 #include "Camera.hpp"
 #include "DebugDraw.hpp"
 
+#include "core/GameWorld.hpp"
+#include "common/ShapeRender.hpp"
 
 void glfwErrorCallback(int error, const char* description) {
 	fprintf(stderr, "GLFW error occured. Code: %d. Description: %s\n", error, description);
@@ -225,45 +227,32 @@ int main() {
 
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
-	/*unsigned int VAO;
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	float vertices[] = {
-		// ---- vertex ----   ---- color ----
-		0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,
-		0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,
-		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,
-	};
-	unsigned int VBO;
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-	Shader shader("shaders/shader.vs", "shaders/shader.fs");*/
-
 	DebugDraw debugDraw;
 	debugDraw.Create();
 	world.SetDebugDraw(&debugDraw);
 
+	// scale font so that we can see texts in high dpi display clearly
 	ImFontConfig fontConfig;
 	fontConfig.SizePixels = 13.0f * gScale;
 	ImFont* font = ImGui::GetIO().Fonts->AddFontDefault(&fontConfig);
 	//ImGui::GetStyle().ScaleAllSizes(gScale);
 
+	// Add some GameObject to game world
+	auto gameWorld = std::make_shared<GameWorld>();
+	auto gameObject = std::make_shared<GameObject>(gameWorld);
+	std::shared_ptr<Script> shapeRender = std::make_shared<ShapeRender>(gameObject);
+	gameObject->addScript(shapeRender);
+	gameWorld->addGameObject(gameObject);
+	gameWorld->create();
+	
 	float lastTime = glfwGetTime();
 	while (!glfwWindowShouldClose(mainWindow)) {
-		float currentTime = glfwGetTime();
-		float deltaTime = currentTime - lastTime;
-		lastTime = currentTime;
+		gameWorld->mCurrentTime = glfwGetTime();
+		gameWorld->mDeltaTime = gameWorld->mCurrentTime - lastTime;
+		lastTime = gameWorld->mCurrentTime;
 		processInput(mainWindow);
 		//std::cout << "currentTime=" << currentTime << ", gCameraXY=" << gCameraX << "," << gCameraY << std::endl;
-		gCamera.move((float)gCameraX * gCamera.moveSpeed * deltaTime, (float)gCameraY * gCamera.moveSpeed * deltaTime);
+		gCamera.move((float)gCameraX * gCamera.moveSpeed * gameWorld->mDeltaTime, (float)gCameraY * gCamera.moveSpeed * gameWorld->mDeltaTime);
 
 		//glfwGetWindowSize(mainWindow, &width, &height);
 		int bufferWidth, bufferHeight;
@@ -275,24 +264,15 @@ int main() {
 		glViewport(0, 0, bufferWidth, bufferHeight);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		/*glm::mat4 model = glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(400.0f, 300.0f, 1.0f)), glm::radians(15.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		glm::mat4 view = glm::mat4(1.0f);
-		glm::mat4 projection = gCamera.buildProjectionMatrix();
-		shader.use();
-		shader.setMat4("model", glm::value_ptr(model));
-		shader.setMat4("view", glm::value_ptr(view));
-		shader.setMat4("projection", glm::value_ptr(projection));
-		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 3);*/
-
 		debugDraw.SetFlags(b2Draw::e_shapeBit | b2Draw::e_jointBit | b2Draw::e_aabbBit | b2Draw::e_centerOfMassBit);
 		world.Step(timeStep, velocityIterations, positionIterations);
 		world.DebugDraw();
 		debugDraw.Flush();
 		b2Vec2 position = body->GetPosition();
 		float angle = body->GetAngle();
-		printf("%4.2f %4.2f %4.2f\n", position.x, position.y, angle);
+		//printf("%4.2f %4.2f %4.2f\n", position.x, position.y, angle);
 
+		gameWorld->update();
 		
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
