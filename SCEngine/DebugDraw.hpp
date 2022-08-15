@@ -1,5 +1,5 @@
-#ifndef _DEBUG_DRAW_H_
-#define _DEBUG_DRAW_H_
+#ifndef _DebugDraw_H_
+#define _DebugDraw_H_
 
 static void sCheckGLError() {
 	GLenum errCode = glGetError();
@@ -494,4 +494,4 @@ public:
 	GLRenderTriangles* m_triangles;
 };
 
-#endif // _DEBUG_DRAW_H_
+#endif // _DebugDraw_H_

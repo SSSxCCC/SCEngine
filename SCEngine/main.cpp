@@ -17,7 +17,8 @@ const float gScale = 2.0f;
 #include "DebugDraw.hpp"
 
 #include "core/GameWorld.hpp"
-#include "common/ShapeRender.hpp"
+#include "common/RectangleRender.hpp"
+#include "common/RigidBody.hpp"
 
 void glfwErrorCallback(int error, const char* description) {
 	fprintf(stderr, "GLFW error occured. Code: %d. Description: %s\n", error, description);
@@ -238,12 +239,19 @@ int main() {
 	//ImGui::GetStyle().ScaleAllSizes(gScale);
 
 	// Add some GameObject to game world
+	std::shared_ptr<Script> rectangleRender = std::make_shared<RectangleRender>();
+	auto gameObject = std::make_shared<GameObject>();
+	gameObject->addScript(rectangleRender);
+
 	auto gameWorld = std::make_shared<GameWorld>();
-	auto gameObject = std::make_shared<GameObject>(gameWorld);
-	std::shared_ptr<Script> shapeRender = std::make_shared<ShapeRender>(gameObject);
-	gameObject->addScript(shapeRender);
 	gameWorld->addGameObject(gameObject);
 	gameWorld->create();
+
+	gameObject->mTransform.mPosX = 100.0f;
+	auto gameObject2 = gameObject->clone();
+	gameObject2->mTransform.mPosX = -100.0f;
+	gameWorld->addGameObject(gameObject2);
+	std::cout << "GameObject2=" << gameObject2->mTransform.mPosX << std::endl;
 	
 	float lastTime = glfwGetTime();
 	while (!glfwWindowShouldClose(mainWindow)) {

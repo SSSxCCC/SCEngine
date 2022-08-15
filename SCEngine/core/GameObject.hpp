@@ -1,5 +1,5 @@
-#ifndef _GAME_OBJECT_H_
-#define _GAME_OBJECT_H_
+#ifndef _GameObject_H_
+#define _GameObject_H_
 
 #include <vector>
 #include <memory>
@@ -10,10 +10,8 @@
 class GameWorld;
 
 // GameObject is a object in the game world. Attach GameObjectScript to this GameObject to implement game logic
-class GameObject {
+class GameObject : public std::enable_shared_from_this<GameObject> {
 public:
-	GameObject(std::shared_ptr<GameWorld>& gameWorld) : mGameWorld(gameWorld) { }
-
 	void onCreate() {
 		for (auto script : mScripts) {
 			script->onCreate();
@@ -34,6 +32,17 @@ public:
 
 	void addScript(std::shared_ptr<Script>& script) {
 		mScripts.push_back(script);
+		script->mGameObject = shared_from_this();
+	}
+
+	std::shared_ptr<GameObject> clone() {
+		auto gameObject = std::make_shared<GameObject>();
+		for (auto script : mScripts) {
+			auto newScript = script->clone();
+			gameObject->addScript(newScript);
+		}
+		gameObject->mTransform = mTransform;
+		return gameObject;
 	}
 
 	// The GameWorld this GameObject is in.
@@ -48,4 +57,4 @@ private:
 	std::vector<std::shared_ptr<Script>> mScripts;
 };
 
-#endif // _GAME_OBJECT_H_
+#endif // _GameObject_H_

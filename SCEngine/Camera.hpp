@@ -1,5 +1,5 @@
-#ifndef _CAMERA_H_
-#define _CAMERA_H_
+#ifndef _Camera_H_
+#define _Camera_H_
 
 class Camera {
 public:
@@ -42,4 +42,4 @@ Camera gCamera(800 * gScale, 600 * gScale);
 int gCameraX = 0;
 int gCameraY = 0;
 
-#endif // _CAMERA_H_
+#endif // _Camera_H_
