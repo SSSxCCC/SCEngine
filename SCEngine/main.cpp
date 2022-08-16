@@ -12,10 +12,10 @@
 // scale for high dpi
 const float gScale = 2.0f;
 
+#include "core/Input.hpp"
+#include "core/Camera.hpp"
 #include "Shader.hpp"
-#include "Camera.hpp"
 #include "DebugDraw.hpp"
-
 #include "core/GameWorld.hpp"
 #include "common/RectangleRender.hpp"
 #include "common/RigidBody.hpp"
@@ -30,12 +30,13 @@ static void ScrollCallback(GLFWwindow* window, double dx, double dy) {
 	if (ImGui::GetIO().WantCaptureMouse) {
 		return;
 	}
-
 	if (dy > 0) {
 		gCamera.zoomIn();
 	} else {
 		gCamera.zoomOut();
 	}
+	gInput.mScrollX = dx;
+	gInput.mScrollY = dy;
 }
 
 static void WindowSizeCallback(GLFWwindow*, int width, int height) {
@@ -243,7 +244,11 @@ int main() {
 		gameWorld->mCurrentTime = glfwGetTime();
 		gameWorld->mDeltaTime = gameWorld->mCurrentTime - lastTime;
 		lastTime = gameWorld->mCurrentTime;
+
+		gInput.reset();
+		glfwPollEvents();
 		processInput(mainWindow);
+		
 		//std::cout << "currentTime=" << currentTime << ", gCameraXY=" << gCameraX << "," << gCameraY << std::endl;
 		gCamera.move((float)gCameraX * gCamera.moveSpeed * gameWorld->mDeltaTime, (float)gCameraY * gCamera.moveSpeed * gameWorld->mDeltaTime);
 
@@ -277,7 +282,6 @@ int main() {
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		glfwSwapBuffers(mainWindow);
-		glfwPollEvents();
 	}
 
 	gameWorld->destroy();

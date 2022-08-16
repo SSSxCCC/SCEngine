@@ -7,6 +7,7 @@
 
 #include "DebugDraw.hpp"
 #include "core/GameObject.hpp"
+#include "core/Camera.hpp"
 
 // GameWorld stores all GameObject in the game
 class GameWorld : public std::enable_shared_from_this<GameWorld> {
