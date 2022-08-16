@@ -12,10 +12,10 @@ public:
 
 		float vertices[] = {
 			// ---- vertex ----   ---- color ----
-			1.0f,  1.0f, 0.0f,   1.0f, 0.0f, 0.0f,
-			1.0f, -1.0f, 0.0f,   0.0f, 1.0f, 0.0f,
-			-1.0f, -1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
-			-1.0f, 1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+			0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,
+			0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,
+			-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,
+			-0.5f, 0.5f, 0.0f,   1.0f, 1.0f, 1.0f,
 		};
 		glGenBuffers(1, &VBO);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -39,13 +39,9 @@ public:
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
-
-		mGameObject->mTransform.mScaleX = 30.f;
-		mGameObject->mTransform.mScaleY = 30.f;
 	}
 
 	void onUpdate() override {
-		mGameObject->mTransform.mDegree = mGameObject->mGameWorld->mCurrentTime * 100.0f;
 		onDraw();
 	}
 

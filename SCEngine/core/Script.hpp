@@ -10,6 +10,7 @@ class GameObject;
 class Script {
 public:
 	virtual void onCreate() { }  // called when the GameObject is created
+	virtual void onStart() { }   // called before the first onUpdate call
 	virtual void onUpdate() { }  // called every frame
 	virtual void onDestroy() { } // called when the GameObject is destroyed
 

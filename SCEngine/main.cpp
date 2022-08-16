@@ -19,6 +19,7 @@ const float gScale = 2.0f;
 #include "core/GameWorld.hpp"
 #include "common/RectangleRender.hpp"
 #include "common/RigidBody.hpp"
+#include "common/RectangleCollider.hpp"
 
 void glfwErrorCallback(int error, const char* description) {
 	fprintf(stderr, "GLFW error occured. Code: %d. Description: %s\n", error, description);
@@ -149,35 +150,6 @@ void processInput(GLFWwindow* window) {
 }
 
 int main() {
-	b2Vec2 gravity(0.0f, -10.0f);
-	b2World world(gravity);
-
-	b2BodyDef groundBodyDef;
-	groundBodyDef.position.Set(0.0f, -100.0f);
-	b2Body* groundBody = world.CreateBody(&groundBodyDef);
-	b2PolygonShape groundBox;
-	groundBox.SetAsBox(500.0f, 100.0f);
-	groundBody->CreateFixture(&groundBox, 0.0f);
-
-	b2BodyDef bodyDef;
-	bodyDef.type = b2_dynamicBody;
-	bodyDef.position.Set(0.0f, 40.0f);
-	b2Body* body = world.CreateBody(&bodyDef);
-	b2PolygonShape dynamicBox;
-	dynamicBox.SetAsBox(10.0f, 10.0f);
-	b2FixtureDef fixtureDef;
-	fixtureDef.shape = &dynamicBox;
-	fixtureDef.density = 1.0f;
-	fixtureDef.friction = 0.3f;
-	fixtureDef.restitution = 1.0f;
-	body->CreateFixture(&fixtureDef);
-
-	float timeStep = 1.0f / 60.0f;
-	int32 velocityIterations = 8;
-	int32 positionIterations = 3;
-	
-	printf("Box2D Version %d.%d.%d\n", b2_version.major, b2_version.minor, b2_version.revision);
-
 	glfwSetErrorCallback(glfwErrorCallback);
 
 	if (glfwInit() != GLFW_TRUE) {
@@ -205,6 +177,7 @@ int main() {
 	int version = gladLoadGL(glfwGetProcAddress);
 	printf("GLAD %d.%d\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
 	printf("OpenGL %s, GLSL %s\n", glGetString(GL_VERSION), glGetString(GL_SHADING_LANGUAGE_VERSION));
+	printf("Box2D Version %d.%d.%d\n", b2_version.major, b2_version.minor, b2_version.revision);
 
 	glfwSetScrollCallback(mainWindow, ScrollCallback);
 	glfwSetWindowSizeCallback(mainWindow, WindowSizeCallback);
@@ -228,10 +201,6 @@ int main() {
 
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
-	DebugDraw debugDraw;
-	debugDraw.Create();
-	world.SetDebugDraw(&debugDraw);
-
 	// scale font so that we can see texts in high dpi display clearly
 	ImFontConfig fontConfig;
 	fontConfig.SizePixels = 13.0f * gScale;
@@ -239,19 +208,35 @@ int main() {
 	//ImGui::GetStyle().ScaleAllSizes(gScale);
 
 	// Add some GameObject to game world
-	std::shared_ptr<Script> rectangleRender = std::make_shared<RectangleRender>();
-	auto gameObject = std::make_shared<GameObject>();
-	gameObject->addScript(rectangleRender);
-
 	auto gameWorld = std::make_shared<GameWorld>();
-	gameWorld->addGameObject(gameObject);
 	gameWorld->create();
 
-	gameObject->mTransform.mPosX = 100.0f;
+	auto rectangleRender = std::make_shared<RectangleRender>();
+	auto rigidBody = std::make_shared<RigidBody>();
+	rigidBody->mBodyDef.type = b2_dynamicBody;
+	auto rectangleCollider = std::make_shared<RectangleCollider>();
+	auto gameObject = std::make_shared<GameObject>();
+	gameObject->mTransform.mScaleX = 10.f;
+	gameObject->mTransform.mScaleY = 10.f;
+	gameObject->mTransform.mPosX = 0.0f;
+	gameObject->mTransform.mPosY = 100.0f;
+	gameObject->addScript(rectangleRender);
+	gameObject->addScript(rigidBody);
+	gameObject->addScript(rectangleCollider);
+	gameWorld->addGameObject(gameObject);
+
 	auto gameObject2 = gameObject->clone();
-	gameObject2->mTransform.mPosX = -100.0f;
+	gameObject2->mTransform.mPosX = 5.0f;
+	gameObject2->mTransform.mPosY = 120.0f;
 	gameWorld->addGameObject(gameObject2);
-	std::cout << "GameObject2=" << gameObject2->mTransform.mPosX << std::endl;
+	
+	auto groundObject = gameObject->clone();
+	groundObject->getScript<RigidBody>()->mBodyDef.type = b2_staticBody;
+	groundObject->mTransform.mPosX = 0.0f;
+	groundObject->mTransform.mPosY = -100.0f;
+	groundObject->mTransform.mScaleX = 400.0f;
+	groundObject->mTransform.mScaleY = 80.f;
+	gameWorld->addGameObject(groundObject);
 	
 	float lastTime = glfwGetTime();
 	while (!glfwWindowShouldClose(mainWindow)) {
@@ -271,14 +256,6 @@ int main() {
 		}
 		glViewport(0, 0, bufferWidth, bufferHeight);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		debugDraw.SetFlags(b2Draw::e_shapeBit | b2Draw::e_jointBit | b2Draw::e_aabbBit | b2Draw::e_centerOfMassBit);
-		world.Step(timeStep, velocityIterations, positionIterations);
-		world.DebugDraw();
-		debugDraw.Flush();
-		b2Vec2 position = body->GetPosition();
-		float angle = body->GetAngle();
-		//printf("%4.2f %4.2f %4.2f\n", position.x, position.y, angle);
 
 		gameWorld->update();
 		
@@ -303,7 +280,7 @@ int main() {
 		glfwPollEvents();
 	}
 
-	debugDraw.Destroy();
+	gameWorld->destroy();
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	glfwTerminate();
