@@ -7,7 +7,7 @@
 class GameObject;
 
 // Script is a script attached to a GameObject to implement game logic
-class Script {
+class Script : public std::enable_shared_from_this<Script> {
 public:
 	virtual void onCreate() { }  // called when the GameObject is created
 	virtual void onStart() { }   // called before the first onUpdate call

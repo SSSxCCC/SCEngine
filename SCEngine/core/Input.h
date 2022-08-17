@@ -1,6 +1,8 @@
 #ifndef _Input_H_
 #define _Input_H_
 
+#include "glfw/glfw3.h"
+
 // handle input in game
 class Input {
 public:
@@ -21,6 +23,8 @@ public:
 	}
 private:
 	GLFWwindow* mWindow = nullptr;
-} gInput;
+};
+
+extern Input gInput;
 
 #endif // _Input_H_

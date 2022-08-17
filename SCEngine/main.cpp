@@ -11,17 +11,14 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/string_cast.hpp"
 
-// scale for high dpi
-const float gScale = 2.0f;
-
-#include "core/Input.hpp"
-#include "core/Camera.hpp"
-#include "Shader.hpp"
-#include "DebugDraw.hpp"
-#include "core/GameWorld.hpp"
-#include "common/RectangleRender.hpp"
-#include "common/RigidBody.hpp"
-#include "common/RectangleCollider.hpp"
+#include "core/GameWorld.h"
+#include "core/GameObject.h"
+#include "core/Input.h"
+#include "core/Camera.h"
+#include "editor/EditorCameraController.h"
+#include "common/RectangleRender.h"
+#include "common/RigidBody.h"
+#include "common/RectangleCollider.h"
 
 void glfwErrorCallback(int error, const char* description) {
 	fprintf(stderr, "GLFW error occured. Code: %d. Description: %s\n", error, description);
@@ -37,12 +34,12 @@ static void ScrollCallback(GLFWwindow* window, double dx, double dy) {
 	//} else {
 	//	gCamera.zoomOut();
 	//}
-	gInput.mScrollX = dx;
-	gInput.mScrollY = dy;
+	gInput.mScrollX = (float) dx;
+	gInput.mScrollY = (float) dy;
 }
 
 static void WindowSizeCallback(GLFWwindow*, int width, int height) {
-	gCamera.setSize(width, height);
+	//gCamera.setSize(width, height);
 }
 
 static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -165,8 +162,7 @@ int main() {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	int width, height;
-	gCamera.getSize(width, height);
+	int width = 800, height = 600;
 	GLFWwindow* mainWindow = glfwCreateWindow(width, height, "SCEngine", NULL, NULL);
 
 	if (mainWindow == NULL) {
@@ -214,6 +210,14 @@ int main() {
 	auto gameWorld = std::make_shared<GameWorld>();
 	gameWorld->create();
 
+	auto cameraObject = std::make_shared<GameObject>();
+	auto camera = std::make_shared<Camera>();
+	camera->setSize(width * gScale, height * gScale);
+	auto editorCameraController = std::make_shared<EditorCameraController>();
+	cameraObject->addScript(camera);
+	cameraObject->addScript(editorCameraController);
+	gameWorld->addGameObject(cameraObject);
+
 	auto rectangleRender = std::make_shared<RectangleRender>();
 	auto rigidBody = std::make_shared<RigidBody>();
 	rigidBody->mBodyDef.type = b2_dynamicBody;
@@ -256,15 +260,10 @@ int main() {
 		//glfwGetWindowSize(mainWindow, &width, &height);
 		int bufferWidth, bufferHeight;
 		glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);
-		gCamera.getSize(width, height);
-		if (width != bufferWidth || height != bufferHeight) {
-			std::cout << "bufferSize=" << bufferWidth << "x" << bufferHeight << ", windowSize=" << width << "x" << height << std::endl;
-		}
 		glViewport(0, 0, bufferWidth, bufferHeight);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		gameWorld->update();
-		gCamera.move((float)gCameraX * gCamera.moveSpeed * gameWorld->mDeltaTime, (float)gCameraY * gCamera.moveSpeed * gameWorld->mDeltaTime);
 		
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();

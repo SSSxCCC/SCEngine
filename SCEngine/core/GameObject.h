@@ -3,8 +3,8 @@
 
 #include <vector>
 #include <memory>
-#include "core/Script.hpp"
-#include "core/Transform.hpp"
+#include "core/Script.h"
+#include "core/Transform.h"
 
 // Predefine GameWorld here to solve circular reference problem
 class GameWorld;
@@ -12,36 +12,13 @@ class GameWorld;
 // GameObject is a object in the game world. Attach GameObjectScript to this GameObject to implement game logic
 class GameObject : public std::enable_shared_from_this<GameObject> {
 public:
-	void onCreate() {
-		for (auto script : mScripts) {
-			script->onCreate();
-		}
-	}
-
-	void onStart() {
-		for (auto script : mScripts) {
-			script->onStart();
-		}
-	}
-
-	void onUpdate() {
-		for (auto script : mScripts) {
-			script->onUpdate();
-		}
-	}
-
-	void onDestroy() {
-		for (auto script : mScripts) {
-			script->onDestroy();
-		}
-	}
+	void onCreate();
+	void onStart();
+	void onUpdate();
+	void onDestroy();
 
 	// addScript should be called before GameWorld::addGameObject
-	void addScript(const std::shared_ptr<Script>& script) {
-		assert(!mAdded);
-		mScripts.push_back(script);
-		script->mGameObject = shared_from_this();
-	}
+	void addScript(const std::shared_ptr<Script>& script);
 
 	// get first script of class S from this GameObject
 	template <class S> std::shared_ptr<S> getScript() {
@@ -66,15 +43,7 @@ public:
 		return vector;
 	}
 
-	std::shared_ptr<GameObject> clone() {
-		auto gameObject = std::make_shared<GameObject>();
-		for (auto script : mScripts) {
-			auto newScript = script->clone();
-			gameObject->addScript(newScript);
-		}
-		gameObject->mTransform = mTransform;
-		return gameObject;
-	}
+	std::shared_ptr<GameObject> clone();
 
 	// The GameWorld this GameObject is in.
 	// Note: there is circular reference between GameObject and GameWorld!

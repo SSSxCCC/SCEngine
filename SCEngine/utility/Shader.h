@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include "glad/gl.h"
 
 class Shader {
 public:
