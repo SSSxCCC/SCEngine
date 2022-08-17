@@ -1,6 +1,14 @@
 #ifndef _Camera_H_
 #define _Camera_H_
 
+#include "GLFW/glfw3.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "core/Script.hpp"
+
+int gCameraX = 0;
+int gCameraY = 0;
+
 class Camera {
 public:
 	Camera(int width, int height) { setSize(width, height); }
@@ -40,6 +48,29 @@ public:
 		} else if (gInput.mScrollY < 0.0f) {
 			zoomOut();
 		}
+
+		if (gInput.getKey(GLFW_KEY_HOME) == GLFW_PRESS) {
+			reset();
+		}
+
+		gCameraX = 0;
+		gCameraY = 0;
+		if (gInput.getKey(GLFW_KEY_LEFT) == GLFW_PRESS || gInput.getKey(GLFW_KEY_A) == GLFW_PRESS) {
+			std::cout << "111" << std::endl;
+			gCameraX -= 1;
+		}
+		if (gInput.getKey(GLFW_KEY_RIGHT) == GLFW_PRESS || gInput.getKey(GLFW_KEY_D) == GLFW_PRESS) {
+			std::cout << "222" << std::endl;
+			gCameraX += 1;
+		}
+		if (gInput.getKey(GLFW_KEY_UP) == GLFW_PRESS || gInput.getKey(GLFW_KEY_W) == GLFW_PRESS) {
+			std::cout << "333" << std::endl;
+			gCameraY += 1;
+		}
+		if (gInput.getKey(GLFW_KEY_DOWN) == GLFW_PRESS || gInput.getKey(GLFW_KEY_S) == GLFW_PRESS) {
+			std::cout << "444" << std::endl;
+			gCameraY -= 1;
+		}
 	}
 
 	const float moveSpeed = 1000.0f;
@@ -51,7 +82,5 @@ private:
 	float mCenterX = 0.0f, mCenterY = 0.0f;
 	float mZoom = defaultZoom;
 } gCamera(800 * gScale, 600 * gScale);
-int gCameraX = 0;
-int gCameraY = 0;
 
 #endif // _Camera_H_

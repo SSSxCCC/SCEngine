@@ -13,7 +13,7 @@ public:
 	}
 
 	int getKey(int key) {
-		return glfwGetKey(mWindow, GLFW_KEY_LEFT);
+		return glfwGetKey(mWindow, key);
 	}
 
 	void setWindow(GLFWwindow* window) {

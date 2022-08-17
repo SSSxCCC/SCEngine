@@ -5,6 +5,7 @@ cmake_minimum_required (VERSION 3.12)
 
 # Add source to this project's executable.
 add_executable (SCEngine "main.cpp" "imgui_backends/imgui_impl_glfw.cpp" "imgui_backends/imgui_impl_opengl3.cpp")
+target_include_directories(SCEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 set_property(TARGET SCEngine PROPERTY CXX_STANDARD 20)
 

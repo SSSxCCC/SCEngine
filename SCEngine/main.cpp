@@ -1,13 +1,15 @@
-﻿#include "glad/gl.h"
+﻿#include <iostream>
+
+#include "glad/gl.h"
 #include "box2d/box2d.h"
 #include "imgui/imgui.h"
 #include "imgui_backends/imgui_impl_glfw.h"
 #include "imgui_backends/imgui_impl_opengl3.h"
 #include "GLFW/glfw3.h"
 #include "glm/glm.hpp"
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/string_cast.hpp>
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
+#include "glm/gtx/string_cast.hpp"
 
 // scale for high dpi
 const float gScale = 2.0f;
@@ -30,11 +32,11 @@ static void ScrollCallback(GLFWwindow* window, double dx, double dy) {
 	if (ImGui::GetIO().WantCaptureMouse) {
 		return;
 	}
-	if (dy > 0) {
-		gCamera.zoomIn();
-	} else {
-		gCamera.zoomOut();
-	}
+	//if (dy > 0) {
+	//	gCamera.zoomIn();
+	//} else {
+	//	gCamera.zoomOut();
+	//}
 	gInput.mScrollX = dx;
 	gInput.mScrollY = dy;
 }
@@ -54,15 +56,15 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 		case GLFW_KEY_ESCAPE:
 			glfwSetWindowShouldClose(window, GL_TRUE);
 			break;
-		case GLFW_KEY_HOME:
-			gCamera.reset();
-			break;
+		//case GLFW_KEY_HOME:
+		//	gCamera.reset();
+		//	break;
 		default:
 			break;
 		}
 	}
 
-	if (action == GLFW_PRESS) {
+	/*if (action == GLFW_PRESS) {
 		if (key == GLFW_KEY_LEFT || key == GLFW_KEY_A) {
 			gCameraX -= 1;
 		} else if (key == GLFW_KEY_RIGHT || key == GLFW_KEY_D) {
@@ -82,7 +84,7 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 		} else if (key == GLFW_KEY_DOWN || key == GLFW_KEY_S) {
 			gCameraY += 1;
 		}
-	}
+	}*/
 }
 
 static void CharCallback(GLFWwindow* window, unsigned int c) {
@@ -239,6 +241,7 @@ int main() {
 	groundObject->mTransform.mScaleY = 80.f;
 	gameWorld->addGameObject(groundObject);
 	
+	gInput.setWindow(mainWindow);
 	float lastTime = glfwGetTime();
 	while (!glfwWindowShouldClose(mainWindow)) {
 		gameWorld->mCurrentTime = glfwGetTime();
@@ -250,8 +253,6 @@ int main() {
 		processInput(mainWindow);
 		
 		//std::cout << "currentTime=" << currentTime << ", gCameraXY=" << gCameraX << "," << gCameraY << std::endl;
-		gCamera.move((float)gCameraX * gCamera.moveSpeed * gameWorld->mDeltaTime, (float)gCameraY * gCamera.moveSpeed * gameWorld->mDeltaTime);
-
 		//glfwGetWindowSize(mainWindow, &width, &height);
 		int bufferWidth, bufferHeight;
 		glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);
@@ -263,6 +264,7 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		gameWorld->update();
+		gCamera.move((float)gCameraX * gCamera.moveSpeed * gameWorld->mDeltaTime, (float)gCameraY * gCamera.moveSpeed * gameWorld->mDeltaTime);
 		
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();

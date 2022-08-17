@@ -33,6 +33,7 @@ public:
 			}
 			gameObject->onUpdate();
 		}
+		gCamera.onUpdate();
 
 		// Last debug draw the physics objects
 		mDebugDraw.SetFlags(b2Draw::e_shapeBit | b2Draw::e_jointBit | b2Draw::e_aabbBit | b2Draw::e_centerOfMassBit);
