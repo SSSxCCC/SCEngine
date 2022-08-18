@@ -13,7 +13,6 @@ class GameWorld;
 class GameObject : public std::enable_shared_from_this<GameObject> {
 public:
 	void onCreate();
-	void onStart();
 	void onUpdate();
 	void onDestroy();
 
@@ -52,12 +51,11 @@ public:
 	// This GameObject's position, rotation and scale
 	Transform mTransform;
 
-	bool mAdded = false;   // have been added to a GameWorld?
-	bool mStarted = false; // have onStarted called?
-
 private:
 	// All Script attached to this GameObject
 	std::vector<std::shared_ptr<Script>> mScripts;
+
+	bool mCreated = false; // have onCreate called?
 };
 
 #endif // _GameObject_H_

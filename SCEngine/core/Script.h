@@ -19,6 +19,8 @@ public:
 	// the GameObject this Script attached to.
 	// Note: there is circular reference between Script and GameObject!
 	std::shared_ptr<GameObject> mGameObject;
+
+	bool mStarted = false; // have onStart called?
 };
 
 #endif // _Script_H_

@@ -30,7 +30,7 @@ public:
 	std::shared_ptr<Camera> mMainCamera;
 private:
 	std::vector<std::shared_ptr<GameObject>> mGameObjects; // All GameObject in the world
-	bool created = false; // Have onCreate called?
+	bool mCreated = false; // have create called?
 };
 
 #endif // _GameWorld_H_

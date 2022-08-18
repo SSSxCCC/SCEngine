@@ -208,7 +208,6 @@ int main() {
 
 	// Add some GameObject to game world
 	auto gameWorld = std::make_shared<GameWorld>();
-	gameWorld->create();
 
 	auto cameraObject = std::make_shared<GameObject>();
 	auto camera = std::make_shared<Camera>();
@@ -245,6 +244,8 @@ int main() {
 	groundObject->mTransform.mScaleY = 80.f;
 	gameWorld->addGameObject(groundObject);
 	
+	gameWorld->create();
+
 	gInput.setWindow(mainWindow);
 	float lastTime = glfwGetTime();
 	while (!glfwWindowShouldClose(mainWindow)) {

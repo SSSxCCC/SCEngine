@@ -4,16 +4,16 @@ void GameObject::onCreate() {
 	for (auto script : mScripts) {
 		script->onCreate();
 	}
-}
-
-void GameObject::onStart() {
-	for (auto script : mScripts) {
-		script->onStart();
-	}
+	mCreated = true;
 }
 
 void GameObject::onUpdate() {
 	for (auto script : mScripts) {
+		if (!script->mStarted) {
+			// call Script::onStart once before Script::onUpdate get first call 
+			script->onStart();
+			script->mStarted = true;
+		}
 		script->onUpdate();
 	}
 }
@@ -26,9 +26,11 @@ void GameObject::onDestroy() {
 
 // addScript should be called before GameWorld::addGameObject
 void GameObject::addScript(const std::shared_ptr<Script>& script) {
-	assert(!mAdded);
 	mScripts.push_back(script);
 	script->mGameObject = shared_from_this();
+	if (mCreated) {
+		script->onCreate();
+	}
 }
 
 // get first script of class S from this GameObject
