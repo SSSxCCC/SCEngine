@@ -27,8 +27,7 @@ public:
 	b2World mPhysicsWorld = b2World(mGravity); // the box2d physics world
 	DebugDraw mDebugDraw;
 
-	//std::shared_ptr<Camera> mMainCamera;
-	Camera* mMainCamera;
+	std::shared_ptr<Camera> mMainCamera;
 private:
 	std::vector<std::shared_ptr<GameObject>> mGameObjects; // All GameObject in the world
 	bool created = false; // Have onCreate called?

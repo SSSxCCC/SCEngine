@@ -3,7 +3,7 @@
 #include "core/GameWorld.h"
 
 void Camera::onCreate() {
-	mGameObject->mGameWorld->mMainCamera = this;//shared_from_this();
+	mGameObject->mGameWorld->mMainCamera = std::dynamic_pointer_cast<Camera>(shared_from_this());
 }
 
 glm::mat4 Camera::buildProjectionMatrix() {
