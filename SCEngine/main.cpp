@@ -29,11 +29,6 @@ static void ScrollCallback(GLFWwindow* window, double dx, double dy) {
 	if (ImGui::GetIO().WantCaptureMouse) {
 		return;
 	}
-	//if (dy > 0) {
-	//	gCamera.zoomIn();
-	//} else {
-	//	gCamera.zoomOut();
-	//}
 	gInput.mScrollX = (float) dx;
 	gInput.mScrollY = (float) dy;
 }
@@ -53,9 +48,6 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 		case GLFW_KEY_ESCAPE:
 			glfwSetWindowShouldClose(window, GL_TRUE);
 			break;
-		//case GLFW_KEY_HOME:
-		//	gCamera.reset();
-		//	break;
 		default:
 			break;
 		}
@@ -258,7 +250,8 @@ int main() {
 		processInput(mainWindow);
 		
 		//std::cout << "currentTime=" << currentTime << ", gCameraXY=" << gCameraX << "," << gCameraY << std::endl;
-		//glfwGetWindowSize(mainWindow, &width, &height);
+		glfwGetWindowSize(mainWindow, &width, &height);
+		camera->setSize(width * gScale, height * gScale);
 		int bufferWidth, bufferHeight;
 		glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);
 		glViewport(0, 0, bufferWidth, bufferHeight);
