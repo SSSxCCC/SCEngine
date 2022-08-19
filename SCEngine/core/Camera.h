@@ -19,7 +19,7 @@ public:
 	std::shared_ptr<Script> clone() override;
 
 	int mHalfWidth, mHalfHeight;
-	float mZoom;
+	float mZoom = 1.0f;
 };
 
 #endif // _Camera_H_

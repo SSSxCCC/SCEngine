@@ -21,7 +21,6 @@ public:
 	void onDestroy() override;
 
 	float mMoveSpeed = 1000.0f;
-	const float mDefaultZoom = 1.0f / gScale;
 private:
 	std::shared_ptr<Camera> mCamera;
 };

@@ -40,19 +40,6 @@ void RectangleRender::onCreate() {
 	glBindVertexArray(0);
 }
 
-void RectangleRender::onUpdate() {
-	onDraw();
-}
-
-void RectangleRender::onDestroy() {
-	mShader.destroy();
-	// TODO: destroy mVAO, mVBO, mEBO
-}
-
-std::shared_ptr<Script> RectangleRender::clone() {
-	return std::make_shared<RectangleRender>();
-}
-
 void RectangleRender::onDraw() {
 	glm::mat4 model = mGameObject->mTransform.buildModelMatrix();
 	glm::mat4 projection = mGameObject->mGameWorld->mMainCamera->buildProjectionMatrix();
@@ -70,4 +57,13 @@ void RectangleRender::onDraw() {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+}
+
+void RectangleRender::onDestroy() {
+	mShader.destroy();
+	// TODO: destroy mVAO, mVBO, mEBO
+}
+
+std::shared_ptr<Script> RectangleRender::clone() {
+	return std::make_shared<RectangleRender>();
 }

@@ -6,12 +6,15 @@
 // Predefine GameObject here to solve circular reference problem
 class GameObject;
 
+
+
 // Script is a script attached to a GameObject to implement game logic
 class Script : public std::enable_shared_from_this<Script> {
 public:
 	virtual void onCreate() { }  // called when the GameObject is created
 	virtual void onStart() { }   // called before the first onUpdate call
 	virtual void onUpdate() { }  // called every frame
+	virtual void onDraw() { }    // called every frame after onUpdate
 	virtual void onDestroy() { } // called when the GameObject is destroyed
 
 	virtual std::shared_ptr<Script> clone() = 0; // create a copy of this Script

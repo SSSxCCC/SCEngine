@@ -10,11 +10,15 @@ void GameObject::onCreate() {
 void GameObject::onUpdate() {
 	for (auto script : mScripts) {
 		if (!script->mStarted) {
-			// call Script::onStart once before Script::onUpdate get first call 
+			// call Script::onStart once before Script::onUpdate get first called
 			script->onStart();
 			script->mStarted = true;
 		}
 		script->onUpdate();
+	}
+	// call Script::onDraw every frame after Script::onUpdate get called
+	for (auto script : mScripts) {
+		script->onDraw();
 	}
 }
 

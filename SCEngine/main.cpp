@@ -154,7 +154,7 @@ int main() {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	int width = 800, height = 600;
+	int width = 800 * gScale, height = 600 * gScale;
 	GLFWwindow* mainWindow = glfwCreateWindow(width, height, "SCEngine", NULL, NULL);
 
 	if (mainWindow == NULL) {
@@ -203,7 +203,7 @@ int main() {
 
 	auto cameraObject = std::make_shared<GameObject>();
 	auto camera = std::make_shared<Camera>();
-	camera->setSize(width * gScale, height * gScale);
+	camera->setSize(width / gScale, height / gScale);
 	auto editorCameraController = std::make_shared<EditorCameraController>();
 	cameraObject->addScript(camera);
 	cameraObject->addScript(editorCameraController);
@@ -251,7 +251,7 @@ int main() {
 		
 		//std::cout << "currentTime=" << currentTime << ", gCameraXY=" << gCameraX << "," << gCameraY << std::endl;
 		glfwGetWindowSize(mainWindow, &width, &height);
-		camera->setSize(width * gScale, height * gScale);
+		camera->setSize(width / gScale, height / gScale);
 		int bufferWidth, bufferHeight;
 		glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);
 		glViewport(0, 0, bufferWidth, bufferHeight);
