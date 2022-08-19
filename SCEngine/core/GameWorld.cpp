@@ -50,10 +50,14 @@ int GameWorld::generateId() {
 
 GameWorldData GameWorld::getData() {
 	GameWorldData data;
-
+	for (const auto& [id, gameObject] : mGameObjects) {
+		data[id] = gameObject->getData();
+	}
 	return std::move(data);
 }
 
 void GameWorld::setData(const GameWorldData& data) {
-
+	for (const auto& [id, gameObjectData] : data) {
+		mGameObjects[id]->setData(gameObjectData);
+	}
 }

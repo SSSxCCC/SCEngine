@@ -9,6 +9,7 @@
 #include "core/Camera.h"
 #include "editor/DebugDraw.h"
 
+// Key: the id of GameObject, Value: GameObject's data
 using GameWorldData = std::unordered_map<int, GameObjectData>;
 
 // GameWorld stores all GameObject in the game
