@@ -9,8 +9,11 @@
 // Predefine GameWorld here to solve circular reference problem
 class GameWorld;
 
-// Key: Script name, Value: ScriptData
-using GameObjectData = std::unordered_map<std::string, ScriptData>;
+struct GameObjectData {
+	Transform transform;
+	std::unordered_map<std::string, ScriptData> scriptsData; // Key: Script name, Value: ScriptData
+	std::string name;
+};
 
 // GameObject is a object in the game world. Attach GameObjectScript to this GameObject to implement game logic
 class GameObject : public std::enable_shared_from_this<GameObject> {

@@ -72,14 +72,18 @@ std::shared_ptr<GameObject> GameObject::clone() {
 
 GameObjectData GameObject::getData() {
 	GameObjectData data;
+	data.name = mName;
+	data.transform = mTransform;
 	for (const auto& script : mScripts) {
-		data[script->getName()] = script->getData();
+		data.scriptsData[script->getName()] = script->getData();
 	}
 	return std::move(data);
 }
 
 void GameObject::setData(const GameObjectData& data) {
+	mName = data.name;
+	mTransform = data.transform;
 	for (const auto& script : mScripts) {
-		script->setData(data.at(script->getName()));
+		script->setData(data.scriptsData.at(script->getName()));
 	}
 }
