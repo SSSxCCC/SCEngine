@@ -10,7 +10,7 @@ void RigidBody::onCreate() {
 }
 
 void RigidBody::onStart() {
-	for (auto collider : mGameObject->getScripts<Collider>()) {
+	for (const auto& collider : mGameObject->getScripts<Collider>()) {
 		mBody->CreateFixture(&collider->mFixtureDef);
 	}
 }

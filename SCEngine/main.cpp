@@ -235,7 +235,7 @@ int main() {
 	groundObject->mTransform.mScaleX = 400.0f;
 	groundObject->mTransform.mScaleY = 80.f;
 	gameWorld->addGameObject(groundObject);
-	
+
 	gameWorld->create();
 
 	gInput.setWindow(mainWindow);

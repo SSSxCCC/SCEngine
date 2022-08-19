@@ -2,22 +2,29 @@
 #define _Script_H_
 
 #include <memory>
+#include <unordered_map>
 
 // Predefine GameObject here to solve circular reference problem
 class GameObject;
 
-
+// Key: variable name, Value: variable value
+using ScriptData = std::unordered_map<std::string, std::string>;
 
 // Script is a script attached to a GameObject to implement game logic
 class Script : public std::enable_shared_from_this<Script> {
 public:
-	virtual void onCreate() { }  // called when the GameObject is created
+	virtual void onCreate() { }  // called when the GameObject is created or this Script is first added to a created GameObject
 	virtual void onStart() { }   // called before the first onUpdate call
 	virtual void onUpdate() { }  // called every frame
 	virtual void onDraw() { }    // called every frame after onUpdate
-	virtual void onDestroy() { } // called when the GameObject is destroyed
+	virtual void onDestroy() { } // called when the Script is removed from GameObject or the GameObject is destroyed
 
 	virtual std::shared_ptr<Script> clone() = 0; // create a copy of this Script
+
+	virtual std::string getName() = 0; // return the class name of this Script (we need this because C++ dosen't have reflective)
+
+	virtual ScriptData getData() { return std::move(ScriptData()); }
+	virtual void setData(const ScriptData& data) { }
 
 	// the GameObject this Script attached to.
 	// Note: there is circular reference between Script and GameObject!

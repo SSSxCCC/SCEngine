@@ -11,7 +11,7 @@ public:
 	void onDraw() override;
 	void onDestroy() override;
 	std::shared_ptr<Script> clone() override;
-
+	std::string getName() override { return "RectangleRender"; }
 private:
 	Shader mShader = Shader("shaders/shader.vs", "shaders/shader.fs");
 	unsigned int mVAO;

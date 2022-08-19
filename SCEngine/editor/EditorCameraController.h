@@ -17,6 +17,7 @@ public:
 	void onUpdate() override;
 
 	std::shared_ptr<Script> clone() override;
+	std::string getName() override { return "EditorCameraController"; }
 
 	void onDestroy() override;
 

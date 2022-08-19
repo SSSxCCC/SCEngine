@@ -1,14 +1,14 @@
 #include "core/GameObject.h"
 
 void GameObject::onCreate() {
-	for (auto script : mScripts) {
+	for (const auto& script : mScripts) {
 		script->onCreate();
 	}
 	mCreated = true;
 }
 
 void GameObject::onUpdate() {
-	for (auto script : mScripts) {
+	for (const auto& script : mScripts) {
 		if (!script->mStarted) {
 			// call Script::onStart once before Script::onUpdate get first called
 			script->onStart();
@@ -17,13 +17,13 @@ void GameObject::onUpdate() {
 		script->onUpdate();
 	}
 	// call Script::onDraw every frame after Script::onUpdate get called
-	for (auto script : mScripts) {
+	for (const auto& script : mScripts) {
 		script->onDraw();
 	}
 }
 
 void GameObject::onDestroy() {
-	for (auto script : mScripts) {
+	for (const auto& script : mScripts) {
 		script->onDestroy();
 	}
 }
@@ -62,10 +62,24 @@ void GameObject::addScript(const std::shared_ptr<Script>& script) {
 
 std::shared_ptr<GameObject> GameObject::clone() {
 	auto gameObject = std::make_shared<GameObject>();
-	for (auto script : mScripts) {
+	for (const auto& script : mScripts) {
 		auto newScript = script->clone();
 		gameObject->addScript(newScript);
 	}
 	gameObject->mTransform = mTransform;
 	return gameObject;
+}
+
+GameObjectData GameObject::getData() {
+	GameObjectData data;
+	for (const auto& script : mScripts) {
+		data[script->getName()] = script->getData();
+	}
+	return std::move(data);
+}
+
+void GameObject::setData(const GameObjectData& data) {
+	for (const auto& script : mScripts) {
+		script->setData(data.at(script->getName()));
+	}
 }

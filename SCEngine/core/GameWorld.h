@@ -9,6 +9,8 @@
 #include "core/Camera.h"
 #include "editor/DebugDraw.h"
 
+using GameWorldData = std::unordered_map<int, GameObjectData>;
+
 // GameWorld stores all GameObject in the game
 class GameWorld : public std::enable_shared_from_this<GameWorld> {
 public:
@@ -16,6 +18,8 @@ public:
 	void update();
 	void destroy();
 	void addGameObject(const std::shared_ptr<GameObject>& gameObject);
+	GameWorldData getData();
+	void setData(const GameWorldData& data);
 
 	float mCurrentTime = 0.0f; // time since game start
 	float mDeltaTime = 0.0f;   // time spent in last frame
@@ -29,7 +33,11 @@ public:
 
 	std::shared_ptr<Camera> mMainCamera;
 private:
-	std::vector<std::shared_ptr<GameObject>> mGameObjects; // All GameObject in the world
+	// generate a unique id for new added GameObject
+	int generateId();
+	int mCurrentId = 0;
+
+	std::unordered_map<int, std::shared_ptr<GameObject>> mGameObjects; // All GameObject in the world, key is the id of GameObject
 	bool mCreated = false; // have create called?
 };
 

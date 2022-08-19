@@ -17,7 +17,7 @@ public:
 	void worldToScreen(float worldX, float worldY, float& screenX, float& screenY);
 	void screenToWorld(float screenX, float screenY, float& worldX, float& worldY);
 	std::shared_ptr<Script> clone() override;
-
+	std::string getName() override { return "Camera"; }
 	int mHalfWidth, mHalfHeight;
 	float mZoom = 1.0f;
 };

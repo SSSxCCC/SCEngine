@@ -11,7 +11,7 @@ public:
 	void onUpdate() override;
 	void onDestroy() override;
 	std::shared_ptr<Script> clone() override;
-
+	std::string getName() override { return "RigidBody"; }
 	b2BodyDef mBodyDef;
 private:
 	b2Body* mBody = nullptr;

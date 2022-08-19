@@ -9,6 +9,9 @@
 // Predefine GameWorld here to solve circular reference problem
 class GameWorld;
 
+// Key: Script name, Value: ScriptData
+using GameObjectData = std::unordered_map<std::string, ScriptData>;
+
 // GameObject is a object in the game world. Attach GameObjectScript to this GameObject to implement game logic
 class GameObject : public std::enable_shared_from_this<GameObject> {
 public:
@@ -16,12 +19,13 @@ public:
 	void onUpdate();
 	void onDestroy();
 
-	// addScript should be called before GameWorld::addGameObject
+	// add a Script to this GameObject
+	// warning: addScript should not add two scripts of same type
 	void addScript(const std::shared_ptr<Script>& script);
 
 	// get first script of class S from this GameObject
 	template <class S> std::shared_ptr<S> getScript() {
-		for (auto script : mScripts) {
+		for (const auto& script : mScripts) {
 			auto s = std::dynamic_pointer_cast<S>(script);
 			if (s) {
 				return s;
@@ -33,7 +37,7 @@ public:
 	// get all scripts of class S from this GameObject
 	template <class S> std::vector<std::shared_ptr<S>> getScripts() {
 		std::vector<std::shared_ptr<S>> vector;
-		for (auto script : mScripts) {
+		for (const auto& script : mScripts) {
 			auto s = std::dynamic_pointer_cast<S>(script);
 			if (s) {
 				vector.push_back(s);
@@ -43,13 +47,16 @@ public:
 	}
 
 	std::shared_ptr<GameObject> clone();
+	GameObjectData getData();
+	void setData(const GameObjectData& data);
 
 	// The GameWorld this GameObject is in.
 	// Note: there is circular reference between GameObject and GameWorld!
 	std::shared_ptr<GameWorld> mGameWorld;
 
-	// This GameObject's position, rotation and scale
-	Transform mTransform;
+	Transform mTransform; // this GameObject's position, rotation and scale
+	std::string mName;    // the name of this GameObject
+	int mId = -1;         // the unique id of this GameObject, -1 means there is no id yet
 
 private:
 	// All Script attached to this GameObject
