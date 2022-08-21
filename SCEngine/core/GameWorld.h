@@ -9,8 +9,11 @@
 #include "core/Camera.h"
 #include "editor/DebugDraw.h"
 
-// Key: the id of GameObject, Value: GameObject's data
-using GameWorldData = std::unordered_map<int, GameObjectData>;
+
+struct GameWorldData {
+	std::vector<int> gameObjectIds;
+	std::unordered_map<int, GameObjectData> gameObjectsData; // Key: the id of GameObject, Value: GameObject's data
+};
 
 // GameWorld stores all GameObject in the game
 class GameWorld : public std::enable_shared_from_this<GameWorld> {
@@ -38,6 +41,7 @@ private:
 	int generateId();
 	int mCurrentId = 0;
 
+	std::vector<int> mGameObjectIds; // All GameObject ids in a order
 	std::unordered_map<int, std::shared_ptr<GameObject>> mGameObjects; // All GameObject in the world, key is the id of GameObject
 	bool mCreated = false; // have create called?
 };

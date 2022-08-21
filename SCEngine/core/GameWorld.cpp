@@ -31,6 +31,7 @@ void GameWorld::destroy() {
 
 void GameWorld::addGameObject(const std::shared_ptr<GameObject>& gameObject) {
 	gameObject->mId = generateId();
+	mGameObjectIds.push_back(gameObject->mId);
 	mGameObjects[gameObject->mId] = gameObject;
 	gameObject->mGameWorld = shared_from_this();
 	if (mCreated) {
@@ -50,14 +51,16 @@ int GameWorld::generateId() {
 
 GameWorldData GameWorld::getData() {
 	GameWorldData data;
+	data.gameObjectIds = mGameObjectIds;
 	for (const auto& [id, gameObject] : mGameObjects) {
-		data[id] = gameObject->getData();
+		data.gameObjectsData[id] = gameObject->getData();
 	}
 	return std::move(data);
 }
 
 void GameWorld::setData(const GameWorldData& data) {
-	for (const auto& [id, gameObjectData] : data) {
+	for (const auto& [id, gameObjectData] : data.gameObjectsData) {
 		mGameObjects[id]->setData(gameObjectData);
 	}
+	// no necessary to copy data.gameObjectIds
 }
