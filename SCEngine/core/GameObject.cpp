@@ -75,7 +75,8 @@ GameObjectData GameObject::getData() {
 	data.name = mName;
 	data.transform = mTransform;
 	for (const auto& script : mScripts) {
-		data.scriptsData[script->getName()] = script->getData();
+		data.scriptsName.push_back(script->getName());
+		data.scriptsData.push_back(script->getData());
 	}
 	return std::move(data);
 }
@@ -83,7 +84,8 @@ GameObjectData GameObject::getData() {
 void GameObject::setData(const GameObjectData& data) {
 	mName = data.name;
 	mTransform = data.transform;
-	for (const auto& script : mScripts) {
-		script->setData(data.scriptsData.at(script->getName()));
+	for (int i = 0; i < data.scriptsData.size(); i++) {
+		assert(mScripts[i]->getName() == data.scriptsName[i]);
+		mScripts[i]->setData(data.scriptsData[i]);
 	}
 }

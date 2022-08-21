@@ -10,9 +10,10 @@
 class GameWorld;
 
 struct GameObjectData {
-	Transform transform;
-	std::unordered_map<std::string, ScriptData> scriptsData; // Key: Script name, Value: ScriptData
 	std::string name;
+	Transform transform;
+	std::vector<std::string> scriptsName;
+	std::vector<ScriptData> scriptsData; // Key: Script name, Value: ScriptData
 };
 
 // GameObject is a object in the game world. Attach GameObjectScript to this GameObject to implement game logic
