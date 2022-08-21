@@ -202,6 +202,7 @@ int main() {
 	auto gameWorld = std::make_shared<GameWorld>();
 
 	auto cameraObject = std::make_shared<GameObject>();
+	cameraObject->mName = "Camera";
 	auto camera = std::make_shared<Camera>();
 	camera->setSize(width / gScale, height / gScale);
 	auto editorCameraController = std::make_shared<EditorCameraController>();
@@ -214,6 +215,7 @@ int main() {
 	rigidBody->mBodyDef.type = b2_dynamicBody;
 	auto rectangleCollider = std::make_shared<RectangleCollider>();
 	auto gameObject = std::make_shared<GameObject>();
+	gameObject->mName = "Box1";
 	gameObject->mTransform.mScaleX = 10.f;
 	gameObject->mTransform.mScaleY = 10.f;
 	gameObject->mTransform.mPosX = 0.0f;
@@ -224,11 +226,13 @@ int main() {
 	gameWorld->addGameObject(gameObject);
 
 	auto gameObject2 = gameObject->clone();
+	gameObject2->mName = "Box2";
 	gameObject2->mTransform.mPosX = 5.0f;
 	gameObject2->mTransform.mPosY = 120.0f;
 	gameWorld->addGameObject(gameObject2);
 	
 	auto groundObject = gameObject->clone();
+	groundObject->mName = "Ground";
 	groundObject->getScript<RigidBody>()->mBodyDef.type = b2_staticBody;
 	groundObject->mTransform.mPosX = 0.0f;
 	groundObject->mTransform.mPosY = -100.0f;
@@ -257,11 +261,22 @@ int main() {
 		glViewport(0, 0, bufferWidth, bufferHeight);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		gameWorld->update();
-		
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+
+		GameWorldData worldData = gameWorld->getData();
+		static int current = 0;
+		auto itemsGetter = [](void* data, int idx, const char** out_text) {
+			GameWorldData* worldData = (GameWorldData*)data;
+			*out_text = worldData->gameObjectsData[worldData->gameObjectIds[idx]].name.c_str();
+			return true;
+		};
+		ImGui::Begin("GameObjects");
+		ImGui::ListBox("", &current, itemsGetter, (void*)&worldData, worldData.gameObjectIds.size());
+		ImGui::End();
+
+		gameWorld->update();
 
 		ImGui::Begin("imgui");
 		ImGui::Text("Text");
