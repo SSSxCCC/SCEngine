@@ -14,6 +14,7 @@ target_link_libraries(SCEngine PUBLIC glfw)
 target_link_libraries(SCEngine PUBLIC glad)
 target_link_libraries(SCEngine PUBLIC glm)
 target_link_libraries(SCEngine PUBLIC imgui)
+target_link_libraries(SCEngine PUBLIC nlohmann_json)
 
 install(TARGETS SCEngine DESTINATION bin)
 install(DIRECTORY "shaders"

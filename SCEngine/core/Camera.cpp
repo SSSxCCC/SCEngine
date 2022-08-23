@@ -6,6 +6,12 @@ void Camera::onCreate() {
 	mGameObject->mGameWorld->mMainCamera = std::dynamic_pointer_cast<Camera>(shared_from_this());
 }
 
+void Camera::onDestroy() {
+	if (mGameObject->mGameWorld->mMainCamera == shared_from_this()) {
+		mGameObject->mGameWorld->mMainCamera = nullptr;
+	}
+}
+
 glm::mat4 Camera::buildProjectionMatrix() {
 	glm::vec3 cameraPos = glm::vec3(mGameObject->mTransform.mPosX, mGameObject->mTransform.mPosY, mGameObject->mTransform.mZ);
 	glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);

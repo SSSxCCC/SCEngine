@@ -61,7 +61,9 @@ void RectangleRender::onDraw() {
 
 void RectangleRender::onDestroy() {
 	mShader.destroy();
-	// TODO: destroy mVAO, mVBO, mEBO
+	glDeleteVertexArrays(1, &mVAO);
+	glDeleteBuffers(1, &mVBO);
+	glDeleteBuffers(1, &mEBO);
 }
 
 std::shared_ptr<Script> RectangleRender::clone() {

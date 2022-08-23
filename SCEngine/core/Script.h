@@ -3,12 +3,16 @@
 
 #include <memory>
 #include <unordered_map>
+#include "nlohmann/json.hpp"
 
 // Predefine GameObject here to solve circular reference problem
 class GameObject;
 
-// Key: variable name, Value: variable value
-using ScriptData = std::unordered_map<std::string, std::string>;
+struct ScriptData {
+	std::string name;
+	std::unordered_map<std::string, std::string> data; // Key: variable name, Value: variable value
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ScriptData, name, data)
 
 // Script is a script attached to a GameObject to implement game logic
 class Script : public std::enable_shared_from_this<Script> {
@@ -23,7 +27,7 @@ public:
 
 	virtual std::string getName() = 0; // return the class name of this Script (we need this because C++ dosen't have reflective)
 
-	virtual ScriptData getData() { return std::move(ScriptData()); }
+	virtual ScriptData getData() { ScriptData data; data.name = getName(); return std::move(data); }
 	virtual void setData(const ScriptData& data) { }
 
 	// the GameObject this Script attached to.

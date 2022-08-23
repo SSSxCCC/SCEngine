@@ -11,9 +11,9 @@
 
 
 struct GameWorldData {
-	std::vector<int> gameObjectIds;
-	std::unordered_map<int, GameObjectData> gameObjectsData; // Key: the id of GameObject, Value: GameObject's data
+	std::vector<GameObjectData> gameObjectsData;
 };
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(GameWorldData, gameObjectsData)
 
 // GameWorld stores all GameObject in the game
 class GameWorld : public std::enable_shared_from_this<GameWorld> {
@@ -22,6 +22,7 @@ public:
 	void update();
 	void destroy();
 	void addGameObject(const std::shared_ptr<GameObject>& gameObject);
+	void removeGameObject(int GameObjectId);
 	GameWorldData getData();
 	void setData(const GameWorldData& data);
 

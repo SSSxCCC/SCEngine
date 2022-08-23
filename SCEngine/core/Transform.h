@@ -3,6 +3,7 @@
 
 #include "glm/glm.hpp"
 #include <glm/gtc/matrix_transform.hpp>
+#include "nlohmann/json.hpp"
 
 // Keep a GameObject's position, rotation and scale
 class Transform {
@@ -19,5 +20,6 @@ public:
 		return model;
 	}
 };
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Transform, mPosX, mPosY, mZ, mRotation, mScaleX, mScaleY)
 
 #endif // _Transform_H_

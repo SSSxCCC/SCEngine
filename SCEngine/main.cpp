@@ -10,6 +10,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/string_cast.hpp"
+#include "nlohmann/json.hpp"
 
 #include "core/GameWorld.h"
 #include "core/GameObject.h"
@@ -242,6 +243,9 @@ int main() {
 
 	gameWorld->create();
 
+	nlohmann::json j = gameWorld->getData();
+	std::cout << j << std::endl;
+
 	gInput.setWindow(mainWindow);
 	float lastTime = glfwGetTime();
 	while (!glfwWindowShouldClose(mainWindow)) {
@@ -269,12 +273,22 @@ int main() {
 		static int current = 0;
 		auto itemsGetter = [](void* data, int idx, const char** out_text) {
 			GameWorldData* worldData = (GameWorldData*)data;
-			*out_text = worldData->gameObjectsData[worldData->gameObjectIds[idx]].name.c_str();
+			*out_text = worldData->gameObjectsData[idx].name.c_str();
 			return true;
 		};
 		ImGui::Begin("GameObjects");
-		ImGui::ListBox("", &current, itemsGetter, (void*)&worldData, worldData.gameObjectIds.size());
+		ImGui::ListBox("", &current, itemsGetter, (void*)&worldData, worldData.gameObjectsData.size());
 		ImGui::End();
+
+		/*if (current >= 0) {
+			GameObjectData objectData = worldData.gameObjectsData[current];
+			ImGui::Begin("GameObject Inspector");
+			ImGui::Text(objectData.name.c_str());
+			ImGui::Text("Transform");
+			ImGui::Text("position:");
+			ImGui::Text();
+			ImGui::End();
+		}*/
 
 		gameWorld->update();
 

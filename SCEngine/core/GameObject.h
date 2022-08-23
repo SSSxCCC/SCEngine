@@ -10,11 +10,12 @@
 class GameWorld;
 
 struct GameObjectData {
+	int id;
 	std::string name;
 	Transform transform;
-	std::vector<std::string> scriptsName;
-	std::vector<ScriptData> scriptsData; // Key: Script name, Value: ScriptData
+	std::vector<ScriptData> scriptsData;
 };
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(GameObjectData, id, name, transform, scriptsData)
 
 // GameObject is a object in the game world. Attach GameObjectScript to this GameObject to implement game logic
 class GameObject : public std::enable_shared_from_this<GameObject> {

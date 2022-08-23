@@ -1,4 +1,5 @@
 #include "core/GameWorld.h"
+#include <iostream>
 
 void GameWorld::create() {
 	mDebugDraw.Create(shared_from_this());
@@ -26,7 +27,12 @@ void GameWorld::update() {
 
 void GameWorld::destroy() {
 	mDebugDraw.Destroy();
-	// TODO: destroy all gameObjects
+
+	while (mGameObjectIds.size() > 0) {
+		removeGameObject(mGameObjectIds[mGameObjectIds.size() - 1]);
+	}
+	assert(mGameObjectIds.size() == 0);
+	assert(mGameObjects.size() == 0);
 }
 
 void GameWorld::addGameObject(const std::shared_ptr<GameObject>& gameObject) {
@@ -37,6 +43,18 @@ void GameWorld::addGameObject(const std::shared_ptr<GameObject>& gameObject) {
 	if (mCreated) {
 		gameObject->onCreate();
 	}
+}
+
+void GameWorld::removeGameObject(int gameObjectId) {
+	if (!mGameObjects.contains(gameObjectId)) {
+		std::cout << "GameWorld::removeGameObject GameObjectId is not exist, GameObjectId=" << gameObjectId << std::endl;
+		return;
+	}
+	mGameObjects[gameObjectId]->onDestroy();
+	mGameObjects[gameObjectId]->mGameWorld = nullptr;
+	mGameObjects.erase(gameObjectId);
+	auto iter = std::remove(mGameObjectIds.begin(), mGameObjectIds.end(), gameObjectId);
+	mGameObjectIds.erase(iter, mGameObjectIds.end());
 }
 
 int GameWorld::generateId() {
@@ -51,16 +69,12 @@ int GameWorld::generateId() {
 
 GameWorldData GameWorld::getData() {
 	GameWorldData data;
-	data.gameObjectIds = mGameObjectIds;
-	for (const auto& [id, gameObject] : mGameObjects) {
-		data.gameObjectsData[id] = gameObject->getData();
+	for (int id : mGameObjectIds) {
+		data.gameObjectsData.push_back(mGameObjects[id]->getData());
 	}
 	return std::move(data);
 }
 
 void GameWorld::setData(const GameWorldData& data) {
-	for (const auto& [id, gameObjectData] : data.gameObjectsData) {
-		mGameObjects[id]->setData(gameObjectData);
-	}
-	// no necessary to copy data.gameObjectIds
+	// TODO: implement setData
 }

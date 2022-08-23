@@ -11,6 +11,7 @@ class GameWorld;
 class Camera : public Script {
 public:
 	void onCreate() override;
+	void onDestroy() override;
 	void getSize(int& outWidth, int& outHeight) { outWidth = mHalfWidth * 2; outHeight = mHalfHeight * 2; }
 	void setSize(int width, int height) { mHalfWidth = width / 2; mHalfHeight = height / 2; }
 	glm::mat4 buildProjectionMatrix();

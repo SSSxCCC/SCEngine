@@ -25,6 +25,7 @@ void GameObject::onUpdate() {
 void GameObject::onDestroy() {
 	for (const auto& script : mScripts) {
 		script->onDestroy();
+		script->mGameObject = nullptr;
 	}
 }
 
@@ -36,29 +37,6 @@ void GameObject::addScript(const std::shared_ptr<Script>& script) {
 		script->onCreate();
 	}
 }
-
-// get first script of class S from this GameObject
-//template <class S> std::shared_ptr<S> GameObject::getScript() {
-//	for (auto script : mScripts) {
-//		auto s = std::dynamic_pointer_cast<S>(script);
-//		if (s) {
-//			return s;
-//		}
-//	}
-//	return nullptr;
-//}
-
-// get all scripts of class S from this GameObject
-//template <class S> std::vector<std::shared_ptr<S>> GameObject::getScripts() {
-//	std::vector<std::shared_ptr<S>> vector;
-//	for (auto script : mScripts) {
-//		auto s = std::dynamic_pointer_cast<S>(script);
-//		if (s) {
-//			vector.push_back(s);
-//		}
-//	}
-//	return vector;
-//}
 
 std::shared_ptr<GameObject> GameObject::clone() {
 	auto gameObject = std::make_shared<GameObject>();
@@ -72,20 +50,15 @@ std::shared_ptr<GameObject> GameObject::clone() {
 
 GameObjectData GameObject::getData() {
 	GameObjectData data;
+	data.id = mId;
 	data.name = mName;
 	data.transform = mTransform;
 	for (const auto& script : mScripts) {
-		data.scriptsName.push_back(script->getName());
 		data.scriptsData.push_back(script->getData());
 	}
 	return std::move(data);
 }
 
 void GameObject::setData(const GameObjectData& data) {
-	mName = data.name;
-	mTransform = data.transform;
-	for (int i = 0; i < data.scriptsData.size(); i++) {
-		assert(mScripts[i]->getName() == data.scriptsName[i]);
-		mScripts[i]->setData(data.scriptsData[i]);
-	}
+	// TODO: implement setData
 }
