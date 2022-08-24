@@ -37,4 +37,6 @@ public:
 	bool mStarted = false; // have onStart called?
 };
 
+extern std::unordered_map<std::string, std::function<std::shared_ptr<Script>()>> gScriptCreater;
+
 #endif // _Script_H_
