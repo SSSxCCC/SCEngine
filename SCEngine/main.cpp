@@ -11,7 +11,8 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "nlohmann/json.hpp"
-#include "static_block.hpp"
+
+#include "utility/StaticBlock.h"
 
 #include "core/GameWorld.h"
 #include "core/GameObject.h"
