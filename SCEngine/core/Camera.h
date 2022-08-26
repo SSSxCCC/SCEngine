@@ -23,4 +23,6 @@ public:
 	float mZoom = 1.0f;
 };
 
+REGISTER_SCRIPT(Camera)
+
 #endif // _Camera_H_

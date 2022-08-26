@@ -12,4 +12,6 @@ private:
 	b2PolygonShape mRectangleShape;
 };
 
+REGISTER_SCRIPT(RectangleCollider)
+
 #endif // _RectangleCollider_H_

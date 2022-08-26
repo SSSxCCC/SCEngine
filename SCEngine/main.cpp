@@ -12,8 +12,6 @@
 #include "glm/gtx/string_cast.hpp"
 #include "nlohmann/json.hpp"
 
-#include "utility/StaticBlock.h"
-
 #include "core/GameWorld.h"
 #include "core/GameObject.h"
 #include "core/Input.h"
@@ -22,11 +20,6 @@
 #include "common/RectangleRender.h"
 #include "common/RigidBody.h"
 #include "common/RectangleCollider.h"
-
-STATIC_BLOCK {
-	std::cout << "static_block!" << std::endl;
-	return 0;
-}();
 
 void glfwErrorCallback(int error, const char* description) {
 	fprintf(stderr, "GLFW error occured. Code: %d. Description: %s\n", error, description);
@@ -150,6 +143,10 @@ void processInput(GLFWwindow* window) {
 }
 
 int main() {
+	for (const auto& [key, value] : *gScriptCreater) {
+		std::cout << "name=" << key << ", value=" << value()->getName() << std::endl;
+	}
+
 	glfwSetErrorCallback(glfwErrorCallback);
 
 	if (glfwInit() != GLFW_TRUE) {

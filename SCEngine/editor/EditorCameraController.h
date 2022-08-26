@@ -26,4 +26,6 @@ private:
 	std::shared_ptr<Camera> mCamera;
 };
 
+REGISTER_SCRIPT(EditorCameraController)
+
 #endif // _EditorCameraController_H_

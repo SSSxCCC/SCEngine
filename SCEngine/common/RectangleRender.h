@@ -13,10 +13,12 @@ public:
 	std::shared_ptr<Script> clone() override;
 	std::string getName() override { return "RectangleRender"; }
 private:
-	Shader mShader = Shader("shaders/shader.vs", "shaders/shader.fs");
+	Shader *mShader;
 	unsigned int mVAO;
 	unsigned int mVBO;
 	unsigned int mEBO;
 };
+
+REGISTER_SCRIPT(RectangleRender)
 
 #endif // _RectangleRender_H_

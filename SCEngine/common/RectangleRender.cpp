@@ -6,6 +6,8 @@
 #include "core/GameWorld.h"
 
 void RectangleRender::onCreate() {
+	mShader = new Shader("shaders/shader.vs", "shaders/shader.fs");
+
 	glGenVertexArrays(1, &mVAO);
 	glBindVertexArray(mVAO);
 
@@ -43,9 +45,9 @@ void RectangleRender::onCreate() {
 void RectangleRender::onDraw() {
 	glm::mat4 model = mGameObject->mTransform.buildModelMatrix();
 	glm::mat4 projection = mGameObject->mGameWorld->mMainCamera->buildProjectionMatrix();
-	mShader.use();
-	mShader.setMat4("model", glm::value_ptr(model));
-	mShader.setMat4("projection", glm::value_ptr(projection));
+	mShader->use();
+	mShader->setMat4("model", glm::value_ptr(model));
+	mShader->setMat4("projection", glm::value_ptr(projection));
 	glBindVertexArray(mVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, mVBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mEBO);
@@ -60,7 +62,9 @@ void RectangleRender::onDraw() {
 }
 
 void RectangleRender::onDestroy() {
-	mShader.destroy();
+	mShader->destroy();
+	delete mShader;
+	mShader = nullptr;
 	glDeleteVertexArrays(1, &mVAO);
 	glDeleteBuffers(1, &mVBO);
 	glDeleteBuffers(1, &mEBO);

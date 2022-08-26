@@ -17,4 +17,6 @@ private:
 	b2Body* mBody = nullptr;
 };
 
+REGISTER_SCRIPT(RigidBody)
+
 #endif // _RigidBody_H_
