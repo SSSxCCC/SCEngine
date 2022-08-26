@@ -17,6 +17,7 @@
 #include "core/Input.h"
 #include "core/Camera.h"
 #include "editor/EditorCameraController.h"
+#include "editor/GameWorldEditor.h"
 #include "common/RectangleRender.h"
 #include "common/RigidBody.h"
 #include "common/RectangleCollider.h"
@@ -246,6 +247,8 @@ int main() {
 	nlohmann::json j = gameWorld->getData();
 	std::cout << j << std::endl;
 
+	GameWorldEditor worldEditor;
+
 	gInput.setWindow(mainWindow);
 	float lastTime = glfwGetTime();
 	while (!glfwWindowShouldClose(mainWindow)) {
@@ -269,28 +272,9 @@ int main() {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		GameWorldData worldData = gameWorld->getData();
-		static int current = 0;
-		auto itemsGetter = [](void* data, int idx, const char** out_text) {
-			GameWorldData* worldData = (GameWorldData*)data;
-			*out_text = worldData->gameObjectsData[idx].name.c_str();
-			return true;
-		};
-		ImGui::Begin("GameObjects");
-		ImGui::ListBox("", &current, itemsGetter, (void*)&worldData, worldData.gameObjectsData.size());
-		ImGui::End();
+		worldEditor.update(gameWorld);
 
-		/*if (current >= 0) {
-			GameObjectData objectData = worldData.gameObjectsData[current];
-			ImGui::Begin("GameObject Inspector");
-			ImGui::Text(objectData.name.c_str());
-			ImGui::Text("Transform");
-			ImGui::Text("position:");
-			ImGui::Text();
-			ImGui::End();
-		}*/
-
-		ImGui::Begin("imgui");
+		ImGui::Begin("restart");
 		if (ImGui::Button("restart")) {
 			gameWorld->destroy();
 			GameWorldData gameWorldData = j;

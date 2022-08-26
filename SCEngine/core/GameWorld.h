@@ -47,6 +47,8 @@ private:
 	std::vector<int> mGameObjectIds; // All GameObject ids in a order
 	std::unordered_map<int, std::shared_ptr<GameObject>> mGameObjects; // All GameObject in the world, key is the id of GameObject
 	bool mCreated = false; // have create called?
+
+friend class GameWorldEditor;
 };
 
 #endif // _GameWorld_H_

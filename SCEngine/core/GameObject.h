@@ -75,6 +75,8 @@ private:
 
 	// have onCreate called?
 	bool mCreated = false;
+
+friend class GameWorldEditor;
 };
 
 #endif // _GameObject_H_

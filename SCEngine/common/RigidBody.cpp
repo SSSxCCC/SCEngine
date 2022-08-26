@@ -29,11 +29,11 @@ void RigidBody::onDestroy() {
 }
 
 void RigidBody::setData(const ScriptData& data) {
-	mBodyDef.type = static_cast<b2BodyType>(data.intData.at("mBodyDef.type"));
+	mBodyDef.type = static_cast<b2BodyType>(data.getInt("mBodyDef.type"));
 }
 
 ScriptData RigidBody::getData() {
 	ScriptData data = Script::getData();
-	data.intData["mBodyDef.type"] = mBodyDef.type;
+	data.addInt("mBodyDef.type", mBodyDef.type);
 	return std::move(data);
 }

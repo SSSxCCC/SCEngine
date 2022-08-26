@@ -56,11 +56,11 @@ void EditorCameraController::onDestroy() {
 }
 
 void EditorCameraController::setData(const ScriptData& data) {
-	 mMoveSpeed = data.floatData.at("mMoveSpeed");
+	 mMoveSpeed = data.getFloat("mMoveSpeed");
 }
 
 ScriptData EditorCameraController::getData() {
 	auto data = Script::getData();
-	data.floatData["mMoveSpeed"] = mMoveSpeed;
+	data.addFloat("mMoveSpeed", mMoveSpeed);
 	return data;
 }
