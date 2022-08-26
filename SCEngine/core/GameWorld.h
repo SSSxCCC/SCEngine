@@ -9,7 +9,7 @@
 #include "core/Camera.h"
 #include "editor/DebugDraw.h"
 
-
+// Store all the data in a GameWorld
 struct GameWorldData {
 	std::vector<GameObjectData> gameObjectsData;
 };
@@ -24,7 +24,9 @@ public:
 	void addGameObject(const std::shared_ptr<GameObject>& gameObject);
 	void removeGameObject(int GameObjectId);
 	GameWorldData getData();
-	void setData(const GameWorldData& data);
+
+	// create a instance of GameWorld based on GameWorldData
+	static std::shared_ptr<GameWorld> create(const GameWorldData& data);
 
 	float mCurrentTime = 0.0f; // time since game start
 	float mDeltaTime = 0.0f;   // time spent in last frame

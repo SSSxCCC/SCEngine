@@ -36,7 +36,11 @@ void GameWorld::destroy() {
 }
 
 void GameWorld::addGameObject(const std::shared_ptr<GameObject>& gameObject) {
-	gameObject->mId = generateId();
+	if (gameObject->mId < 0) {
+		gameObject->mId = generateId();
+	} else {
+		assert(!mGameObjects.contains(gameObject->mId));
+	}
 	mGameObjectIds.push_back(gameObject->mId);
 	mGameObjects[gameObject->mId] = gameObject;
 	gameObject->mGameWorld = shared_from_this();
@@ -75,6 +79,10 @@ GameWorldData GameWorld::getData() {
 	return std::move(data);
 }
 
-void GameWorld::setData(const GameWorldData& data) {
-	// TODO: implement setData
+std::shared_ptr<GameWorld> GameWorld::create(const GameWorldData& data) {
+	auto gameWorld = std::make_shared<GameWorld>();
+	for (const auto& gameObjectData : data.gameObjectsData) {
+		gameWorld->addGameObject(GameObject::create(gameObjectData));
+	}
+	return gameWorld;
 }

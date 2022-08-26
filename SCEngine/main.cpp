@@ -143,9 +143,6 @@ void processInput(GLFWwindow* window) {
 }
 
 int main() {
-	for (const auto& [k, v] : *Script::sCreater) {
-		std::cout << "k=" << k << ", v=" << v()->getName() << std::endl;
-	}
 	glfwSetErrorCallback(glfwErrorCallback);
 
 	if (glfwInit() != GLFW_TRUE) {
@@ -293,15 +290,16 @@ int main() {
 			ImGui::End();
 		}*/
 
-		gameWorld->update();
-
 		ImGui::Begin("imgui");
-		ImGui::Text("Text");
+		if (ImGui::Button("restart")) {
+			gameWorld->destroy();
+			GameWorldData gameWorldData = j;
+			gameWorld = GameWorld::create(gameWorldData);
+			gameWorld->create();
+		}
 		ImGui::End();
 
-		ImGui::Begin("imgui2");
-		ImGui::Text("Text2");
-		ImGui::End();
+		gameWorld->update();
 
 		ImGui::ShowDemoWindow();
 

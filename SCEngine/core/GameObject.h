@@ -9,6 +9,7 @@
 // Predefine GameWorld here to solve circular reference problem
 class GameWorld;
 
+// Store all the data in a GameObject
 struct GameObjectData {
 	int id;
 	std::string name;
@@ -51,9 +52,14 @@ public:
 		return vector;
 	}
 
+	// create a copy of this GameObject, its mId is -1
 	std::shared_ptr<GameObject> clone();
+
+	// serialize data
 	GameObjectData getData();
-	void setData(const GameObjectData& data);
+
+	// create a instance of GameObject based on GameObjectData
+	static std::shared_ptr<GameObject> create(const GameObjectData& data);
 
 	// The GameWorld this GameObject is in.
 	// Note: there is circular reference between GameObject and GameWorld!
@@ -67,7 +73,8 @@ private:
 	// All Script attached to this GameObject
 	std::vector<std::shared_ptr<Script>> mScripts;
 
-	bool mCreated = false; // have onCreate called?
+	// have onCreate called?
+	bool mCreated = false;
 };
 
 #endif // _GameObject_H_

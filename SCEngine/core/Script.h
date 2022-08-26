@@ -41,29 +41,27 @@ public:
 	virtual void onUpdate() { }  // called every frame
 	virtual void onDraw() { }    // called every frame after onUpdate
 	virtual void onDestroy() { } // called when the Script is removed from GameObject or the GameObject is destroyed
+	virtual std::string getName() = 0; // return the class name of this Script (we need this because C++ dosen't have reflective)
+	virtual ScriptData getData() { ScriptData data; data.name = getName(); return std::move(data); } // data serialization
+	virtual void setData(const ScriptData& data) { } // data deserialization
 
 	// create a copy of this Script
-	std::shared_ptr<Script> clone() {
-		auto script = (*sCreater)[getName()]();
-		script->setData(getData());
-		return script;
-	}
-
-	virtual std::string getName() = 0; // return the class name of this Script (we need this because C++ dosen't have reflective)
-
-	virtual ScriptData getData() { ScriptData data; data.name = getName(); return std::move(data); }
-	virtual void setData(const ScriptData& data) {  }
+	std::shared_ptr<Script> clone() { return create(getData()); }
 
 	// the GameObject this Script attached to.
 	// Note: there is circular reference between Script and GameObject!
 	std::shared_ptr<GameObject> mGameObject;
 
-	bool mStarted = false; // have onStart called?
+	// have onStart called?
+	bool mStarted = false;
 
 	// Key: Script class name, Value: a funtion to create a instance of Script.
 	// We use this map to dynamic create instance of Script based on its name.
 	// (We need this because C++ dosen't have reflective)
 	static std::unordered_map<std::string, std::function<std::shared_ptr<Script>()>>* sCreater;
+
+	// create a instance of Script based on ScriptData
+	static std::shared_ptr<Script> create(const ScriptData& data);
 };
 
 // A macro to register a Script in Script::sCreater.

@@ -39,13 +39,9 @@ void GameObject::addScript(const std::shared_ptr<Script>& script) {
 }
 
 std::shared_ptr<GameObject> GameObject::clone() {
-	auto gameObject = std::make_shared<GameObject>();
-	for (const auto& script : mScripts) {
-		auto newScript = script->clone();
-		gameObject->addScript(newScript);
-	}
-	gameObject->mTransform = mTransform;
-	return gameObject;
+	auto data = getData();
+	data.id = -1;
+	return create(data);
 }
 
 GameObjectData GameObject::getData() {
@@ -59,6 +55,14 @@ GameObjectData GameObject::getData() {
 	return std::move(data);
 }
 
-void GameObject::setData(const GameObjectData& data) {
-	// TODO: implement setData
+std::shared_ptr<GameObject> GameObject::create(const GameObjectData& data) {
+	auto gameObject = std::make_shared<GameObject>();
+	gameObject->mId = data.id;
+	gameObject->mName = data.name;
+	gameObject->mTransform = data.transform;
+	for (const auto& scriptData : data.scriptsData) {
+		auto script = Script::create(scriptData);
+		gameObject->addScript(script);
+	}
+	return gameObject;
 }
