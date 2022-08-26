@@ -37,6 +37,6 @@ STATIC_BLOCK(name) { // name can be any string
 STATIC_BLOCK_ is the same as STATIC_BLOCK except that only STATIC_BLOCK_ need a abitrary name as parameter.
 The name parameter is to solve redefinition problem of STATIC_BLOCK.
 */
-#define STATIC_BLOCK_(name) [[maybe_unused]] static const auto M_CON(_static_block_,name) = []()
+#define STATIC_BLOCK_(name) [[maybe_unused]] static const auto _static_block_##name = []()
 
 #endif // _StaticBlock_H_
