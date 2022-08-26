@@ -12,9 +12,11 @@ class GameObject;
 // Store all the data in a Script
 struct ScriptData {
 	std::string name;
-	std::unordered_map<std::string, std::string> data; // Key: variable name, Value: variable value
+	std::unordered_map<std::string, float> floatData;
+	std::unordered_map<std::string, int> intData;
+	std::unordered_map<std::string, std::string> stringData; // Key: variable name, Value: variable value
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ScriptData, name, data)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ScriptData, name, floatData, intData, stringData)
 
 /*
 A script attached to a GameObject to implement game logic.
@@ -23,16 +25,14 @@ Example:
 #include "core/Script.h"
 class MyScript : public Script {
 public:
-	std::shared_ptr<Script> clone() override { return std::make_shared<MyScript>(); } // return a copy of MyScript
 	std::string getName() override { return "MyScript"; } // return the className
 };
 REGISTER_SCRIPT(MyScript)
 
 The above example is a minimal code implementation, every non-abstract Script must:
 1 inherit from Script
-2 implement clone
-3 implement getName
-4 call REGISTER_SCRIPT
+2 implement getName
+3 call REGISTER_SCRIPT
 */
 class Script : public std::enable_shared_from_this<Script> {
 public:
@@ -42,32 +42,37 @@ public:
 	virtual void onDraw() { }    // called every frame after onUpdate
 	virtual void onDestroy() { } // called when the Script is removed from GameObject or the GameObject is destroyed
 
-	virtual std::shared_ptr<Script> clone() = 0; // create a copy of this Script
+	// create a copy of this Script
+	std::shared_ptr<Script> clone() {
+		auto script = (*sCreater)[getName()]();
+		script->setData(getData());
+		return script;
+	}
 
 	virtual std::string getName() = 0; // return the class name of this Script (we need this because C++ dosen't have reflective)
 
 	virtual ScriptData getData() { ScriptData data; data.name = getName(); return std::move(data); }
-	virtual void setData(const ScriptData& data) { }
+	virtual void setData(const ScriptData& data) {  }
 
 	// the GameObject this Script attached to.
 	// Note: there is circular reference between Script and GameObject!
 	std::shared_ptr<GameObject> mGameObject;
 
 	bool mStarted = false; // have onStart called?
+
+	// Key: Script class name, Value: a funtion to create a instance of Script.
+	// We use this map to dynamic create instance of Script based on its name.
+	// (We need this because C++ dosen't have reflective)
+	static std::unordered_map<std::string, std::function<std::shared_ptr<Script>()>>* sCreater;
 };
 
-// Key: Script class name, Value: a funtion to create a instance of Script.
-// We use this map to dynamic create instance of Script based on its name.
-// (We need this because C++ dosen't have reflective)
-extern std::unordered_map<std::string, std::function<std::shared_ptr<Script>()>>* gScriptCreater;
-
-// A macro to register a Script in gScriptCreater.
+// A macro to register a Script in Script::sCreater.
 // Any non-abstract Script must call this macro.
 #define REGISTER_SCRIPT(ScriptClass) STATIC_BLOCK_(ScriptClass##Register) { \
-	if (gScriptCreater == nullptr) { \
-		gScriptCreater = new std::unordered_map<std::string, std::function<std::shared_ptr<Script>()>>; \
+	if (Script::sCreater == nullptr) { \
+		Script::sCreater = new std::unordered_map<std::string, std::function<std::shared_ptr<Script>()>>; \
 	} \
-	(*gScriptCreater)[ScriptClass().getName()] = []() { return std::make_shared<ScriptClass>(); }; \
+	(*Script::sCreater)[ScriptClass().getName()] = []() { return std::make_shared<ScriptClass>(); }; \
 	return 0; \
 }();
 

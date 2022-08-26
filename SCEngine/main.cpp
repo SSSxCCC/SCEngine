@@ -143,10 +143,9 @@ void processInput(GLFWwindow* window) {
 }
 
 int main() {
-	for (const auto& [key, value] : *gScriptCreater) {
-		std::cout << "name=" << key << ", value=" << value()->getName() << std::endl;
+	for (const auto& [k, v] : *Script::sCreater) {
+		std::cout << "k=" << k << ", v=" << v()->getName() << std::endl;
 	}
-
 	glfwSetErrorCallback(glfwErrorCallback);
 
 	if (glfwInit() != GLFW_TRUE) {

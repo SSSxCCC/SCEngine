@@ -35,10 +35,16 @@ void Camera::screenToWorld(float screenX, float screenY, float& worldX, float& w
 	worldY = top - screenY * mZoom;
 }
 
-std::shared_ptr<Script> Camera::clone() {
-	auto newCamera = std::make_shared<Camera>();
-	newCamera->mHalfWidth = mHalfWidth;
-	newCamera->mHalfHeight = mHalfHeight;
-	newCamera->mZoom = mZoom;
-	return newCamera;
+void Camera::setData(const ScriptData& data) {
+	mHalfWidth = data.intData.at("mHalfWidth");
+	mHalfHeight = data.intData.at("mHalfHeight");
+	mZoom = data.floatData.at("mZoom");
+}
+
+ScriptData Camera::getData() {
+	auto data = Script::getData();
+	data.intData["mHalfWidth"] = mHalfWidth;
+	data.intData["mHalfHeight"] = mHalfHeight;
+	data.floatData["mZoom"] = mZoom;
+	return std::move(data);
 }

@@ -15,11 +15,12 @@ public:
 	void reset();
 
 	void onUpdate() override;
+	void onDestroy() override;
 
-	std::shared_ptr<Script> clone() override;
 	std::string getName() override { return "EditorCameraController"; }
 
-	void onDestroy() override;
+	void setData(const ScriptData& data) override;
+	ScriptData getData() override;
 
 	float mMoveSpeed = 1000.0f;
 private:

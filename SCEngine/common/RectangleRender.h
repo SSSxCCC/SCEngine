@@ -10,7 +10,6 @@ public:
 	void onCreate() override;
 	void onDraw() override;
 	void onDestroy() override;
-	std::shared_ptr<Script> clone() override;
 	std::string getName() override { return "RectangleRender"; }
 private:
 	Shader *mShader;

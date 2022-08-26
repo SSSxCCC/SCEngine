@@ -28,8 +28,12 @@ void RigidBody::onDestroy() {
 	mBody = nullptr;
 }
 
-std::shared_ptr<Script> RigidBody::clone() {
-	auto newRigidBody = std::make_shared<RigidBody>();
-	newRigidBody->mBodyDef = mBodyDef;
-	return newRigidBody;
+void RigidBody::setData(const ScriptData& data) {
+	mBodyDef.type = static_cast<b2BodyType>(data.intData.at("mBodyDef.type"));
+}
+
+ScriptData RigidBody::getData() {
+	ScriptData data = Script::getData();
+	data.intData["mBodyDef.type"] = mBodyDef.type;
+	return std::move(data);
 }

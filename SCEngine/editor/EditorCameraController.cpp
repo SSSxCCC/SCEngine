@@ -51,12 +51,16 @@ void EditorCameraController::onUpdate() {
 	mGameObject->mTransform.mPosY += moveY * mMoveSpeed * mGameObject->mGameWorld->mDeltaTime;
 }
 
-std::shared_ptr<Script> EditorCameraController::clone() {
-	auto newEditorCameraController = std::make_shared<EditorCameraController>();
-	newEditorCameraController->mMoveSpeed = mMoveSpeed;
-	return newEditorCameraController;
-}
-
 void EditorCameraController::onDestroy() {
 	mCamera = nullptr;
+}
+
+void EditorCameraController::setData(const ScriptData& data) {
+	 mMoveSpeed = data.floatData.at("mMoveSpeed");
+}
+
+ScriptData EditorCameraController::getData() {
+	auto data = Script::getData();
+	data.floatData["mMoveSpeed"] = mMoveSpeed;
+	return data;
 }

@@ -69,7 +69,3 @@ void RectangleRender::onDestroy() {
 	glDeleteBuffers(1, &mVBO);
 	glDeleteBuffers(1, &mEBO);
 }
-
-std::shared_ptr<Script> RectangleRender::clone() {
-	return std::make_shared<RectangleRender>();
-}
