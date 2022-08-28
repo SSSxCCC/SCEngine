@@ -25,6 +25,8 @@ private:
 	GLFWwindow* mWindow = nullptr;
 };
 
-extern Input gInput;
+extern Input gInput, gEditorInput;
+
+extern bool gGameFocus, gEditorFocus;
 
 #endif // _Input_H_

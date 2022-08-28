@@ -1,3 +1,5 @@
 #include "core/Input.h"
 
-Input gInput;
+Input gInput, gEditorInput;
+
+bool gGameFocus, gEditorFocus;

@@ -23,28 +23,28 @@ void EditorCameraController::reset() {
 }
 
 void EditorCameraController::onUpdate() {
-	if (gInput.mScrollY > 0.0f) {
+	if (gEditorInput.mScrollY > 0.0f) {
 		zoomIn();
 	}
-	else if (gInput.mScrollY < 0.0f) {
+	else if (gEditorInput.mScrollY < 0.0f) {
 		zoomOut();
 	}
 
-	if (gInput.getKey(GLFW_KEY_HOME) == GLFW_PRESS) {
+	if (gEditorInput.getKey(GLFW_KEY_HOME) == GLFW_PRESS) {
 		reset();
 	}
 
 	float moveX = 0, moveY = 0;
-	if (gInput.getKey(GLFW_KEY_LEFT) == GLFW_PRESS || gInput.getKey(GLFW_KEY_A) == GLFW_PRESS) {
+	if (gEditorInput.getKey(GLFW_KEY_LEFT) == GLFW_PRESS || gEditorInput.getKey(GLFW_KEY_A) == GLFW_PRESS) {
 		moveX -= 1.0f;
 	}
-	if (gInput.getKey(GLFW_KEY_RIGHT) == GLFW_PRESS || gInput.getKey(GLFW_KEY_D) == GLFW_PRESS) {
+	if (gEditorInput.getKey(GLFW_KEY_RIGHT) == GLFW_PRESS || gEditorInput.getKey(GLFW_KEY_D) == GLFW_PRESS) {
 		moveX += 1.0f;
 	}
-	if (gInput.getKey(GLFW_KEY_UP) == GLFW_PRESS || gInput.getKey(GLFW_KEY_W) == GLFW_PRESS) {
+	if (gEditorInput.getKey(GLFW_KEY_UP) == GLFW_PRESS || gEditorInput.getKey(GLFW_KEY_W) == GLFW_PRESS) {
 		moveY += 1.0f;
 	}
-	if (gInput.getKey(GLFW_KEY_DOWN) == GLFW_PRESS || gInput.getKey(GLFW_KEY_S) == GLFW_PRESS) {
+	if (gEditorInput.getKey(GLFW_KEY_DOWN) == GLFW_PRESS || gEditorInput.getKey(GLFW_KEY_S) == GLFW_PRESS) {
 		moveY -= 1.0f;
 	}
 	mGameObject->mTransform.mPosX += moveX * mMoveSpeed * mGameObject->mGameWorld->mDeltaTime;

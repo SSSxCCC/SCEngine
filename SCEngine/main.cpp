@@ -28,11 +28,20 @@ void glfwErrorCallback(int error, const char* description) {
 
 static void ScrollCallback(GLFWwindow* window, double dx, double dy) {
 	ImGui_ImplGlfw_ScrollCallback(window, dx, dy);
+
+	if (gEditorFocus) {
+		gEditorInput.mScrollX = (float)dx;
+		gEditorInput.mScrollY = (float)dy;
+	}
+
+	if (gGameFocus) {
+		gInput.mScrollX = (float)dx;
+		gInput.mScrollY = (float)dy;
+	}
+
 	if (ImGui::GetIO().WantCaptureMouse) {
 		return;
 	}
-	gInput.mScrollX = (float) dx;
-	gInput.mScrollY = (float) dy;
 }
 
 static void WindowSizeCallback(GLFWwindow*, int width, int height) {
@@ -156,8 +165,7 @@ int main() {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	int width = 800 * gScale, height = 600 * gScale;
-	GLFWwindow* mainWindow = glfwCreateWindow(width, height, "SCEngine", NULL, NULL);
+	GLFWwindow* mainWindow = glfwCreateWindow(800 * gScale, 600 * gScale, "SCEngine", NULL, NULL);
 
 	if (mainWindow == NULL) {
 		fprintf(stderr, "Failed to create GLFW window.\n");
@@ -206,7 +214,8 @@ int main() {
 	auto cameraObject = std::make_shared<GameObject>();
 	cameraObject->mName = "Camera";
 	auto camera = std::make_shared<Camera>();
-	camera->setSize(width / gScale, height / gScale);
+	int editorWidth = 400 * gScale, editorHeight = 300 * gScale;
+	camera->setSize(editorWidth / gScale, editorHeight / gScale);
 	auto editorCameraController = std::make_shared<EditorCameraController>();
 	cameraObject->addScript(camera);
 	cameraObject->addScript(editorCameraController);
@@ -249,7 +258,34 @@ int main() {
 
 	GameWorldEditor worldEditor;
 
+	unsigned int fbo;
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+	unsigned int texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, editorWidth, editorHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+
+	unsigned int rbo;
+	glGenRenderbuffers(1, &rbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, editorWidth, editorHeight);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 	gInput.setWindow(mainWindow);
+	gEditorInput.setWindow(mainWindow);
 	float lastTime = glfwGetTime();
 	while (!glfwWindowShouldClose(mainWindow)) {
 		gameWorld->mCurrentTime = glfwGetTime();
@@ -257,12 +293,19 @@ int main() {
 		lastTime = gameWorld->mCurrentTime;
 
 		gInput.reset();
+		gEditorInput.reset();
 		glfwPollEvents();
 		processInput(mainWindow);
 		
 		//std::cout << "currentTime=" << currentTime << ", gCameraXY=" << gCameraX << "," << gCameraY << std::endl;
-		glfwGetWindowSize(mainWindow, &width, &height);
-		camera->setSize(width / gScale, height / gScale);
+		//glfwGetWindowSize(mainWindow, &width, &height);
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		glViewport(0, 0, editorWidth, editorHeight);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		gameWorld->mMainCamera->setSize(editorWidth / gScale, editorHeight / gScale);
+		gameWorld->update();
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 		int bufferWidth, bufferHeight;
 		glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);
 		glViewport(0, 0, bufferWidth, bufferHeight);
@@ -283,7 +326,41 @@ int main() {
 		}
 		ImGui::End();
 
-		gameWorld->update();
+		ImGui::Begin("editor");
+		gEditorFocus = ImGui::IsWindowFocused();
+		ImGui::Image((ImTextureID)texture, ImVec2(editorWidth, editorHeight), ImVec2(0, 1.0f), ImVec2(1.0f, 0));
+		ImVec2 windowSize = ImGui::GetWindowSize();
+		windowSize.y = std::max(windowSize.y - 50.0f, 1.0f);
+		if (editorWidth != windowSize.x || editorHeight != windowSize.y) {
+			editorWidth = windowSize.x;
+			editorHeight = windowSize.y;
+
+			glDeleteTextures(1, &texture);
+			glDeleteRenderbuffers(1, &rbo);
+
+			glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+			glGenTextures(1, &texture);
+			glBindTexture(GL_TEXTURE_2D, texture);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, editorWidth, editorHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glBindTexture(GL_TEXTURE_2D, 0);
+
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+
+			glGenRenderbuffers(1, &rbo);
+			glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, editorWidth, editorHeight);
+			glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+				std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		}
+		ImGui::End();
 
 		ImGui::ShowDemoWindow();
 
