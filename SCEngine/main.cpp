@@ -211,6 +211,8 @@ int main() {
 	ImFont* font = ImGui::GetIO().Fonts->AddFontDefault(&fontConfig);
 	//ImGui::GetStyle().ScaleAllSizes(gScale);
 
+	ImGui::GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
+
 	// Add some GameObject to game world
 	auto gameWorld = std::make_shared<GameWorld>();
 
