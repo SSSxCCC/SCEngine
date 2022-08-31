@@ -23,7 +23,7 @@ class GameObject : public std::enable_shared_from_this<GameObject> {
 public:
 	void create();
 	void update();
-	void draw(float* projectionMatrix);
+	void draw(float* projectionMatrix, bool forEditor = false);
 	void destroy();
 
 	// add a Script to this GameObject

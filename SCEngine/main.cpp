@@ -267,7 +267,7 @@ int main() {
 
 	GameWorldEditor worldEditor;
 
-	SubWindow editorWindow;
+	SubWindow editorWindow("editor");
 
 	gInput.setWindow(mainWindow);
 	gEditorInput.setWindow(mainWindow);
@@ -290,13 +290,12 @@ int main() {
 
 		editorWindow.update();
 		gEditorFocus = editorWindow.isFocus();
-
-		glBindFramebuffer(GL_FRAMEBUFFER, editorWindow.getFbo());
-		glViewport(0, 0, editorWindow.getWidth(), editorWindow.getHeight());
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		gameWorld->mEditorCamera->setSize(editorWindow.getWidth() / gScale, editorWindow.getHeight() / gScale);
 		gameWorld->update();
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		editorWindow.bind();
+		gameWorld->draw(true);
+		editorWindow.unbind();
 
 		int bufferWidth, bufferHeight;
 		glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);

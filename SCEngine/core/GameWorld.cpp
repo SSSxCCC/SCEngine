@@ -11,16 +11,16 @@ void GameWorld::create() {
 }
 
 void GameWorld::update() {
-	// First update game objects
 	for (const auto& [_, gameObject] : mGameObjects) {
 		gameObject->update();
 	}
+}
 
-	// Last draw all objects
-	glm::mat4 projection = mEditorCamera->buildProjectionMatrix();
+void GameWorld::draw(bool forEditor) {
+	glm::mat4 projection = forEditor ? mEditorCamera->buildProjectionMatrix() : mMainCamera->buildProjectionMatrix();
 	float* projectionMatrix = glm::value_ptr(projection);
 	for (const auto& [_, gameObject] : mGameObjects) {
-		gameObject->draw(projectionMatrix);
+		gameObject->draw(projectionMatrix, forEditor);
 	}
 }
 

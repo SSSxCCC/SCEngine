@@ -3,7 +3,7 @@
 #include "imgui/imgui.h"
 #include <iostream>
 
-SubWindow::SubWindow() {
+SubWindow::SubWindow(const std::string& title) : mTitle(title) {
 	mFocus = false;
 	// width and height will be set to ImGui window size
 	mWidth = 1;
@@ -20,7 +20,7 @@ SubWindow::~SubWindow() {
 }
 
 void SubWindow::update() {
-	ImGui::Begin("editor");
+	ImGui::Begin(mTitle.c_str());
 	mFocus = ImGui::IsWindowFocused();
 	ImGui::Image((ImTextureID)mTexture, ImVec2(mWidth, mHeight), ImVec2(0, 1.0f), ImVec2(1.0f, 0));
 	ImVec2 windowSize = ImGui::GetWindowSize();
@@ -57,5 +57,15 @@ void SubWindow::updateFrameBuffer() {
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void SubWindow::bind() {
+	glBindFramebuffer(GL_FRAMEBUFFER, mFbo);
+	glViewport(0, 0, mWidth, mHeight);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void SubWindow::unbind() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
