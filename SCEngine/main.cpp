@@ -308,32 +308,9 @@ int main() {
 		
 		//std::cout << "currentTime=" << currentTime << ", gCameraXY=" << gCameraX << "," << gCameraY << std::endl;
 		//glfwGetWindowSize(mainWindow, &width, &height);
-		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-		glViewport(0, 0, editorWidth, editorHeight);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		gameWorld->mMainCamera->setSize(editorWidth / gScale, editorHeight / gScale);
-		gameWorld->update();
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-		int bufferWidth, bufferHeight;
-		glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);
-		glViewport(0, 0, bufferWidth, bufferHeight);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
-
-		worldEditor.update(gameWorld);
-
-		ImGui::Begin("restart");
-		if (ImGui::Button("restart")) {
-			gameWorld->destroy();
-			GameWorldData gameWorldData = j;
-			gameWorld = GameWorld::create(gameWorldData);
-			gameWorld->create();
-		}
-		ImGui::End();
 
 		ImGui::Begin("editor");
 		gEditorFocus = ImGui::IsWindowFocused();
@@ -368,6 +345,29 @@ int main() {
 			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 				std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		}
+		ImGui::End();
+
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		glViewport(0, 0, editorWidth, editorHeight);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		gameWorld->mEditorCamera->setSize(editorWidth / gScale, editorHeight / gScale);
+		gameWorld->update();
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		int bufferWidth, bufferHeight;
+		glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);
+		glViewport(0, 0, bufferWidth, bufferHeight);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		worldEditor.update(gameWorld);
+
+		ImGui::Begin("restart");
+		if (ImGui::Button("restart")) {
+			gameWorld->destroy();
+			GameWorldData gameWorldData = j;
+			gameWorld = GameWorld::create(gameWorldData);
+			gameWorld->create();
 		}
 		ImGui::End();
 

@@ -17,7 +17,7 @@ void GameWorld::update() {
 	}
 
 	// Last draw all objects
-	glm::mat4 projection = mMainCamera->buildProjectionMatrix();
+	glm::mat4 projection = mEditorCamera->buildProjectionMatrix();
 	float* projectionMatrix = glm::value_ptr(projection);
 	for (const auto& [_, gameObject] : mGameObjects) {
 		gameObject->draw(projectionMatrix);

@@ -1,14 +1,28 @@
 #include "core/Camera.h"
 #include "core/GameObject.h"
 #include "core/GameWorld.h"
+#include "editor/EditorCameraController.h"
 
 void Camera::onCreate() {
-	mGameObject->mGameWorld->mMainCamera = std::dynamic_pointer_cast<Camera>(shared_from_this());
+	auto editorCameraController = mGameObject->getScript<EditorCameraController>();
+	if (editorCameraController) {
+		mEditor = true;
+		mGameObject->mGameWorld->mEditorCamera = std::dynamic_pointer_cast<Camera>(shared_from_this());
+	} else {
+		mEditor = false;
+		mGameObject->mGameWorld->mMainCamera = std::dynamic_pointer_cast<Camera>(shared_from_this());
+	}
 }
 
 void Camera::onDestroy() {
-	if (mGameObject->mGameWorld->mMainCamera == shared_from_this()) {
-		mGameObject->mGameWorld->mMainCamera = nullptr;
+	if (mEditor) {
+		if (mGameObject->mGameWorld->mEditorCamera == shared_from_this()) {
+			mGameObject->mGameWorld->mEditorCamera = nullptr;
+		}
+	} else {
+		if (mGameObject->mGameWorld->mMainCamera == shared_from_this()) {
+			mGameObject->mGameWorld->mMainCamera = nullptr;
+		}
 	}
 }
 

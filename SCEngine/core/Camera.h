@@ -22,6 +22,8 @@ public:
 	ScriptData getData() override;
 	int mHalfWidth, mHalfHeight;
 	float mZoom = 1.0f;
+private:
+	bool mEditor; // Am I the editor camera?
 };
 
 REGISTER_SCRIPT(Camera)
