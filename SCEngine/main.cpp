@@ -231,6 +231,13 @@ int main() {
 	cameraObject->addScript(editorCameraController);
 	gameWorld->addGameObject(cameraObject);
 
+	auto camera2Object = std::make_shared<GameObject>();
+	camera2Object->mName = "GameCamera";
+	auto camera2 = std::make_shared<Camera>();
+	camera2->setSize(400 * gScale / gScale, 300 * gScale / gScale); // TODO: remove this
+	camera2Object->addScript(camera2);
+	gameWorld->addGameObject(camera2Object);
+
 	auto rectangleRender = std::make_shared<RectangleRender>();
 	auto rigidBody = std::make_shared<RigidBody>();
 	rigidBody->mBodyDef.type = b2_dynamicBody;
