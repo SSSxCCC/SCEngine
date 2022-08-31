@@ -526,10 +526,12 @@ void PhysicsDebugDraw::onCreate() {
 }
 
 void PhysicsDebugDraw::onDraw(float* projectionMatrix, bool forEditor) {
-	mDebugDraw->setProjectionMatrix(projectionMatrix);
-	mDebugDraw->SetFlags(b2Draw::e_shapeBit | b2Draw::e_jointBit | b2Draw::e_aabbBit | b2Draw::e_centerOfMassBit);
-	mPhysicsWorld->mWorld->DebugDraw();
-	mDebugDraw->Flush();
+	if (forEditor) {
+		mDebugDraw->setProjectionMatrix(projectionMatrix);
+		mDebugDraw->SetFlags(b2Draw::e_shapeBit | b2Draw::e_jointBit | b2Draw::e_aabbBit | b2Draw::e_centerOfMassBit);
+		mPhysicsWorld->mWorld->DebugDraw();
+		mDebugDraw->Flush();
+	}
 }
 
 void PhysicsDebugDraw::onDestroy() {
