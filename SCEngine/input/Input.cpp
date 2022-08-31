@@ -1,5 +1,5 @@
 #include "input/Input.h"
 
-Input gInput, gEditorInput;
+Input gInput(false), gEditorInput(true);
 
 bool gGameFocus, gEditorFocus;
