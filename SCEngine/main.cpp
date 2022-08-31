@@ -19,6 +19,7 @@
 #include "editor/EditorCameraController.h"
 #include "editor/GameWorldEditor.h"
 #include "editor/PhysicsDebugDraw.h"
+#include "editor/SubWindow.h"
 #include "graphics/RectangleRender.h"
 #include "physics/PhysicsWorld.h"
 #include "physics/RigidBody.h"
@@ -223,8 +224,7 @@ int main() {
 	auto cameraObject = std::make_shared<GameObject>();
 	cameraObject->mName = "Camera";
 	auto camera = std::make_shared<Camera>();
-	int editorWidth = 400 * gScale, editorHeight = 300 * gScale;
-	camera->setSize(editorWidth / gScale, editorHeight / gScale);
+	camera->setSize(400 * gScale / gScale, 300 * gScale / gScale); // TODO: remove this
 	auto editorCameraController = std::make_shared<EditorCameraController>();
 	cameraObject->addScript(camera);
 	cameraObject->addScript(editorCameraController);
@@ -267,31 +267,7 @@ int main() {
 
 	GameWorldEditor worldEditor;
 
-	unsigned int fbo;
-	glGenFramebuffers(1, &fbo);
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-	unsigned int texture;
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, editorWidth, editorHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
-
-	unsigned int rbo;
-	glGenRenderbuffers(1, &rbo);
-	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, editorWidth, editorHeight);
-	glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
-
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	SubWindow editorWindow;
 
 	gInput.setWindow(mainWindow);
 	gEditorInput.setWindow(mainWindow);
@@ -312,46 +288,13 @@ int main() {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		ImGui::Begin("editor");
-		gEditorFocus = ImGui::IsWindowFocused();
-		ImGui::Image((ImTextureID)texture, ImVec2(editorWidth, editorHeight), ImVec2(0, 1.0f), ImVec2(1.0f, 0));
-		ImVec2 windowSize = ImGui::GetWindowSize();
-		windowSize.y = std::max(windowSize.y - 50.0f, 1.0f);
-		if (editorWidth != windowSize.x || editorHeight != windowSize.y) {
-			editorWidth = windowSize.x;
-			editorHeight = windowSize.y;
+		editorWindow.update();
+		gEditorFocus = editorWindow.isFocus();
 
-			glDeleteTextures(1, &texture);
-			glDeleteRenderbuffers(1, &rbo);
-
-			glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-			glGenTextures(1, &texture);
-			glBindTexture(GL_TEXTURE_2D, texture);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, editorWidth, editorHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glBindTexture(GL_TEXTURE_2D, 0);
-
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
-
-			glGenRenderbuffers(1, &rbo);
-			glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, editorWidth, editorHeight);
-			glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
-
-			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-				std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		}
-		ImGui::End();
-
-		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-		glViewport(0, 0, editorWidth, editorHeight);
+		glBindFramebuffer(GL_FRAMEBUFFER, editorWindow.getFbo());
+		glViewport(0, 0, editorWindow.getWidth(), editorWindow.getHeight());
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		gameWorld->mEditorCamera->setSize(editorWidth / gScale, editorHeight / gScale);
+		gameWorld->mEditorCamera->setSize(editorWindow.getWidth() / gScale, editorWindow.getHeight() / gScale);
 		gameWorld->update();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
