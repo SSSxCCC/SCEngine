@@ -275,7 +275,7 @@ int main() {
 
 	GameWorldEditor worldEditor;
 
-	SubWindow editorWindow("editor");
+	SubWindow editorWindow("editor"), gameWindow("game");
 
 	gInput.setWindow(mainWindow);
 	gEditorInput.setWindow(mainWindow);
@@ -297,13 +297,20 @@ int main() {
 		ImGui::NewFrame();
 
 		editorWindow.update();
+		gameWindow.update();
 		gEditorFocus = editorWindow.isFocus();
+		gGameFocus = gameWindow.isFocus();
 		gameWorld->mEditorCamera->setSize(editorWindow.getWidth() / gScale, editorWindow.getHeight() / gScale);
+		gameWorld->mMainCamera->setSize(gameWindow.getWidth() / gScale, gameWindow.getHeight() / gScale);
 		gameWorld->update();
 
 		editorWindow.bind();
 		gameWorld->draw(true);
 		editorWindow.unbind();
+
+		gameWindow.bind();
+		gameWorld->draw();
+		gameWindow.unbind();
 
 		int bufferWidth, bufferHeight;
 		glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);
