@@ -14,13 +14,15 @@
 
 #include "core/GameWorld.h"
 #include "core/GameObject.h"
-#include "core/Input.h"
 #include "core/Camera.h"
+#include "input/Input.h"
 #include "editor/EditorCameraController.h"
 #include "editor/GameWorldEditor.h"
-#include "common/RectangleRender.h"
-#include "common/RigidBody.h"
-#include "common/RectangleCollider.h"
+#include "editor/PhysicsDebugDraw.h"
+#include "graphics/RectangleRender.h"
+#include "physics/PhysicsWorld.h"
+#include "physics/RigidBody.h"
+#include "physics/RectangleCollider.h"
 
 void glfwErrorCallback(int error, const char* description) {
 	fprintf(stderr, "GLFW error occured. Code: %d. Description: %s\n", error, description);
@@ -210,6 +212,13 @@ int main() {
 
 	// Add some GameObject to game world
 	auto gameWorld = std::make_shared<GameWorld>();
+
+	auto physicsObject = std::make_shared<GameObject>();
+	auto physicsWorld = std::make_shared<PhysicsWorld>();
+	auto debugDraw = std::make_shared<PhysicsDebugDraw>();
+	physicsObject->addScript(physicsWorld);
+	physicsObject->addScript(debugDraw);
+	gameWorld->addGameObject(physicsObject);
 
 	auto cameraObject = std::make_shared<GameObject>();
 	cameraObject->mName = "Camera";

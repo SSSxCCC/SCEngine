@@ -8,7 +8,7 @@
 class RectangleRender : public Script {
 public:
 	void onCreate() override;
-	void onDraw() override;
+	void onDraw(float* projectionMatrix, bool forEditor) override;
 	void onDestroy() override;
 	std::string getName() override { return "RectangleRender"; }
 private:

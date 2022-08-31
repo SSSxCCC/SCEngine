@@ -1,4 +1,4 @@
-#include "common/RectangleCollider.h"
+#include "physics/RectangleCollider.h"
 #include "core/GameObject.h"
 
 void RectangleCollider::onCreate() {

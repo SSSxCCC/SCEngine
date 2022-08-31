@@ -1,12 +1,12 @@
-#include "common/RigidBody.h"
-#include "common/Collider.h"
+#include "physics/RigidBody.h"
+#include "physics/Collider.h"
 #include "core/GameObject.h"
 #include "core/GameWorld.h"
 
 void RigidBody::onCreate() {
 	mBodyDef.position.Set(mGameObject->mTransform.mPosX, mGameObject->mTransform.mPosY);
 	mBodyDef.angle = mGameObject->mTransform.mRotation;
-	mBody = mGameObject->mGameWorld->mPhysicsWorld.CreateBody(&mBodyDef);
+	mBody = mGameObject->mGameWorld->mPhysicsWorld->mWorld->CreateBody(&mBodyDef);
 }
 
 void RigidBody::onStart() {
@@ -24,7 +24,7 @@ void RigidBody::onUpdate() {
 }
 
 void RigidBody::onDestroy() {
-	mGameObject->mGameWorld->mPhysicsWorld.DestroyBody(mBody);
+	mGameObject->mGameWorld->mPhysicsWorld->mWorld->DestroyBody(mBody);
 	mBody = nullptr;
 }
 

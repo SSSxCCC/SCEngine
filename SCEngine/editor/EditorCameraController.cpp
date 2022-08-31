@@ -1,5 +1,5 @@
 #include "editor/EditorCameraController.h"
-#include "core/Input.h"
+#include "input/Input.h"
 #include "core/GameObject.h"
 #include "core/GameWorld.h"
 

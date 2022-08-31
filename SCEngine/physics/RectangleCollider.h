@@ -1,7 +1,7 @@
 #ifndef _RectangleCollider_H_
 #define _RectangleCollider_H_
 
-#include "common/Collider.h"
+#include "physics/Collider.h"
 
 class RectangleCollider : public Collider {
 public:

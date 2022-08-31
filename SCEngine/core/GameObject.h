@@ -21,9 +21,10 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(GameObjectData, id, name, transform, scriptsD
 // GameObject is a object in the game world. Attach GameObjectScript to this GameObject to implement game logic
 class GameObject : public std::enable_shared_from_this<GameObject> {
 public:
-	void onCreate();
-	void onUpdate();
-	void onDestroy();
+	void create();
+	void update();
+	void draw(float* projectionMatrix);
+	void destroy();
 
 	// add a Script to this GameObject
 	// warning: addScript should not add two scripts of same type

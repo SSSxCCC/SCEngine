@@ -1,13 +1,13 @@
 #include "core/GameObject.h"
 
-void GameObject::onCreate() {
+void GameObject::create() {
 	for (const auto& script : mScripts) {
 		script->onCreate();
 	}
 	mCreated = true;
 }
 
-void GameObject::onUpdate() {
+void GameObject::update() {
 	for (const auto& script : mScripts) {
 		if (!script->mStarted) {
 			// call Script::onStart once before Script::onUpdate get first called
@@ -16,13 +16,15 @@ void GameObject::onUpdate() {
 		}
 		script->onUpdate();
 	}
-	// call Script::onDraw every frame after Script::onUpdate get called
+}
+
+void GameObject::draw(float* projectionMatrix) {
 	for (const auto& script : mScripts) {
-		script->onDraw();
+		script->onDraw(projectionMatrix);
 	}
 }
 
-void GameObject::onDestroy() {
+void GameObject::destroy() {
 	for (const auto& script : mScripts) {
 		script->onDestroy();
 		script->mGameObject = nullptr;

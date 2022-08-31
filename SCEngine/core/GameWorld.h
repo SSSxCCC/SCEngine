@@ -3,11 +3,9 @@
 
 #include <memory>
 
-#include "box2d/box2d.h"
-
+#include "physics/PhysicsWorld.h"
 #include "core/GameObject.h"
 #include "core/Camera.h"
-#include "editor/DebugDraw.h"
 
 // Store all the data in a GameWorld
 struct GameWorldData {
@@ -31,21 +29,16 @@ public:
 	float mCurrentTime = 0.0f; // time since game start
 	float mDeltaTime = 0.0f;   // time spent in last frame
 
-	int velocityIterations = 8;
-	int positionIterations = 3;
-
-	b2Vec2 mGravity = b2Vec2(0.0f, -10.0f);
-	b2World mPhysicsWorld = b2World(mGravity); // the box2d physics world
-	DebugDraw mDebugDraw;
-
-	std::shared_ptr<Camera> mMainCamera;
+	std::shared_ptr<PhysicsWorld> mPhysicsWorld; // the box2d physics world wrapper
+	std::shared_ptr<Camera> mMainCamera; // the camera to display the game
+	std::shared_ptr<Camera> mEditorCamera; // the camera to display the editor
 private:
 	// generate a unique id for new added GameObject
 	int generateId();
 	int mCurrentId = 0;
 
-	std::vector<int> mGameObjectIds; // All GameObject ids in a order
-	std::unordered_map<int, std::shared_ptr<GameObject>> mGameObjects; // All GameObject in the world, key is the id of GameObject
+	std::vector<int> mGameObjectIds; // all GameObject ids in a order
+	std::unordered_map<int, std::shared_ptr<GameObject>> mGameObjects; // all GameObject in the world, key is the id of GameObject
 	bool mCreated = false; // have create called?
 
 friend class GameWorldEditor;

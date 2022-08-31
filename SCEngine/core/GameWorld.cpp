@@ -1,33 +1,30 @@
 #include "core/GameWorld.h"
 #include <iostream>
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 void GameWorld::create() {
-	mDebugDraw.Create(shared_from_this());
-	mPhysicsWorld.SetDebugDraw(&mDebugDraw);
 	for (const auto& [_, gameObject] : mGameObjects) {
-		gameObject->onCreate();
+		gameObject->create();
 	}
 	mCreated = true;
 }
 
 void GameWorld::update() {
-	// First update physics world
-	mPhysicsWorld.Step(mDeltaTime, velocityIterations, positionIterations);
-
-	// Then update game objects
+	// First update game objects
 	for (const auto& [_, gameObject] : mGameObjects) {
-		gameObject->onUpdate();
+		gameObject->update();
 	}
 
-	// Last debug draw the physics objects
-	mDebugDraw.SetFlags(b2Draw::e_shapeBit | b2Draw::e_jointBit | b2Draw::e_aabbBit | b2Draw::e_centerOfMassBit);
-	mPhysicsWorld.DebugDraw();
-	mDebugDraw.Flush();
+	// Last draw all objects
+	glm::mat4 projection = mMainCamera->buildProjectionMatrix();
+	float* projectionMatrix = glm::value_ptr(projection);
+	for (const auto& [_, gameObject] : mGameObjects) {
+		gameObject->draw(projectionMatrix);
+	}
 }
 
 void GameWorld::destroy() {
-	mDebugDraw.Destroy();
-
 	while (mGameObjectIds.size() > 0) {
 		removeGameObject(mGameObjectIds[mGameObjectIds.size() - 1]);
 	}
@@ -45,7 +42,7 @@ void GameWorld::addGameObject(const std::shared_ptr<GameObject>& gameObject) {
 	mGameObjects[gameObject->mId] = gameObject;
 	gameObject->mGameWorld = shared_from_this();
 	if (mCreated) {
-		gameObject->onCreate();
+		gameObject->create();
 	}
 }
 
@@ -54,7 +51,7 @@ void GameWorld::removeGameObject(int gameObjectId) {
 		std::cout << "GameWorld::removeGameObject GameObjectId is not exist, GameObjectId=" << gameObjectId << std::endl;
 		return;
 	}
-	mGameObjects[gameObjectId]->onDestroy();
+	mGameObjects[gameObjectId]->destroy();
 	mGameObjects[gameObjectId]->mGameWorld = nullptr;
 	mGameObjects.erase(gameObjectId);
 	auto iter = std::remove(mGameObjectIds.begin(), mGameObjectIds.end(), gameObjectId);

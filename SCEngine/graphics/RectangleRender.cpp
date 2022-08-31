@@ -1,4 +1,4 @@
-#include "common/RectangleRender.h"
+#include "graphics/RectangleRender.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -42,12 +42,11 @@ void RectangleRender::onCreate() {
 	glBindVertexArray(0);
 }
 
-void RectangleRender::onDraw() {
+void RectangleRender::onDraw(float* projectionMatrix, bool forEditor) {
 	glm::mat4 model = mGameObject->mTransform.buildModelMatrix();
-	glm::mat4 projection = mGameObject->mGameWorld->mMainCamera->buildProjectionMatrix();
 	mShader->use();
 	mShader->setMat4("model", glm::value_ptr(model));
-	mShader->setMat4("projection", glm::value_ptr(projection));
+	mShader->setMat4("projection", projectionMatrix);
 	glBindVertexArray(mVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, mVBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mEBO);

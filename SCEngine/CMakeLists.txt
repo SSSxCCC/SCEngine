@@ -4,7 +4,7 @@
 cmake_minimum_required (VERSION 3.12)
 
 # Add source to this project's executable.
-add_executable (SCEngine "main.cpp" "imgui_backends/imgui_impl_glfw.cpp" "imgui_backends/imgui_impl_opengl3.cpp" "common/RectangleCollider.cpp" "common/RectangleRender.cpp" "common/RigidBody.cpp" "core/Camera.cpp" "core/GameObject.cpp" "core/GameWorld.cpp" "editor/DeugDraw.cpp" "editor/EditorCameraController.cpp" "utility/Window.h" "core/Input.cpp" "core/Script.cpp" "editor/GameWorldEditor.h" "editor/GameWorldEditor.cpp")
+add_executable (SCEngine "main.cpp" "imgui_backends/imgui_impl_glfw.cpp" "imgui_backends/imgui_impl_opengl3.cpp" "physics/RectangleCollider.cpp" "graphics/RectangleRender.cpp" "physics/RigidBody.cpp" "physics/PhysicsWorld.cpp" "core/Camera.cpp" "core/GameObject.cpp" "core/GameWorld.cpp" "editor/PhysicsDeugDraw.cpp" "editor/EditorCameraController.cpp" "input/Input.cpp" "core/Script.cpp" "editor/GameWorldEditor.cpp")
 target_include_directories(SCEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 set_property(TARGET SCEngine PROPERTY CXX_STANDARD 20)
