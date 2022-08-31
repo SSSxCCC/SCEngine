@@ -215,6 +215,7 @@ int main() {
 	auto gameWorld = std::make_shared<GameWorld>();
 
 	auto physicsObject = std::make_shared<GameObject>();
+	physicsObject->mName = "PhysicsWorld";
 	auto physicsWorld = std::make_shared<PhysicsWorld>();
 	auto debugDraw = std::make_shared<PhysicsDebugDraw>();
 	physicsObject->addScript(physicsWorld);
@@ -222,7 +223,7 @@ int main() {
 	gameWorld->addGameObject(physicsObject);
 
 	auto cameraObject = std::make_shared<GameObject>();
-	cameraObject->mName = "Camera";
+	cameraObject->mName = "EditorCamera";
 	auto camera = std::make_shared<Camera>();
 	camera->setSize(400 * gScale / gScale, 300 * gScale / gScale); // TODO: remove this
 	auto editorCameraController = std::make_shared<EditorCameraController>();
