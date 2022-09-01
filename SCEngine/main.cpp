@@ -32,12 +32,12 @@ void glfwErrorCallback(int error, const char* description) {
 static void ScrollCallback(GLFWwindow* window, double dx, double dy) {
 	ImGui_ImplGlfw_ScrollCallback(window, dx, dy);
 
-	if (gEditorFocus) {
+	if (gEditorInput.isFocus()) {
 		gEditorInput.mScrollX = (float)dx;
 		gEditorInput.mScrollY = (float)dy;
 	}
 
-	if (gGameFocus) {
+	if (gInput.isFocus()) {
 		gInput.mScrollX = (float)dx;
 		gInput.mScrollY = (float)dy;
 	}
@@ -300,8 +300,8 @@ int main() {
 
 		editorWindow.update();
 		gameWindow.update();
-		gEditorFocus = editorWindow.isFocus();
-		gGameFocus = gameWindow.isFocus();
+		gEditorInput.setFocus(editorWindow.isFocus());
+		gInput.setFocus(gameWindow.isFocus());
 		gameWorld->mEditorCamera->setSize(editorWindow.getWidth() / gScale, editorWindow.getHeight() / gScale);
 		gameWorld->mMainCamera->setSize(gameWindow.getWidth() / gScale, gameWindow.getHeight() / gScale);
 		gameWorld->update();
