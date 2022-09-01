@@ -27,7 +27,7 @@ compile will fail due to redefinition. To solve this problem you can use STATIC_
 A mechanism for executing code statically.
 
 Usage example:
-STATIC_BLOCK(name) { // name can be any string
+STATIC_BLOCK_(name) { // name can be any string
 	// static code start
 	std::cout << "static_block!" << std::endl;
 	// static code end
