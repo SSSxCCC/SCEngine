@@ -32,15 +32,8 @@ void glfwErrorCallback(int error, const char* description) {
 static void ScrollCallback(GLFWwindow* window, double dx, double dy) {
 	ImGui_ImplGlfw_ScrollCallback(window, dx, dy);
 
-	if (gEditorInput.isFocus()) {
-		gEditorInput.mScrollX = (float)dx;
-		gEditorInput.mScrollY = (float)dy;
-	}
-
-	if (gInput.isFocus()) {
-		gInput.mScrollX = (float)dx;
-		gInput.mScrollY = (float)dy;
-	}
+	gEditorInput.setScroll((float)dx, (float)dy);
+	gInput.setScroll((float)dx, (float)dy);
 
 	if (ImGui::GetIO().WantCaptureMouse) {
 		return;
@@ -66,28 +59,6 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 			break;
 		}
 	}
-
-	/*if (action == GLFW_PRESS) {
-		if (key == GLFW_KEY_LEFT || key == GLFW_KEY_A) {
-			gCameraX -= 1;
-		} else if (key == GLFW_KEY_RIGHT || key == GLFW_KEY_D) {
-			gCameraX += 1;
-		} else if (key == GLFW_KEY_UP || key == GLFW_KEY_W) {
-			gCameraY += 1;
-		} else if (key == GLFW_KEY_DOWN || key == GLFW_KEY_S) {
-			gCameraY -= 1;
-		}
-	} else if (action == GLFW_RELEASE) {
-		if (key == GLFW_KEY_LEFT || key == GLFW_KEY_A) {
-			gCameraX += 1;
-		} else if (key == GLFW_KEY_RIGHT || key == GLFW_KEY_D) {
-			gCameraX -= 1;
-		} else if (key == GLFW_KEY_UP || key == GLFW_KEY_W) {
-			gCameraY -= 1;
-		} else if (key == GLFW_KEY_DOWN || key == GLFW_KEY_S) {
-			gCameraY += 1;
-		}
-	}*/
 }
 
 static void CharCallback(GLFWwindow* window, unsigned int c) {
@@ -96,37 +67,6 @@ static void CharCallback(GLFWwindow* window, unsigned int c) {
 
 static void MouseButtonCallback(GLFWwindow* window, int32 button, int32 action, int32 mods) {
 	ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
-
-	/*double xd, yd;
-	glfwGetCursorPos(window, &xd, &yd);
-	b2Vec2 ps((float)xd, (float)yd);
-
-	// Use the mouse to move things around.
-	if (button == GLFW_MOUSE_BUTTON_1) {
-		//<##>
-		//ps.Set(0, 0);
-		b2Vec2 pw = g_camera.ConvertScreenToWorld(ps);
-		if (action == GLFW_PRESS) {
-			if (mods == GLFW_MOD_SHIFT) {
-				s_test->ShiftMouseDown(pw);
-			} else {
-				s_test->MouseDown(pw);
-			}
-		}
-
-		if (action == GLFW_RELEASE) {
-			s_test->MouseUp(pw);
-		}
-	} else if (button == GLFW_MOUSE_BUTTON_2) {
-		if (action == GLFW_PRESS) {
-			s_clickPointWS = g_camera.ConvertScreenToWorld(ps);
-			s_rightMouseDown = true;
-		}
-
-		if (action == GLFW_RELEASE) {
-			s_rightMouseDown = false;
-		}
-	}*/
 }
 
 static void CursorPosCallback(GLFWwindow*, double xd, double yd) {
@@ -308,12 +248,16 @@ int main() {
 
 		editorWindow.update();
 		gEditorInput.setFocus(editorWindow.isFocus());
+		ImVec2 cursorScreenPos = editorWindow.getCursorScreenPos();
+		gEditorInput.setCursorOffset(cursorScreenPos.x, cursorScreenPos.y);
 		gameWorld->mEditorCamera->setSize(editorWindow.getWidth() / gScale, editorWindow.getHeight() / gScale);
 		if (editorMode) {
 			gameWorld->mEditorCamera->mGameObject->update();
 		} else {
 			gameWindow.update();
 			gInput.setFocus(gameWindow.isFocus());
+			ImVec2 cursorScreenPos = gameWindow.getCursorScreenPos();
+			gInput.setCursorOffset(cursorScreenPos.x, cursorScreenPos.y);
 			gameWorld->mMainCamera->setSize(gameWindow.getWidth() / gScale, gameWindow.getHeight() / gScale);
 
 			// only update gameWorld in game mode

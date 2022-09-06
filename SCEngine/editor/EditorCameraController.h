@@ -25,6 +25,8 @@ public:
 	float mMoveSpeed = 1000.0f;
 private:
 	std::shared_ptr<Camera> mCamera;
+	float mLastWorldX, mLastWorldY;
+	bool mDragging = false;
 };
 
 REGISTER_SCRIPT(EditorCameraController)

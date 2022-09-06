@@ -22,6 +22,7 @@ SubWindow::~SubWindow() {
 void SubWindow::update() {
 	ImGui::Begin(mTitle.c_str());
 	mFocus = ImGui::IsWindowFocused();
+	mCursorScreenPos = ImGui::GetCursorScreenPos();
 	ImGui::Image((ImTextureID)mTexture, ImVec2(mWidth, mHeight), ImVec2(0, 1.0f), ImVec2(1.0f, 0));
 	ImVec2 windowSize = ImGui::GetWindowSize();
 	windowSize.y = std::max(windowSize.y - 50.0f, 1.0f);
