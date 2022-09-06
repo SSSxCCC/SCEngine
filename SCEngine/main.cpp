@@ -155,6 +155,13 @@ void processInput(GLFWwindow* window) {
 	}*/
 }
 
+static void sCheckGLError() {
+	GLenum errCode = glGetError();
+	if (errCode != GL_NO_ERROR) {
+		fprintf(stderr, "OpenGL error = %d\n", errCode);
+	}
+}
+
 int main() {
 	glfwSetErrorCallback(glfwErrorCallback);
 
@@ -277,6 +284,7 @@ int main() {
 
 	GameWorldEditor worldEditor;
 
+	bool editorMode = true;
 	SubWindow editorWindow("editor"), gameWindow("game");
 
 	gInput.setWindow(mainWindow);
@@ -299,20 +307,25 @@ int main() {
 		ImGui::NewFrame();
 
 		editorWindow.update();
-		gameWindow.update();
 		gEditorInput.setFocus(editorWindow.isFocus());
-		gInput.setFocus(gameWindow.isFocus());
 		gameWorld->mEditorCamera->setSize(editorWindow.getWidth() / gScale, editorWindow.getHeight() / gScale);
-		gameWorld->mMainCamera->setSize(gameWindow.getWidth() / gScale, gameWindow.getHeight() / gScale);
-		gameWorld->update();
+		if (editorMode) {
+			gameWorld->mEditorCamera->mGameObject->update();
+		} else {
+			gameWindow.update();
+			gInput.setFocus(gameWindow.isFocus());
+			gameWorld->mMainCamera->setSize(gameWindow.getWidth() / gScale, gameWindow.getHeight() / gScale);
 
+			// only update gameWorld in game mode
+			gameWorld->update();
+
+			gameWindow.bind();
+			gameWorld->draw();
+			gameWindow.unbind();
+		}
 		editorWindow.bind();
 		gameWorld->draw(true);
 		editorWindow.unbind();
-
-		gameWindow.bind();
-		gameWorld->draw();
-		gameWindow.unbind();
 
 		int bufferWidth, bufferHeight;
 		glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);
@@ -321,19 +334,31 @@ int main() {
 
 		worldEditor.update(gameWorld);
 
-		ImGui::Begin("restart");
-		if (ImGui::Button("restart")) {
+		ImGui::Begin("Game");
+		static auto reloadGame = [&]() {
 			gameWorld->destroy();
 			GameWorldData gameWorldData = j;
 			gameWorld = GameWorld::create(gameWorldData);
 			gameWorld->create();
+		};
+		if (editorMode) {
+			if (ImGui::Button("Run")) {
+				editorMode = false;
+				reloadGame();
+			}
+		} else {
+			if (ImGui::Button("Stop")) {
+				editorMode = true;
+				reloadGame();
+			}
 		}
 		ImGui::End();
 
 		ImGui::ShowDemoWindow();
 
 		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData()); // TODO: fix GLError 1281 in this line when switch between game mode and editor mode!
+		sCheckGLError();
 
 		glfwSwapBuffers(mainWindow);
 	}

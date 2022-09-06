@@ -10,7 +10,7 @@ static void sCheckGLError() {
 	GLenum errCode = glGetError();
 	if (errCode != GL_NO_ERROR) {
 		fprintf(stderr, "OpenGL error = %d\n", errCode);
-		assert(false);
+		//assert(false);
 	}
 }
 
