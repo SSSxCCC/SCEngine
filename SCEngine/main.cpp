@@ -151,6 +151,7 @@ int main() {
 	}
 
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+	glEnable(GL_DEPTH_TEST);
 
 	// scale font so that we can see texts in high dpi display clearly
 	ImFontConfig fontConfig;
@@ -287,6 +288,7 @@ int main() {
 		};
 		if (editorMode) {
 			if (ImGui::Button("Run")) {
+				j = gameWorld->getData();
 				editorMode = false;
 				reloadGame();
 			}

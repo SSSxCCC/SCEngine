@@ -23,6 +23,9 @@ public:
 	float getFloat(const std::string& name) const { return floatData.at(name); }
 	int getInt(const std::string& name) const { return intData.at(name); }
 	std::string getString(const std::string& name) const { return stringData.at(name); }
+	void setFloat(const std::string& name, float value) { assert(floatData.contains(name)); floatData[name] = value; }
+	void setInt(const std::string& name, int value) { assert(intData.contains(name)); intData[name] = value; }
+	void setString(const std::string& name, const std::string& value) { assert(stringData.contains(name)); stringData[name] = value; }
 private:
 	// key: variable name, value: variable value
 	std::unordered_map<std::string, float> floatData;
