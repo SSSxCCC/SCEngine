@@ -17,6 +17,4 @@ target_link_libraries(SCEngine PUBLIC imgui)
 target_link_libraries(SCEngine PUBLIC nlohmann_json)
 
 install(TARGETS SCEngine DESTINATION bin)
-install(DIRECTORY "shaders"
-  DESTINATION bin
-  )
+install(DIRECTORY "shaders" DESTINATION bin)
