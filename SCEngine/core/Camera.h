@@ -4,6 +4,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "core/Script.h"
+#include "utility/Window.h"
 
 // Predefine GameWorld here to solve circular reference problem
 class GameWorld;
@@ -21,7 +22,7 @@ public:
 	void setData(const ScriptData& data) override;
 	ScriptData getData() override;
 	int mHalfWidth, mHalfHeight;
-	float mZoom = 1.0f;
+	float mZoom = 1.0f / gScale;
 private:
 	bool mEditor; // Am I the editor camera?
 };

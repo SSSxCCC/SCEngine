@@ -20,7 +20,7 @@ void EditorCameraController::zoomOut() {
 void EditorCameraController::reset() {
 	mGameObject->mTransform.mPosX = 0.0f;
 	mGameObject->mTransform.mPosY = 0.0f;
-	mCamera->mZoom = 1.0f;
+	mCamera->mZoom = 1.0f / gScale;
 }
 
 void EditorCameraController::onUpdate() {
@@ -42,16 +42,15 @@ void EditorCameraController::onUpdate() {
 		// move by mouse drag
 		float cursorX, cursorY;
 		gEditorInput.getCursorPosition(cursorX, cursorY);
-		float worldX, worldY;
-		mCamera->screenToWorld(cursorX, cursorY, worldX, worldY);
 		if (mDragging) {
+			float worldX, worldY;
+			mCamera->screenToWorld(cursorX, cursorY, worldX, worldY);
 			mGameObject->mTransform.mPosX += (mLastWorldX - worldX);
 			mGameObject->mTransform.mPosY += (mLastWorldY - worldY);
 		} else {
 			mDragging = true;
 		}
-		mLastWorldX = worldX;
-		mLastWorldY = worldY;
+		mCamera->screenToWorld(cursorX, cursorY, mLastWorldX, mLastWorldY);
 	} else {
 		mDragging = false;
 

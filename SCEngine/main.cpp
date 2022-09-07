@@ -174,7 +174,7 @@ int main() {
 	auto cameraObject = std::make_shared<GameObject>();
 	cameraObject->mName = "EditorCamera";
 	auto camera = std::make_shared<Camera>();
-	camera->setSize(400 * gScale / gScale, 300 * gScale / gScale); // TODO: remove this
+	camera->setSize(400, 300); // TODO: remove this
 	auto editorCameraController = std::make_shared<EditorCameraController>();
 	cameraObject->addScript(camera);
 	cameraObject->addScript(editorCameraController);
@@ -183,7 +183,7 @@ int main() {
 	auto camera2Object = std::make_shared<GameObject>();
 	camera2Object->mName = "GameCamera";
 	auto camera2 = std::make_shared<Camera>();
-	camera2->setSize(400 * gScale / gScale, 300 * gScale / gScale); // TODO: remove this
+	camera2->setSize(400, 300); // TODO: remove this
 	camera2Object->addScript(camera2);
 	gameWorld->addGameObject(camera2Object);
 
@@ -250,7 +250,7 @@ int main() {
 		gEditorInput.setFocus(editorWindow.isFocus());
 		ImVec2 cursorScreenPos = editorWindow.getCursorScreenPos();
 		gEditorInput.setCursorOffset(cursorScreenPos.x, cursorScreenPos.y);
-		gameWorld->mEditorCamera->setSize(editorWindow.getWidth() / gScale, editorWindow.getHeight() / gScale);
+		gameWorld->mEditorCamera->setSize(editorWindow.getWidth(), editorWindow.getHeight());
 		if (editorMode) {
 			gameWorld->mEditorCamera->mGameObject->update();
 		} else {
@@ -258,7 +258,7 @@ int main() {
 			gInput.setFocus(gameWindow.isFocus());
 			ImVec2 cursorScreenPos = gameWindow.getCursorScreenPos();
 			gInput.setCursorOffset(cursorScreenPos.x, cursorScreenPos.y);
-			gameWorld->mMainCamera->setSize(gameWindow.getWidth() / gScale, gameWindow.getHeight() / gScale);
+			gameWorld->mMainCamera->setSize(gameWindow.getWidth(), gameWindow.getHeight());
 
 			// only update gameWorld in game mode
 			gameWorld->update();
