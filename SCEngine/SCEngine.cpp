@@ -255,8 +255,7 @@ int startEditor() {
 		gameWorld->mEditorCamera->setSize(editorWindow.getWidth(), editorWindow.getHeight());
 		if (editorMode) {
 			gameWorld->mEditorCamera->mGameObject->update();
-		}
-		else {
+		} else {
 			gameWindow.update();
 			gInput.setFocus(gameWindow.isFocus());
 			ImVec2 cursorScreenPos = gameWindow.getCursorScreenPos();
@@ -293,9 +292,23 @@ int startEditor() {
 				j = gameWorld->getData();
 				editorMode = false;
 				reloadGame();
+			} else {
+				if (ImGui::Button("Save")) {
+					j = gameWorld->getData();
+					std::ofstream o("GameWorldData.json");
+					o << std::setw(4) << j << std::endl;
+				}
+				if (ImGui::Button("Load")) {
+					std::ifstream i("GameWorldData.json");
+					if (i.good()) {
+						i >> j;
+						reloadGame();
+					} else {
+						std::cout << "Load error: failed to open GameWorldData.json" << std::endl;
+					}
+				}
 			}
-		}
-		else {
+		} else {
 			if (ImGui::Button("Stop")) {
 				editorMode = true;
 				reloadGame();
