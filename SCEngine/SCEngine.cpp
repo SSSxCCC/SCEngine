@@ -176,7 +176,6 @@ int startEditor() {
 	auto cameraObject = std::make_shared<GameObject>();
 	cameraObject->mName = "EditorCamera";
 	auto camera = std::make_shared<Camera>();
-	camera->setSize(400, 300); // TODO: remove this
 	auto editorCameraController = std::make_shared<EditorCameraController>();
 	cameraObject->addScript(camera);
 	cameraObject->addScript(editorCameraController);
@@ -185,7 +184,6 @@ int startEditor() {
 	auto camera2Object = std::make_shared<GameObject>();
 	camera2Object->mName = "GameCamera";
 	auto camera2 = std::make_shared<Camera>();
-	camera2->setSize(400, 300); // TODO: remove this
 	camera2Object->addScript(camera2);
 	gameWorld->addGameObject(camera2Object);
 
