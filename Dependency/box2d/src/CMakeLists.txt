@@ -112,18 +112,18 @@ set_target_properties(box2d PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
 )
-
+#[[
 if(MSVC)
   set_target_properties(box2d PROPERTIES
     COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     COMPILE_PDB_NAME box2d
   )
 
-#  install(
-#    FILES "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/box2d.pdb"
-#    DESTINATION ${CMAKE_INSTALL_LIBDIR}
-#    OPTIONAL
-#  )
+  install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/box2d.pdb"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    OPTIONAL
+  )
 endif()
 
 if (BUILD_SHARED_LIBS)
@@ -161,3 +161,4 @@ install(
   FILES "${CMAKE_CURRENT_BINARY_DIR}/box2dConfigVersion.cmake"
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/box2d"
 )
+]]
