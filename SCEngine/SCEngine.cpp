@@ -84,6 +84,22 @@ static void CursorPosCallback(GLFWwindow*, double xd, double yd) {
 	}*/
 }
 
+static void WindowContentScaleCallback(GLFWwindow* window, float xscale, float yscale) {
+	gScale = xscale;
+	if (xscale != yscale) {
+		std::cout << "WindowContentScaleCallback: xscale and yscale are not equal! xcale=" << xscale << ", yscale=" << yscale << std::endl;
+		gScale = (xscale + yscale) / 2.0f;
+	}
+	// scale font so that we can see texts in high dpi display clearly
+	ImFontConfig fontConfig;
+	fontConfig.SizePixels = 13.0f * gScale;
+	ImGui::GetIO().Fonts->Clear();
+	ImFont* font = ImGui::GetIO().Fonts->AddFontDefault(&fontConfig);
+	//ImGui::GetStyle().ScaleAllSizes(gScale);
+	//ImGui::GetIO().Fonts->Build();
+	ImGui_ImplOpenGL3_CreateFontsTexture();
+}
+
 void processInput(GLFWwindow* window) {
 	/*if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
 		gCameraX -= 1;
@@ -116,7 +132,7 @@ int startEditor() {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* mainWindow = glfwCreateWindow(800 * gScale, 600 * gScale, "SCEngine", NULL, NULL);
+	GLFWwindow* mainWindow = glfwCreateWindow(1920, 1080, "SCEngine", NULL, NULL);
 
 	if (mainWindow == NULL) {
 		fprintf(stderr, "Failed to create GLFW window.\n");
@@ -151,14 +167,13 @@ int startEditor() {
 		assert(false);
 	}
 
+	glfwSetWindowContentScaleCallback(mainWindow, WindowContentScaleCallback);
+	float xscale, yscale;
+	glfwGetWindowContentScale(mainWindow, &xscale, &yscale);
+	WindowContentScaleCallback(mainWindow, xscale, yscale);
+	
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
-
-	// scale font so that we can see texts in high dpi display clearly
-	ImFontConfig fontConfig;
-	fontConfig.SizePixels = 13.0f * gScale;
-	ImFont* font = ImGui::GetIO().Fonts->AddFontDefault(&fontConfig);
-	//ImGui::GetStyle().ScaleAllSizes(gScale);
 
 	ImGui::GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
 
