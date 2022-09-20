@@ -34,7 +34,7 @@ void EditorCameraController::onUpdate() {
 	}
 
 	// press home key to reset
-	if (gEditorInput.getKey(GLFW_KEY_HOME) == GLFW_PRESS) {
+	/*if (gEditorInput.getKey(GLFW_KEY_HOME) == GLFW_PRESS) {
 		reset();
 	}
 
@@ -70,7 +70,7 @@ void EditorCameraController::onUpdate() {
 		}
 		mGameObject->mTransform.mPosX += moveX * mMoveSpeed * mGameObject->mGameWorld->mDeltaTime;
 		mGameObject->mTransform.mPosY += moveY * mMoveSpeed * mGameObject->mGameWorld->mDeltaTime;
-	}
+	}*/
 }
 
 void EditorCameraController::onDestroy() {

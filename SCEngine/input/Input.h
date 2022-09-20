@@ -1,8 +1,6 @@
 #ifndef _Input_H_
 #define _Input_H_
 
-#include "glfw/glfw3.h"
-
 // handle input in game
 class Input {
 public:
@@ -12,11 +10,13 @@ public:
 	}
 
 	int getKey(int key) {
-		return mFocus ? glfwGetKey(mWindow, key) : GLFW_RELEASE;
+		//return mFocus ? glfwGetKey(mWindow, key) : GLFW_RELEASE;
+		return 0;
 	}
 
 	int getMouseButton(int button) {
-		return mFocus ? glfwGetMouseButton(mWindow, button) : GLFW_RELEASE;
+		//return mFocus ? glfwGetMouseButton(mWindow, button) : GLFW_RELEASE;
+		return 0;
 	}
 
 	void getScroll(float& scrollX, float& scrollY) {
@@ -25,14 +25,11 @@ public:
 	}
 
 	void getCursorPosition(float& x, float& y) {
-		double xpos, ypos;
-		glfwGetCursorPos(mWindow, &xpos, &ypos);
-		x = xpos - mCursorOffsetX;
-		y = ypos - mCursorOffsetY;
-	}
-
-	void setWindow(GLFWwindow* window) {
-		mWindow = window;
+		//double xpos, ypos;
+		//glfwGetCursorPos(mWindow, &xpos, &ypos);
+		//x = xpos - mCursorOffsetX;
+		//y = ypos - mCursorOffsetY;
+		x = 0; y = 0;
 	}
 
 	void setFocus(bool focus) {
@@ -49,7 +46,6 @@ public:
 		mCursorOffsetY = offsetY;
 	}
 private:
-	GLFWwindow* mWindow = nullptr;
 	bool mFocus;
 	float mScrollX, mScrollY;
 	float mCursorOffsetX, mCursorOffsetY;

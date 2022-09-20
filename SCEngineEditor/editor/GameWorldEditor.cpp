@@ -1,4 +1,4 @@
-#include "editor/GameWorldEditor.h"
+/*#include "editor/GameWorldEditor.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_stdlib.h"
 #include "glm/glm.hpp"
@@ -71,4 +71,4 @@ void GameWorldEditor::update(const std::shared_ptr<GameWorld>& gameWorld) {
 
 		ImGui::End();
 	}
-}
+}*/

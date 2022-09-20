@@ -2,183 +2,32 @@
 
 #include <iostream>
 
-#include "glad/gl.h"
-
-#include "GLFW/glfw3.h"
-
-#include "imgui/imgui.h"
-#include "imgui_backends/imgui_impl_glfw.h"
-#include "imgui_backends/imgui_impl_opengl3.h"
-
 #include "box2d/box2d.h"
 
 #include "utility/Window.h"
-
 #include "input/Input.h"
-
 #include "core/GameWorld.h"
-
 #include "graphics/RectangleRender.h"
 #include "physics/RigidBody.h"
 #include "physics/RectangleCollider.h"
 #include "editor/EditorCameraController.h"
 #include "editor/PhysicsDebugDraw.h"
-#include "editor/GameWorldEditor.h"
-#include "editor/SubWindow.h"
 
-void glfwErrorCallback(int error, const char* description) {
-	fprintf(stderr, "GLFW error occured. Code: %d. Description: %s\n", error, description);
-}
+std::shared_ptr<GameWorld> gameWorld;
+nlohmann::json j;
+long long startTime;
 
-static void ScrollCallback(GLFWwindow* window, double dx, double dy) {
-	ImGui_ImplGlfw_ScrollCallback(window, dx, dy);
+void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer) {
+	openGLPointer.apply();
+	callbackPointer.mScrollCallback = [](double dx, double dy) {
+		gEditorInput.setScroll((float)dx, (float)dy);
+		gInput.setScroll((float)dx, (float)dy);
+	};
 
-	gEditorInput.setScroll((float)dx, (float)dy);
-	gInput.setScroll((float)dx, (float)dy);
-
-	if (ImGui::GetIO().WantCaptureMouse) {
-		return;
-	}
-}
-
-static void WindowSizeCallback(GLFWwindow*, int width, int height) {
-	//gCamera.setSize(width, height);
-}
-
-static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-	ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
-	if (ImGui::GetIO().WantCaptureKeyboard) {
-		return;
-	}
-
-	if (action == GLFW_PRESS) {
-		switch (key) {
-		case GLFW_KEY_ESCAPE:
-			glfwSetWindowShouldClose(window, GL_TRUE);
-			break;
-		default:
-			break;
-		}
-	}
-}
-
-static void CharCallback(GLFWwindow* window, unsigned int c) {
-	ImGui_ImplGlfw_CharCallback(window, c);
-}
-
-static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-	ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
-}
-
-static void CursorPosCallback(GLFWwindow*, double xd, double yd) {
-	/*b2Vec2 ps((float)xd, (float)yd);
-
-	b2Vec2 pw = g_camera.ConvertScreenToWorld(ps);
-	s_test->MouseMove(pw);
-
-	if (s_rightMouseDown) {
-		b2Vec2 diff = pw - s_clickPointWS;
-		g_camera.m_center.x -= diff.x;
-		g_camera.m_center.y -= diff.y;
-		s_clickPointWS = g_camera.ConvertScreenToWorld(ps);
-	}*/
-}
-
-static void WindowContentScaleCallback(GLFWwindow* window, float xscale, float yscale) {
-	gScale = xscale;
-	if (xscale != yscale) {
-		std::cout << "WindowContentScaleCallback: xscale and yscale are not equal! xcale=" << xscale << ", yscale=" << yscale << std::endl;
-		gScale = (xscale + yscale) / 2.0f;
-	}
-	// scale font so that we can see texts in high dpi display clearly
-	ImFontConfig fontConfig;
-	fontConfig.SizePixels = 13.0f * gScale;
-	ImGui::GetIO().Fonts->Clear();
-	ImFont* font = ImGui::GetIO().Fonts->AddFontDefault(&fontConfig);
-	//ImGui::GetStyle().ScaleAllSizes(gScale);
-	//ImGui::GetIO().Fonts->Build();
-	ImGui_ImplOpenGL3_CreateFontsTexture();
-}
-
-void processInput(GLFWwindow* window) {
-	/*if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-		gCameraX -= 1;
-	} else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		gCameraX += 1;
-	} else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-		gCameraY += 1;
-	} else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-		gCameraY -= 1;
-	}*/
-}
-
-static void sCheckGLError() {
-	GLenum errCode = glGetError();
-	if (errCode != GL_NO_ERROR) {
-		fprintf(stderr, "OpenGL error = %d\n", errCode);
-	}
-}
-
-int startEditor() {
-	glfwSetErrorCallback(glfwErrorCallback);
-
-	if (glfwInit() != GLFW_TRUE) {
-		fprintf(stderr, "Failed to initialize GLFW\n");
-		return -1;
-	}
-
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-	GLFWwindow* mainWindow = glfwCreateWindow(1920, 1080, "SCEngine", NULL, NULL);
-
-	if (mainWindow == NULL) {
-		fprintf(stderr, "Failed to create GLFW window.\n");
-		glfwTerminate();
-		return -1;
-	}
-
-	glfwMakeContextCurrent(mainWindow);
-
-	int version = gladLoadGL(glfwGetProcAddress);
-	printf("GLAD %d.%d\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
-	printf("OpenGL %s, GLSL %s\n", glGetString(GL_VERSION), glGetString(GL_SHADING_LANGUAGE_VERSION));
 	printf("Box2D Version %d.%d.%d\n", b2_version.major, b2_version.minor, b2_version.revision);
 
-	glfwSetScrollCallback(mainWindow, ScrollCallback);
-	glfwSetWindowSizeCallback(mainWindow, WindowSizeCallback);
-	glfwSetKeyCallback(mainWindow, KeyCallback);
-	glfwSetCharCallback(mainWindow, CharCallback);
-	glfwSetMouseButtonCallback(mainWindow, MouseButtonCallback);
-	glfwSetCursorPosCallback(mainWindow, CursorPosCallback);
-
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-
-	if (!ImGui_ImplGlfw_InitForOpenGL(mainWindow, false)) {
-		printf("ImGui_ImplGlfw_InitForOpenGL failed\n");
-		assert(false);
-	}
-
-	if (!ImGui_ImplOpenGL3_Init(NULL)) {
-		printf("ImGui_ImplOpenGL3_Init failed\n");
-		assert(false);
-	}
-
-	glfwSetWindowContentScaleCallback(mainWindow, WindowContentScaleCallback);
-	float xscale, yscale;
-	glfwGetWindowContentScale(mainWindow, &xscale, &yscale);
-	WindowContentScaleCallback(mainWindow, xscale, yscale);
-	
-	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-	glEnable(GL_DEPTH_TEST);
-
-	ImGui::GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
-
 	// Add some GameObject to game world
-	auto gameWorld = std::make_shared<GameWorld>();
+	gameWorld = std::make_shared<GameWorld>();
 
 	auto physicsObject = std::make_shared<GameObject>();
 	physicsObject->mName = "PhysicsWorld";
@@ -234,119 +83,74 @@ int startEditor() {
 
 	gameWorld->create();
 
-	nlohmann::json j = gameWorld->getData();
+	j = gameWorld->getData();
 	std::cout << j << std::endl;
 
-	GameWorldEditor worldEditor;
-
-	bool editorMode = true;
-	SubWindow editorWindow("editor"), gameWindow("game");
-
-	gInput.setWindow(mainWindow);
-	gEditorInput.setWindow(mainWindow);
-	float lastTime = glfwGetTime();
-	while (!glfwWindowShouldClose(mainWindow)) {
-		gameWorld->mCurrentTime = glfwGetTime();
-		gameWorld->mDeltaTime = gameWorld->mCurrentTime - lastTime;
-		lastTime = gameWorld->mCurrentTime;
-
-		gInput.reset();
-		gEditorInput.reset();
-		glfwPollEvents();
-		processInput(mainWindow);
-
-		//std::cout << "currentTime=" << currentTime << ", gCameraXY=" << gCameraX << "," << gCameraY << std::endl;
-		//glfwGetWindowSize(mainWindow, &width, &height);
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-
-		editorWindow.update();
-		gEditorInput.setFocus(editorWindow.isFocus());
-		ImVec2 cursorScreenPos = editorWindow.getCursorScreenPos();
-		gEditorInput.setCursorOffset(cursorScreenPos.x, cursorScreenPos.y);
-		gameWorld->mEditorCamera->setSize(editorWindow.getWidth(), editorWindow.getHeight());
-		if (editorMode) {
-			gameWorld->mEditorCamera->mGameObject->update();
-		} else {
-			gameWindow.update();
-			gInput.setFocus(gameWindow.isFocus());
-			ImVec2 cursorScreenPos = gameWindow.getCursorScreenPos();
-			gInput.setCursorOffset(cursorScreenPos.x, cursorScreenPos.y);
-			gameWorld->mMainCamera->setSize(gameWindow.getWidth(), gameWindow.getHeight());
-
-			// only update gameWorld in game mode
-			gameWorld->update();
-
-			gameWindow.bind();
-			gameWorld->draw();
-			gameWindow.unbind();
-		}
-		editorWindow.bind();
-		gameWorld->draw(true);
-		editorWindow.unbind();
-
-		int bufferWidth, bufferHeight;
-		glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);
-		glViewport(0, 0, bufferWidth, bufferHeight);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		worldEditor.update(gameWorld);
-
-		ImGui::Begin("Game");
-		static auto reloadGame = [&]() {
-			gameWorld->destroy();
-			GameWorldData gameWorldData = j;
-			gameWorld = GameWorld::create(gameWorldData);
-			gameWorld->create();
-		};
-		if (editorMode) {
-			if (ImGui::Button("Run")) {
-				j = gameWorld->getData();
-				editorMode = false;
-				reloadGame();
-			} else {
-				if (ImGui::Button("Save")) {
-					j = gameWorld->getData();
-					std::ofstream o("GameWorldData.json");
-					o << std::setw(4) << j << std::endl;
-				}
-				if (ImGui::Button("Load")) {
-					std::ifstream i("GameWorldData.json");
-					if (i.good()) {
-						i >> j;
-						reloadGame();
-					} else {
-						std::cout << "Load error: failed to open GameWorldData.json" << std::endl;
-					}
-				}
-			}
-		} else {
-			if (ImGui::Button("Stop")) {
-				editorMode = true;
-				reloadGame();
-			}
-		}
-		ImGui::End();
-
-		ImGui::ShowDemoWindow();
-
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData()); // TODO: fix GLError 1281 in this line when switch between game mode and editor mode!
-		sCheckGLError();
-
-		glfwSwapBuffers(mainWindow);
-	}
-
-	gameWorld->destroy();
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	glfwTerminate();
-
-	std::cout << "Hello CMake." << std::endl;
-	return 0;
+	startTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
-int startGame() {
-	return 0;
+void doFrame(bool editorMode) {
+	float currentTime = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - startTime) / 1000.0f;
+	gameWorld->mDeltaTime = currentTime - gameWorld->mCurrentTime;
+	gameWorld->mCurrentTime = currentTime;
+	//std::cout << "editorMode=" << editorMode << ", currentTime=" << gameWorld->mCurrentTime << ", deltaTime=" << gameWorld->mDeltaTime << std::endl;
+
+	if (editorMode) {
+		gameWorld->mEditorCamera->mGameObject->update(); // only update EditorCamera in editor mode
+	} else {
+		gameWorld->update();
+	}
+}
+
+void doEditorFrame(bool focus, int with, int height) {
+	gEditorInput.setFocus(focus);
+	//gEditorInput.setCursorOffset(cursorOffsetX, cursorOffsetY);
+	gameWorld->mEditorCamera->setSize(with, height);
+	gameWorld->draw(true);
+	gEditorInput.reset();
+}
+
+void doGameFrame(bool focus, int with, int height) {
+	gInput.setFocus(focus);
+	//gInput.setCursorOffset(cursorScreenPos.x, cursorScreenPos.y);
+	gameWorld->mMainCamera->setSize(with, height);
+	gameWorld->draw();
+	gInput.reset();
+}
+
+static auto reloadGame = [&]() {
+	gameWorld->destroy();
+	GameWorldData gameWorldData = j;
+	gameWorld = GameWorld::create(gameWorldData);
+	gameWorld->create();
+};
+
+void runGame() {
+	j = gameWorld->getData();
+	reloadGame();
+}
+
+void stopGame() {
+	reloadGame();
+}
+
+void save() {
+	j = gameWorld->getData();
+	std::ofstream o("GameWorldData.json");
+	o << std::setw(4) << j << std::endl;
+}
+
+void load() {
+	std::ifstream i("GameWorldData.json");
+	if (i.good()) {
+		i >> j;
+		reloadGame();
+	} else {
+		std::cout << "Load error: failed to open GameWorldData.json" << std::endl;
+	}
+}
+
+void close() {
+	gameWorld->destroy();
+	gameWorld = nullptr;
 }

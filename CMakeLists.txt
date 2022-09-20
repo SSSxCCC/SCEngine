@@ -6,6 +6,8 @@ cmake_minimum_required (VERSION 3.12)
 project ("SCEngine" VERSION 0.1)
 
 add_subdirectory ("SCEngine")
+add_subdirectory ("SCEngineEditor")
+add_subdirectory ("SCEngineCommon")
 
 add_subdirectory ("Dependency/box2d/src")
 add_subdirectory ("Dependency/glad")

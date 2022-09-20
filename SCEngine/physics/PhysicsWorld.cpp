@@ -10,6 +10,7 @@ void PhysicsWorld::onCreate() {
 void PhysicsWorld::onUpdate() {
 	int velocityIterations = 8;
 	int positionIterations = 3;
+	// TODO: use fixed time to step
 	mWorld->Step(mGameObject->mGameWorld->mDeltaTime, velocityIterations, positionIterations);
 }
 

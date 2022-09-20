@@ -1,10 +1,25 @@
 #ifndef _SCEngine_H_
 #define _SCEngine_H_
 
-// the main function to launch editor
-int startEditor();
+#include "common/OpenGLPointer.h"
+#include "common/CallbackPointer.h"
 
-// the main function to launch game
-int startGame();
+extern "C" __declspec(dllexport) void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer);
+
+extern "C" __declspec(dllexport) void doFrame(bool editorMode);
+
+extern "C" __declspec(dllexport) void doEditorFrame(bool focus, int with, int height);
+
+extern "C" __declspec(dllexport) void doGameFrame(bool focus, int with, int height);
+
+extern "C" __declspec(dllexport) void runGame();
+
+extern "C" __declspec(dllexport) void stopGame();
+
+extern "C" __declspec(dllexport) void save();
+
+extern "C" __declspec(dllexport) void load();
+
+extern "C" __declspec(dllexport) void close();
 
 #endif // _SCEngine_H_
