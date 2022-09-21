@@ -11,6 +11,9 @@ public:
 	void onDestroy() override;
 	std::string getName() override { return "PhysicsWorld"; }
 	b2World* mWorld;
+	int mFps = 120;
+private:
+	float mLastStepTime = 0.0f;
 };
 REGISTER_SCRIPT(PhysicsWorld)
 

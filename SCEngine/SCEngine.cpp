@@ -15,7 +15,7 @@
 
 std::shared_ptr<GameWorld> gameWorld;
 nlohmann::json j;
-long long startTime;
+std::chrono::steady_clock::time_point startTime;
 
 void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer) {
 	openGLPointer.apply();
@@ -86,11 +86,11 @@ void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer) {
 	j = gameWorld->getData();
 	std::cout << j << std::endl;
 
-	startTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	startTime = std::chrono::steady_clock::now();
 }
 
 void doFrame(bool editorMode) {
-	float currentTime = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - startTime) / 1000.0f;
+	float currentTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - startTime).count() / 1000000000.0f;
 	gameWorld->mDeltaTime = currentTime - gameWorld->mCurrentTime;
 	gameWorld->mCurrentTime = currentTime;
 	//std::cout << "editorMode=" << editorMode << ", currentTime=" << gameWorld->mCurrentTime << ", deltaTime=" << gameWorld->mDeltaTime << std::endl;

@@ -10,8 +10,11 @@ void PhysicsWorld::onCreate() {
 void PhysicsWorld::onUpdate() {
 	int velocityIterations = 8;
 	int positionIterations = 3;
-	// TODO: use fixed time to step
-	mWorld->Step(mGameObject->mGameWorld->mDeltaTime, velocityIterations, positionIterations);
+	float timeStep = 1.0f / mFps;
+	if (mGameObject->mGameWorld->mCurrentTime - mLastStepTime >= timeStep) {
+		mLastStepTime = mGameObject->mGameWorld->mCurrentTime;
+		mWorld->Step(timeStep, velocityIterations, positionIterations);
+	}
 }
 
 void PhysicsWorld::onDestroy() {
