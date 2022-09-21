@@ -5,17 +5,10 @@
 #include <memory>
 #include "core/Script.h"
 #include "core/Transform.h"
+#include "data/GameObjectData.h"
 
 // Predefine GameWorld here to solve circular reference problem
 class GameWorld;
-
-// Store all the data in a GameObject
-struct GameObjectData {
-	int id;
-	std::string name;
-	std::vector<ScriptData> scriptsData;
-};
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(GameObjectData, id, name, scriptsData)
 
 // GameObject is a object in the game world. Attach GameObjectScript to this GameObject to implement game logic
 class GameObject : public std::enable_shared_from_this<GameObject> {

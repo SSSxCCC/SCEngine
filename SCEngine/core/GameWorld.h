@@ -6,12 +6,7 @@
 #include "physics/PhysicsWorld.h"
 #include "core/GameObject.h"
 #include "core/Camera.h"
-
-// Store all the data in a GameWorld
-struct GameWorldData {
-	std::vector<GameObjectData> gameObjectsData;
-};
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(GameWorldData, gameObjectsData)
+#include "data/GameWorldData.h"
 
 // GameWorld stores all GameObject in the game
 class GameWorld : public std::enable_shared_from_this<GameWorld> {
