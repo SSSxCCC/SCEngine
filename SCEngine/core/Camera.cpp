@@ -27,7 +27,8 @@ void Camera::onDestroy() {
 }
 
 glm::mat4 Camera::buildProjectionMatrix() {
-	glm::vec3 cameraPos = glm::vec3(mGameObject->mTransform.mPosX, mGameObject->mTransform.mPosY, mGameObject->mTransform.mZ);
+	auto transform = mGameObject->getScript<Transform>();
+	glm::vec3 cameraPos = transform ? glm::vec3(transform->mPosX, transform->mPosY, transform->mZ) : glm::vec3(0.0f, 0.0f, 0.0f);
 	glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
@@ -36,15 +37,17 @@ glm::mat4 Camera::buildProjectionMatrix() {
 }
 
 void Camera::worldToScreen(float worldX, float worldY, float& screenX, float& screenY) {
-	float left = mGameObject->mTransform.mPosX - (float)mHalfWidth * mZoom;
-	float top = mGameObject->mTransform.mPosY + (float)mHalfHeight * mZoom;
+	auto tranform = mGameObject->getScript<Transform>();
+	float left = (tranform ? tranform->mPosX : 0.0f) - (float)mHalfWidth * mZoom;
+	float top = (tranform ? tranform->mPosY : 0.0f) + (float)mHalfHeight * mZoom;
 	screenX = (worldX - left) / mZoom;
 	screenY = (top - worldY) / mZoom;
 }
 
 void Camera::screenToWorld(float screenX, float screenY, float& worldX, float& worldY) {
-	float left = mGameObject->mTransform.mPosX - (float)mHalfWidth * mZoom;
-	float top = mGameObject->mTransform.mPosY + (float)mHalfHeight * mZoom;
+	auto tranform = mGameObject->getScript<Transform>();
+	float left = (tranform ? tranform->mPosX : 0.0f) - (float)mHalfWidth * mZoom;
+	float top = (tranform ? tranform->mPosY : 0.0f) + (float)mHalfHeight * mZoom;
 	worldX = left + screenX * mZoom;
 	worldY = top - screenY * mZoom;
 }

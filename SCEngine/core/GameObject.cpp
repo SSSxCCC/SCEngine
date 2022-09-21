@@ -50,7 +50,6 @@ GameObjectData GameObject::getData() {
 	GameObjectData data;
 	data.id = mId;
 	data.name = mName;
-	data.transform = mTransform;
 	for (const auto& script : mScripts) {
 		data.scriptsData.push_back(script->getData());
 	}
@@ -58,10 +57,8 @@ GameObjectData GameObject::getData() {
 }
 
 std::shared_ptr<GameObject> GameObject::create(const GameObjectData& data) {
-	auto gameObject = std::make_shared<GameObject>();
+	auto gameObject = std::make_shared<GameObject>(data.name);
 	gameObject->mId = data.id;
-	gameObject->mName = data.name;
-	gameObject->mTransform = data.transform;
 	for (const auto& scriptData : data.scriptsData) {
 		auto script = Script::create(scriptData);
 		gameObject->addScript(script);

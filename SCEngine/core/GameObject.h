@@ -13,14 +13,14 @@ class GameWorld;
 struct GameObjectData {
 	int id;
 	std::string name;
-	Transform transform;
 	std::vector<ScriptData> scriptsData;
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(GameObjectData, id, name, transform, scriptsData)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(GameObjectData, id, name, scriptsData)
 
 // GameObject is a object in the game world. Attach GameObjectScript to this GameObject to implement game logic
 class GameObject : public std::enable_shared_from_this<GameObject> {
 public:
+	GameObject(const std::string& name) : mName(name) { }
 	void create();
 	void update();
 	void draw(float* projectionMatrix, bool forEditor = false);
@@ -66,7 +66,6 @@ public:
 	// Note: there is circular reference between GameObject and GameWorld!
 	std::shared_ptr<GameWorld> mGameWorld;
 
-	Transform mTransform; // this GameObject's position, rotation and scale
 	std::string mName;    // the name of this GameObject
 	int mId = -1;         // the unique id of this GameObject, -1 means there is no id yet
 

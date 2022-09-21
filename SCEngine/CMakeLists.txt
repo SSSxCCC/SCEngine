@@ -4,7 +4,7 @@
 cmake_minimum_required (VERSION 3.12)
 
 # Add source to this project's executable.
-add_library (SCEngine SHARED "SCEngine.cpp" "physics/RectangleCollider.cpp" "graphics/RectangleRender.cpp" "physics/RigidBody.cpp" "physics/PhysicsWorld.cpp" "core/Camera.cpp" "core/GameObject.cpp" "core/GameWorld.cpp" "editor/PhysicsDeugDraw.cpp" "editor/EditorCameraController.cpp" "input/Input.cpp" "core/Script.cpp" "utility/Window.cpp")
+add_library (SCEngine SHARED "SCEngine.cpp" "physics/RectangleCollider.cpp" "graphics/RectangleRender.cpp" "physics/RigidBody.cpp" "physics/PhysicsWorld.cpp" "core/Camera.cpp" "core/GameObject.cpp" "core/GameWorld.cpp" "editor/PhysicsDeugDraw.cpp" "editor/EditorCameraController.cpp" "input/Input.cpp" "core/Script.cpp" "utility/Window.cpp" "core/Transform.cpp")
 target_include_directories(SCEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 set_property(TARGET SCEngine PROPERTY CXX_STANDARD 20)

@@ -43,7 +43,8 @@ void RectangleRender::onCreate() {
 }
 
 void RectangleRender::onDraw(float* projectionMatrix, bool forEditor) {
-	glm::mat4 model = mGameObject->mTransform.buildModelMatrix();
+	auto transform = mGameObject->getScript<Transform>();
+	glm::mat4 model = transform ? transform->buildModelMatrix() : glm::mat4(1.0f);
 	mShader->use();
 	mShader->setMat4("model", glm::value_ptr(model));
 	mShader->setMat4("projection", projectionMatrix);

@@ -29,56 +29,50 @@ void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer) {
 	// Add some GameObject to game world
 	gameWorld = std::make_shared<GameWorld>();
 
-	auto physicsObject = std::make_shared<GameObject>();
-	physicsObject->mName = "PhysicsWorld";
-	auto physicsWorld = std::make_shared<PhysicsWorld>();
-	auto debugDraw = std::make_shared<PhysicsDebugDraw>();
-	physicsObject->addScript(physicsWorld);
-	physicsObject->addScript(debugDraw);
+	auto physicsObject = std::make_shared<GameObject>("PhysicsWorld");
+	physicsObject->addScript(std::make_shared<PhysicsWorld>());
+	physicsObject->addScript(std::make_shared<PhysicsDebugDraw>());
 	gameWorld->addGameObject(physicsObject);
 
-	auto cameraObject = std::make_shared<GameObject>();
-	cameraObject->mName = "EditorCamera";
-	auto camera = std::make_shared<Camera>();
-	auto editorCameraController = std::make_shared<EditorCameraController>();
-	cameraObject->addScript(camera);
-	cameraObject->addScript(editorCameraController);
+	auto cameraObject = std::make_shared<GameObject>("EditorCamera");
+	cameraObject->addScript(std::make_shared<Transform>());
+	cameraObject->addScript(std::make_shared<Camera>());
+	cameraObject->addScript(std::make_shared<EditorCameraController>());
 	gameWorld->addGameObject(cameraObject);
 
-	auto camera2Object = std::make_shared<GameObject>();
-	camera2Object->mName = "GameCamera";
-	auto camera2 = std::make_shared<Camera>();
-	camera2Object->addScript(camera2);
+	auto camera2Object = std::make_shared<GameObject>("GameCamera");
+	camera2Object->addScript(std::make_shared<Transform>());
+	camera2Object->addScript(std::make_shared<Camera>());
 	gameWorld->addGameObject(camera2Object);
 
-	auto rectangleRender = std::make_shared<RectangleRender>();
-	auto rigidBody = std::make_shared<RigidBody>();
-	rigidBody->mBodyDef.type = b2_dynamicBody;
-	auto rectangleCollider = std::make_shared<RectangleCollider>();
-	auto gameObject = std::make_shared<GameObject>();
-	gameObject->mName = "Box1";
-	gameObject->mTransform.mScaleX = 10.f;
-	gameObject->mTransform.mScaleY = 10.f;
-	gameObject->mTransform.mPosX = 0.0f;
-	gameObject->mTransform.mPosY = 100.0f;
-	gameObject->addScript(rectangleRender);
-	gameObject->addScript(rigidBody);
-	gameObject->addScript(rectangleCollider);
+	auto gameObject = std::make_shared<GameObject>("Box1");
+	gameObject->addScript(std::make_shared<Transform>());
+	auto transform = gameObject->getScript<Transform>();
+	transform->mScaleX = 10.f;
+	transform->mScaleY = 10.f;
+	transform->mPosX = 0.0f;
+	transform->mPosY = 100.0f;
+	gameObject->addScript(std::make_shared<RectangleRender>());
+	gameObject->addScript(std::make_shared<RigidBody>());
+	gameObject->getScript<RigidBody>()->mBodyDef.type = b2_dynamicBody;
+	gameObject->addScript(std::make_shared<RectangleCollider>());
 	gameWorld->addGameObject(gameObject);
 
 	auto gameObject2 = gameObject->clone();
 	gameObject2->mName = "Box2";
-	gameObject2->mTransform.mPosX = 5.0f;
-	gameObject2->mTransform.mPosY = 120.0f;
+	transform = gameObject2->getScript<Transform>();
+	transform->mPosX = 5.0f;
+	transform->mPosY = 120.0f;
 	gameWorld->addGameObject(gameObject2);
 
 	auto groundObject = gameObject->clone();
 	groundObject->mName = "Ground";
 	groundObject->getScript<RigidBody>()->mBodyDef.type = b2_staticBody;
-	groundObject->mTransform.mPosX = 0.0f;
-	groundObject->mTransform.mPosY = -100.0f;
-	groundObject->mTransform.mScaleX = 400.0f;
-	groundObject->mTransform.mScaleY = 80.f;
+	transform = groundObject->getScript<Transform>();
+	transform->mPosX = 0.0f;
+	transform->mPosY = -100.0f;
+	transform->mScaleX = 400.0f;
+	transform->mScaleY = 80.f;
 	gameWorld->addGameObject(groundObject);
 
 	gameWorld->create();
