@@ -8,7 +8,7 @@ ScriptData Transform::getData() {
 	data.addFloat("mRotation", mRotation);
 	data.addFloat("mScaleX", mScaleX);
 	data.addFloat("mScaleY", mScaleY);
-	return std::move(data);
+	return data;
 }
 
 void Transform::setData(const ScriptData& data) {

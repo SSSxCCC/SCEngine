@@ -63,5 +63,5 @@ ScriptData Camera::getData() {
 	data.addInt("mHalfWidth", mHalfWidth);
 	data.addInt("mHalfHeight", mHalfHeight);
 	data.addFloat("mZoom", mZoom);
-	return std::move(data);
+	return data;
 }

@@ -62,7 +62,7 @@ public:
 	virtual void onDraw(float* projectionMatrix, bool forEditor=false) { } // called every frame after onUpdate
 	virtual void onDestroy() { } // called when the Script is removed from GameObject or the GameObject is destroyed
 	virtual std::string getName() = 0; // return the class name of this Script (we need this because C++ dosen't have reflective)
-	virtual ScriptData getData() { ScriptData data; data.name = getName(); return std::move(data); } // data serialization
+	virtual ScriptData getData() { ScriptData data; data.name = getName(); return data; } // data serialization
 	virtual void setData(const ScriptData& data) { } // data deserialization
 
 	// create a copy of this Script

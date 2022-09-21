@@ -53,7 +53,7 @@ GameObjectData GameObject::getData() {
 	for (const auto& script : mScripts) {
 		data.scriptsData.push_back(script->getData());
 	}
-	return std::move(data);
+	return data;
 }
 
 std::shared_ptr<GameObject> GameObject::create(const GameObjectData& data) {

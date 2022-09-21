@@ -41,5 +41,5 @@ void RigidBody::setData(const ScriptData& data) {
 ScriptData RigidBody::getData() {
 	ScriptData data = Script::getData();
 	data.addInt("mBodyDef.type", mBodyDef.type);
-	return std::move(data);
+	return data;
 }
