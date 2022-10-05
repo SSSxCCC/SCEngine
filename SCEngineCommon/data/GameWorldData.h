@@ -1,6 +1,8 @@
 #ifndef _GameWorldData_H_
 #define _GameWorldData_H_
 
+#include "data/GameObjectData.h"
+
 // Store all the data in a GameWorld
 struct GameWorldData {
 	std::vector<GameObjectData> gameObjectsData;

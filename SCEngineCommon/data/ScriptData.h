@@ -1,6 +1,10 @@
 #ifndef _ScriptData_H_
 #define _ScriptData_H_
 
+#include <string>
+#include <vector>
+#include "nlohmann/json.hpp"
+
 // Store all the data in a Script
 struct ScriptData {
 public:

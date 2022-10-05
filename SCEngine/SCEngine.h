@@ -3,10 +3,11 @@
 
 #include "common/OpenGLPointer.h"
 #include "common/CallbackPointer.h"
+#include "data/GameWorldData.h"
 
 extern "C" __declspec(dllexport) void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer);
 
-extern "C" __declspec(dllexport) void doFrame(bool editorMode);
+extern "C" __declspec(dllexport) GameWorldData& doFrame(bool editorMode);
 
 extern "C" __declspec(dllexport) void doEditorFrame(bool focus, int with, int height);
 

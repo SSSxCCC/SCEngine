@@ -3,7 +3,6 @@
 
 #include <memory>
 #include <unordered_map>
-#include "nlohmann/json.hpp"
 #include "utility/StaticBlock.h"
 #include "data/ScriptData.h"
 

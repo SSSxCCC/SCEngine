@@ -14,7 +14,7 @@
 #include "editor/PhysicsDebugDraw.h"
 
 std::shared_ptr<GameWorld> gameWorld;
-nlohmann::json j;
+GameWorldData gameWorldData, tempGameWorldData;
 std::chrono::steady_clock::time_point startTime;
 
 void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer) {
@@ -77,13 +77,24 @@ void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer) {
 
 	gameWorld->create();
 
-	j = gameWorld->getData();
+	gameWorldData = gameWorld->getData();
+	nlohmann::json j = gameWorldData;
 	std::cout << j << std::endl;
 
 	startTime = std::chrono::steady_clock::now();
 }
 
-void doFrame(bool editorMode) {
+static auto reloadGame = [&]() {
+	gameWorld->destroy();
+	gameWorld = GameWorld::create(gameWorldData);
+	gameWorld->create();
+};
+
+GameWorldData& doFrame(bool editorMode) {
+	if (editorMode) {
+		reloadGame();
+	}
+
 	float currentTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - startTime).count() / 1000000000.0f;
 	gameWorld->mDeltaTime = currentTime - gameWorld->mCurrentTime;
 	gameWorld->mCurrentTime = currentTime;
@@ -93,6 +104,14 @@ void doFrame(bool editorMode) {
 		gameWorld->mEditorCamera->mGameObject->update(); // only update EditorCamera in editor mode
 	} else {
 		gameWorld->update();
+	}
+
+	if (editorMode) {
+		gameWorldData = gameWorld->getData();
+		return gameWorldData;
+	} else {
+		tempGameWorldData = gameWorld->getData();
+		return tempGameWorldData;
 	}
 }
 
@@ -112,15 +131,8 @@ void doGameFrame(bool focus, int with, int height) {
 	gInput.reset();
 }
 
-static auto reloadGame = [&]() {
-	gameWorld->destroy();
-	GameWorldData gameWorldData = j;
-	gameWorld = GameWorld::create(gameWorldData);
-	gameWorld->create();
-};
-
 void runGame() {
-	j = gameWorld->getData();
+	gameWorldData = gameWorld->getData();
 	reloadGame();
 }
 
@@ -129,7 +141,7 @@ void stopGame() {
 }
 
 void save() {
-	j = gameWorld->getData();
+	nlohmann::json j = gameWorld->getData();
 	std::ofstream o("GameWorldData.json");
 	o << std::setw(4) << j << std::endl;
 }
@@ -137,7 +149,9 @@ void save() {
 void load() {
 	std::ifstream i("GameWorldData.json");
 	if (i.good()) {
+		nlohmann::json j;
 		i >> j;
+		gameWorldData = j;
 		reloadGame();
 	} else {
 		std::cout << "Load error: failed to open GameWorldData.json" << std::endl;

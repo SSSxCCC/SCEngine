@@ -10,6 +10,7 @@
 #include "common/CallbackPointer.h"
 #include "editor/GameWorldEditor.h"
 #include "editor/SubWindow.h"
+#include "data/GameWorldData.h"
 
 CallbackPointer gCallbackPointer;
 float gScale = 1.0f;
@@ -89,7 +90,7 @@ static void WindowContentScaleCallback(GLFWwindow* window, float xscale, float y
 class SCEngine {
 public:
 	using SCEngine_init_fn = void(*)(OpenGLPointer&, CallbackPointer&);
-	using SCEngine_doFrame_fn = void(*)(bool);
+	using SCEngine_doFrame_fn = GameWorldData&(*)(bool);
 	using SCEngine_doEditorFrame_fn = void(*)(bool,int,int);
 	using SCEngine_doGameFrame_fn = void(*)(bool, int, int);
 	using SCEngine_runGame_fn = void(*)();
@@ -188,7 +189,7 @@ int main() {
 
 	bool editorMode = true;
 	SubWindow editorWindow("editor"), gameWindow("game");
-	//GameWorldEditor worldEditor;
+	GameWorldEditor worldEditor;
 
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
@@ -197,7 +198,9 @@ int main() {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		gSCEngine.doFrame(editorMode);
+		auto& gameWorldData = gSCEngine.doFrame(editorMode);
+		worldEditor.doFrame(gameWorldData);
+
 		editorWindow.update();
 		editorWindow.bind();
 		gSCEngine.doEditorFrame(editorWindow.isFocus(), editorWindow.getWidth(), editorWindow.getHeight());
@@ -213,8 +216,6 @@ int main() {
 		glfwGetFramebufferSize(window, &bufferWidth, &bufferHeight);
 		glViewport(0, 0, bufferWidth, bufferHeight);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		//worldEditor.update(gameWorld);
 
 		ImGui::Begin("Game");
 		if (editorMode) {

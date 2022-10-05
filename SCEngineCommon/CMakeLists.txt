@@ -8,3 +8,4 @@ set_property(TARGET SCEngineCommon PROPERTY CXX_STANDARD 20)
 
 target_link_libraries(SCEngineCommon PUBLIC glad)
 target_link_libraries(SCEngineCommon PUBLIC nlohmann_json)
+target_link_libraries(SCEngineCommon PUBLIC glm)

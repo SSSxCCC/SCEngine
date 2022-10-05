@@ -11,7 +11,6 @@ set_property(TARGET SCEngine PROPERTY CXX_STANDARD 20)
 
 target_link_libraries(SCEngine PUBLIC SCEngineCommon)
 target_link_libraries(SCEngine PUBLIC box2d)
-target_link_libraries(SCEngine PUBLIC glm)
 
 install(DIRECTORY "shaders" DESTINATION bin)
 install(TARGETS SCEngine DESTINATION bin)
