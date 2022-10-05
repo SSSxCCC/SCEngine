@@ -31,13 +31,21 @@ void GameObject::destroy() {
 	}
 }
 
-// addScript should be called before GameWorld::addGameObject
 void GameObject::addScript(const std::shared_ptr<Script>& script) {
 	mScripts.push_back(script);
 	script->mGameObject = shared_from_this();
 	if (mCreated) {
 		script->onCreate();
 	}
+}
+
+std::shared_ptr<Script> GameObject::getScript(const std::string& name) {
+	for (const auto& script : mScripts) {
+		if (script->getName() == name) {
+			return script;
+		}
+	}
+	return nullptr;
 }
 
 std::shared_ptr<GameObject> GameObject::clone() {
@@ -54,6 +62,15 @@ GameObjectData GameObject::getData() {
 		data.scriptsData.push_back(script->getData());
 	}
 	return data;
+}
+
+void GameObject::setData(const GameObjectData& gameObjectData) {
+	mName = gameObjectData.name;
+	for (const auto& scriptData : gameObjectData.scriptsData) {
+		if (scriptData.editType == EditType::Modify) {
+			getScript(scriptData.name)->setData(scriptData);
+		} // TODO: hanle other edit type
+	}
 }
 
 std::shared_ptr<GameObject> GameObject::create(const GameObjectData& data) {

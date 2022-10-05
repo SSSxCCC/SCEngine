@@ -46,11 +46,15 @@ public:
 		return vector;
 	}
 
+	// get first script of name from this GameObject
+	std::shared_ptr<Script> getScript(const std::string& name);
+
 	// create a copy of this GameObject, its mId is -1
 	std::shared_ptr<GameObject> clone();
 
 	// serialize data
 	GameObjectData getData();
+	void setData(const GameObjectData& gameObjectData);
 
 	// create a instance of GameObject based on GameObjectData
 	static std::shared_ptr<GameObject> create(const GameObjectData& data);

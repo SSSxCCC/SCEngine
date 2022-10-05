@@ -76,6 +76,14 @@ GameWorldData GameWorld::getData() {
 	return std::move(data);
 }
 
+void GameWorld::setData(const GameWorldData& gameWorldData) {
+	for (const auto& gameObjectData : gameWorldData.gameObjectsData) {
+		if (gameObjectData.editType == EditType::Modify) {
+			mGameObjects[gameObjectData.id]->setData(gameObjectData);
+		} // TODO: hanle other edit type
+	}
+}
+
 std::shared_ptr<GameWorld> GameWorld::create(const GameWorldData& data) {
 	auto gameWorld = std::make_shared<GameWorld>();
 	for (const auto& gameObjectData : data.gameObjectsData) {

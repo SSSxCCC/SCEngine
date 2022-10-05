@@ -91,7 +91,15 @@ void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer) {
 
 GameWorldData& doFrame(bool editorMode) {
 	if (editorMode) {
-		reloadGame();
+		//reloadGame();
+		//std::cout << "editType=" << static_cast<typename std::underlying_type<EditType>::type>(gameWorldData.editType) << std::endl;
+		if (gameWorldData.editType == EditType::Modify) {
+			gameWorld->setData(gameWorldData);
+		} // TODO: hanle other edit type
+	} else {
+		if (tempGameWorldData.editType == EditType::Modify) {
+			gameWorld->setData(tempGameWorldData);
+		} // TODO: hanle other edit type
 	}
 
 	float currentTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - startTime).count() / 1000000000.0f;

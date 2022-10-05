@@ -21,46 +21,71 @@ void GameWorldEditor::doFrame(GameWorldData& gameWorldData) {
 		ImGui::Begin("GameObject");
 		std::string name = gameObjectData.name;
 		ImGui::InputText("name", &name);
-		gameObjectData.name = name;
+		if (gameObjectData.name != name) {
+			gameObjectData.name = name;
+			gameObjectData.editType = EditType::Modify;
+			gameWorldData.editType = EditType::Modify;
+		}
 
 		ImGui::Text(("Id: " + std::to_string(gameObjectData.id)).c_str());
 
 		for (auto& scriptData : gameObjectData.scriptsData) {
 			ImGui::Text("--------------------------------------------------");
 			ImGui::Text(scriptData.name.c_str());
+			bool modify = false;
 			if (scriptData.name == "Transform") {
 				float position[3] = { scriptData.getFloat("mPosX"), scriptData.getFloat("mPosY"), scriptData.getFloat("mZ") };
 				ImGui::DragFloat3("position", position);
-				scriptData.setFloat("mPosX", position[0]); scriptData.setFloat("mPosY", position[1]); scriptData.setFloat("mZ", position[2]);
+				if (scriptData.getFloat("mPosX") != position[0] || scriptData.getFloat("mPosY") != position[1] || scriptData.getFloat("mZ") != position[2]) {
+					scriptData.setFloat("mPosX", position[0]); scriptData.setFloat("mPosY", position[1]); scriptData.setFloat("mZ", position[2]);
+					modify = true;
+				}
 
 				float rotation = glm::degrees(scriptData.getFloat("mRotation"));
 				ImGui::DragFloat("rotation", &rotation);
-				scriptData.setFloat("mRotation", glm::radians(rotation));
+				if (glm::degrees(scriptData.getFloat("mRotation")) != rotation) {
+					scriptData.setFloat("mRotation", glm::radians(rotation));
+					modify = true;
+				}
 
 				float scale[2] = { scriptData.getFloat("mScaleX"), scriptData.getFloat("mScaleY") };
 				ImGui::DragFloat2("scale", scale);
-				scriptData.setFloat("mScaleX", scale[0]); scriptData.setFloat("mScaleY", scale[1]);
+				if (scriptData.getFloat("mScaleX") != scale[0] || scriptData.getFloat("mScaleY") != scale[1]) {
+					scriptData.setFloat("mScaleX", scale[0]); scriptData.setFloat("mScaleY", scale[1]);
+					modify = true;
+				}
 			} else {
 				for (const auto& dataName : scriptData.dataList) {
 					if (scriptData.floatData.contains(dataName)) {
 						float floatData = scriptData.getFloat(dataName);
 						ImGui::InputFloat(dataName.c_str(), &floatData);
-						scriptData.setFloat(dataName, floatData);
-					}
-					else if (scriptData.intData.contains(dataName)) {
+						if (scriptData.getFloat(dataName) != floatData) {
+							scriptData.setFloat(dataName, floatData);
+							modify = true;
+						}
+					} else if (scriptData.intData.contains(dataName)) {
 						int intData = scriptData.getInt(dataName);
 						ImGui::InputInt(dataName.c_str(), &intData);
-						scriptData.setInt(dataName, intData);
-					}
-					else if (scriptData.stringData.contains(dataName)) {
+						if (scriptData.getInt(dataName) != intData) {
+							scriptData.setInt(dataName, intData);
+							modify = true;
+						}
+					} else if (scriptData.stringData.contains(dataName)) {
 						std::string stringData = scriptData.getString(dataName);
 						ImGui::InputText(dataName.c_str(), &stringData);
-						scriptData.setString(dataName, stringData);
-					}
-					else {
+						if (scriptData.getString(dataName) != stringData) {
+							scriptData.setString(dataName, stringData);
+							modify = true;
+						}
+					} else {
 						assert(false);
 					}
 				}
+			}
+			if (modify) {
+				scriptData.editType = EditType::Modify;
+				gameObjectData.editType = EditType::Modify;
+				gameWorldData.editType = EditType::Modify;
 			}
 		}
 

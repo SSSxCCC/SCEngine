@@ -18,6 +18,7 @@ public:
 	void addGameObject(const std::shared_ptr<GameObject>& gameObject);
 	void removeGameObject(int GameObjectId);
 	GameWorldData getData();
+	void setData(const GameWorldData& gameWorldData);
 
 	// create a instance of GameWorld based on GameWorldData
 	static std::shared_ptr<GameWorld> create(const GameWorldData& data);

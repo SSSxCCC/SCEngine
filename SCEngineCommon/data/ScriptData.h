@@ -5,6 +5,14 @@
 #include <vector>
 #include "nlohmann/json.hpp"
 
+enum class EditType {
+	None,
+	Modify,
+	Move,
+	Add,
+	Delete,
+};
+
 // Store all the data in a Script
 struct ScriptData {
 public:
@@ -12,6 +20,9 @@ public:
 
 	// the className of Script
 	std::string name;
+
+	// indicate how this Script was edited, editor use only
+	EditType editType = EditType::None;
 
 	void addFloat(const std::string& name, float value) { dataList.push_back(name); floatData[name] = value; }
 	void addInt(const std::string& name, int value) { dataList.push_back(name); intData[name] = value; }
