@@ -17,6 +17,13 @@ std::shared_ptr<GameWorld> gameWorld;
 GameWorldData gameWorldData, tempGameWorldData;
 std::chrono::steady_clock::time_point startTime;
 
+static auto reloadGame = [&]() {
+	gameWorld->destroy();
+	gameWorld = GameWorld::create(gameWorldData);
+	gameWorld->create();
+	startTime = std::chrono::steady_clock::now();
+};
+
 void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer) {
 	openGLPointer.apply();
 	callbackPointer.mScrollCallback = [](double dx, double dy) {
@@ -76,19 +83,11 @@ void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer) {
 	gameWorld->addGameObject(groundObject);
 
 	gameWorld->create();
-
+	startTime = std::chrono::steady_clock::now();
 	gameWorldData = gameWorld->getData();
 	nlohmann::json j = gameWorldData;
 	std::cout << j << std::endl;
-
-	startTime = std::chrono::steady_clock::now();
 }
-
-static auto reloadGame = [&]() {
-	gameWorld->destroy();
-	gameWorld = GameWorld::create(gameWorldData);
-	gameWorld->create();
-};
 
 GameWorldData& doFrame(bool editorMode) {
 	if (editorMode) {
