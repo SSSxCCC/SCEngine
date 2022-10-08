@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <variant>
 #include "nlohmann/json.hpp"
 
 enum class EditType {
@@ -12,6 +13,36 @@ enum class EditType {
 	Add,
 	Delete,
 };
+
+struct ScriptVar {
+	std::variant<int, float, std::string> value;
+	ScriptVar() { }
+	template<typename T> explicit ScriptVar(const T& val) {
+		value = val;
+	}
+};
+
+inline void to_json(nlohmann::json& json, const ScriptVar& scriptVar) {
+	int type = scriptVar.value.index();
+	if (type == 0) {
+		json["value"] = std::get<int>(scriptVar.value);
+	} else if (type == 1) {
+		json["value"] = std::get<float>(scriptVar.value);
+	} else if (type == 2) {
+		json["value"] = std::get<std::string>(scriptVar.value);
+	} else assert(false);
+	json["type"] = type;
+}
+inline void from_json(const nlohmann::json& json, ScriptVar& scriptVar) {
+	int type = json["type"];
+	if (type == 0) {
+		scriptVar.value = json["value"].get<int>();
+	} else if (type == 1) {
+		scriptVar.value = json["value"].get<float>();
+	} else if (type == 2) {
+		scriptVar.value = json["value"].get<std::string>();
+	} else assert(false);
+}
 
 // Store all the data in a Script
 struct ScriptData {
