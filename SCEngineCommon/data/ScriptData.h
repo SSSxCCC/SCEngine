@@ -17,9 +17,7 @@ enum class EditType {
 struct ScriptVar {
 	std::variant<int, float, std::string> value;
 	ScriptVar() { }
-	template<typename T> explicit ScriptVar(const T& val) {
-		value = val;
-	}
+	template<typename T> explicit ScriptVar(const T& value) : value(value) { }
 };
 
 inline void to_json(nlohmann::json& json, const ScriptVar& scriptVar) {
