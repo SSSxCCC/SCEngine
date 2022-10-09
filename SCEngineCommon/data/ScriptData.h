@@ -6,6 +6,30 @@
 #include <variant>
 #include "nlohmann/json.hpp"
 
+// The value restrict rule for ScriptVar::value
+template<typename T>
+class Restrict {
+public:
+	virtual T apply(const T& oldVal, const T& newVal) = 0;
+};
+
+class EnumRestrict : public Restrict<int> {
+public:
+	std::vector<std::string> mEnumNames;
+	std::vector<int> mEnumValues;
+	explicit EnumRestrict(const std::vector<std::string>& enumNames) {
+		std::vector<int> enumValues;
+		for (int i = 0, size = enumNames.size(); i < size; i++) {
+			enumValues.push_back(i);
+		}
+		new(this) EnumRestrict(enumNames, enumValues);
+	}
+	EnumRestrict(const std::vector<std::string>& enumNames, const std::vector<int>& enumValues) : mEnumNames(enumNames), mEnumValues(enumValues) { }
+	int apply(const int& oldVal, const int& newVal) override {
+		return std::find(mEnumValues.begin(), mEnumValues.end(), newVal) != mEnumValues.end() ? newVal : oldVal;
+	}
+};
+
 // The type index of ScriptVar::value
 static const int TYPE_INT = 0, TYPE_FLOAT = 1, TYPE_STRING = 2;
 
