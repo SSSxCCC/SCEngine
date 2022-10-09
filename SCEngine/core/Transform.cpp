@@ -2,22 +2,22 @@
 
 ScriptData Transform::getData() {
 	auto data = Script::getData();
-	data.addFloat("mPosX", mPosX);
-	data.addFloat("mPosY", mPosY);
-	data.addFloat("mZ", mZ);
-	data.addFloat("mRotation", mRotation);
-	data.addFloat("mScaleX", mScaleX);
-	data.addFloat("mScaleY", mScaleY);
+	data.add("mPosX", mPosX);
+	data.add("mPosY", mPosY);
+	data.add("mZ", mZ);
+	data.add("mRotation", mRotation);
+	data.add("mScaleX", mScaleX);
+	data.add("mScaleY", mScaleY);
 	return data;
 }
 
 void Transform::setData(const ScriptData& data) {
-	mPosX = data.getFloat("mPosX");
-	mPosY = data.getFloat("mPosY");
-	mZ = data.getFloat("mZ");
-	mRotation = data.getFloat("mRotation");
-	mScaleX = data.getFloat("mScaleX");
-	mScaleY = data.getFloat("mScaleY");
+	mPosX = data.get<float>("mPosX");
+	mPosY = data.get<float>("mPosY");
+	mZ = data.get<float>("mZ");
+	mRotation = data.get<float>("mRotation");
+	mScaleX = data.get<float>("mScaleX");
+	mScaleY = data.get<float>("mScaleY");
 }
 
 glm::mat4 Transform::buildModelMatrix() {

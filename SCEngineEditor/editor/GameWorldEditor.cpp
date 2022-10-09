@@ -34,52 +34,51 @@ void GameWorldEditor::doFrame(GameWorldData& gameWorldData) {
 			ImGui::Text(scriptData.name.c_str());
 			bool modify = false;
 			if (scriptData.name == "Transform") {
-				float position[3] = { scriptData.getFloat("mPosX"), scriptData.getFloat("mPosY"), scriptData.getFloat("mZ") };
+				float position[3] = { scriptData.get<float>("mPosX"), scriptData.get<float>("mPosY"), scriptData.get<float>("mZ") };
 				ImGui::DragFloat3("position", position);
-				if (scriptData.getFloat("mPosX") != position[0] || scriptData.getFloat("mPosY") != position[1] || scriptData.getFloat("mZ") != position[2]) {
-					scriptData.setFloat("mPosX", position[0]); scriptData.setFloat("mPosY", position[1]); scriptData.setFloat("mZ", position[2]);
+				if (scriptData.get<float>("mPosX") != position[0] || scriptData.get<float>("mPosY") != position[1] || scriptData.get<float>("mZ") != position[2]) {
+					scriptData.set("mPosX", position[0]); scriptData.set("mPosY", position[1]); scriptData.set("mZ", position[2]);
 					modify = true;
 				}
 
-				float rotation = glm::degrees(scriptData.getFloat("mRotation"));
+				float rotation = glm::degrees(scriptData.get<float>("mRotation"));
 				ImGui::DragFloat("rotation", &rotation);
-				if (glm::degrees(scriptData.getFloat("mRotation")) != rotation) {
-					scriptData.setFloat("mRotation", glm::radians(rotation));
+				if (glm::degrees(scriptData.get<float>("mRotation")) != rotation) {
+					scriptData.set("mRotation", glm::radians(rotation));
 					modify = true;
 				}
 
-				float scale[2] = { scriptData.getFloat("mScaleX"), scriptData.getFloat("mScaleY") };
+				float scale[2] = { scriptData.get<float>("mScaleX"), scriptData.get<float>("mScaleY") };
 				ImGui::DragFloat2("scale", scale);
-				if (scriptData.getFloat("mScaleX") != scale[0] || scriptData.getFloat("mScaleY") != scale[1]) {
-					scriptData.setFloat("mScaleX", scale[0]); scriptData.setFloat("mScaleY", scale[1]);
+				if (scriptData.get<float>("mScaleX") != scale[0] || scriptData.get<float>("mScaleY") != scale[1]) {
+					scriptData.set("mScaleX", scale[0]); scriptData.set("mScaleY", scale[1]);
 					modify = true;
 				}
 			} else {
 				for (const auto& dataName : scriptData.dataList) {
-					if (scriptData.floatData.contains(dataName)) {
-						float floatData = scriptData.getFloat(dataName);
+					int type = scriptData.getType(dataName);
+					if (type == TYPE_FLOAT) {
+						float floatData = scriptData.get<float>(dataName);
 						ImGui::InputFloat(dataName.c_str(), &floatData);
-						if (scriptData.getFloat(dataName) != floatData) {
-							scriptData.setFloat(dataName, floatData);
+						if (scriptData.get<float>(dataName) != floatData) {
+							scriptData.set(dataName, floatData);
 							modify = true;
 						}
-					} else if (scriptData.intData.contains(dataName)) {
-						int intData = scriptData.getInt(dataName);
+					} else if (type == TYPE_INT) {
+						int intData = scriptData.get<int>(dataName);
 						ImGui::InputInt(dataName.c_str(), &intData);
-						if (scriptData.getInt(dataName) != intData) {
-							scriptData.setInt(dataName, intData);
+						if (scriptData.get<int>(dataName) != intData) {
+							scriptData.set(dataName, intData);
 							modify = true;
 						}
-					} else if (scriptData.stringData.contains(dataName)) {
-						std::string stringData = scriptData.getString(dataName);
+					} else if (type == TYPE_STRING) {
+						std::string stringData = scriptData.get<std::string>(dataName);
 						ImGui::InputText(dataName.c_str(), &stringData);
-						if (scriptData.getString(dataName) != stringData) {
-							scriptData.setString(dataName, stringData);
+						if (scriptData.get<std::string>(dataName) != stringData) {
+							scriptData.set(dataName, stringData);
 							modify = true;
 						}
-					} else {
-						assert(false);
-					}
+					} else assert(false);
 				}
 			}
 			if (modify) {

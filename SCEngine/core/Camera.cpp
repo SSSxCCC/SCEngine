@@ -53,15 +53,15 @@ void Camera::screenToWorld(float screenX, float screenY, float& worldX, float& w
 }
 
 void Camera::setData(const ScriptData& data) {
-	mHalfWidth = data.getInt("mHalfWidth");
-	mHalfHeight = data.getInt("mHalfHeight");
-	mZoom = data.getFloat("mZoom");
+	mHalfWidth = data.get<int>("mHalfWidth");
+	mHalfHeight = data.get<int>("mHalfHeight");
+	mZoom = data.get<float>("mZoom");
 }
 
 ScriptData Camera::getData() {
 	auto data = Script::getData();
-	data.addInt("mHalfWidth", mHalfWidth);
-	data.addInt("mHalfHeight", mHalfHeight);
-	data.addFloat("mZoom", mZoom);
+	data.add("mHalfWidth", mHalfWidth);
+	data.add("mHalfHeight", mHalfHeight);
+	data.add("mZoom", mZoom);
 	return data;
 }

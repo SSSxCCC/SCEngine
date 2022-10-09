@@ -51,7 +51,7 @@ enum class EditType {
 // Store all the data in a Script
 struct ScriptData {
 public:
-	NLOHMANN_DEFINE_TYPE_INTRUSIVE(ScriptData, name, floatData, intData, stringData)
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE(ScriptData, name, dataMap)
 
 	// the className of Script
 	std::string name;
@@ -59,20 +59,13 @@ public:
 	// indicate how this Script was edited, editor use only
 	EditType editType = EditType::None;
 
-	void addFloat(const std::string& name, float value) { dataList.push_back(name); floatData[name] = value; }
-	void addInt(const std::string& name, int value) { dataList.push_back(name); intData[name] = value; }
-	void addString(const std::string& name, const std::string& value) { dataList.push_back(name); stringData[name] = value; }
-	float getFloat(const std::string& name) const { return floatData.at(name); }
-	int getInt(const std::string& name) const { return intData.at(name); }
-	std::string getString(const std::string& name) const { return stringData.at(name); }
-	void setFloat(const std::string& name, float value) { assert(floatData.contains(name)); floatData[name] = value; }
-	void setInt(const std::string& name, int value) { assert(intData.contains(name)); intData[name] = value; }
-	void setString(const std::string& name, const std::string& value) { assert(stringData.contains(name)); stringData[name] = value; }
+	template<typename T> void add(const std::string& name, const T& value) { dataList.push_back(name); dataMap[name] = ScriptVar(value); }
+	template<typename T> void set(const std::string& name, const T& value) { assert(dataMap.contains(name)); dataMap[name].value = value; }
+	template<typename T> T get(const std::string& name) const { return std::get<T>(dataMap.at(name).value); }
+	int getType(const std::string& name) const { return dataMap.at(name).value.index(); }
 private:
 	// key: variable name, value: variable value
-	std::unordered_map<std::string, float> floatData;
-	std::unordered_map<std::string, int> intData;
-	std::unordered_map<std::string, std::string> stringData;
+	std::unordered_map<std::string, ScriptVar> dataMap;
 
 	// store the order of variable, editor use only
 	std::vector<std::string> dataList;
