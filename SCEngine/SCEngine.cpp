@@ -86,7 +86,7 @@ void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer) {
 	startTime = std::chrono::steady_clock::now();
 	gameWorldData = gameWorld->getData();
 	nlohmann::json j = gameWorldData;
-	std::cout << j << std::endl;
+	std::cout << j.dump(4) << std::endl;
 }
 
 GameWorldData& doFrame(bool editorMode) {
