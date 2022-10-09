@@ -6,6 +6,40 @@
 #include <variant>
 #include "nlohmann/json.hpp"
 
+// The type index of ScriptVar::value
+static const int TYPE_INT = 0, TYPE_FLOAT = 1, TYPE_STRING = 2;
+
+// A single variable in a Script
+struct ScriptVar {
+	std::variant<int, float, std::string> value;
+	ScriptVar() { }
+	template<typename T> explicit ScriptVar(const T& value) : value(value) { }
+};
+
+// Make ScriptVar can be converted to json
+inline void to_json(nlohmann::json& json, const ScriptVar& scriptVar) {
+	int type = scriptVar.value.index();
+	if (type == TYPE_INT) {
+		json["value"] = std::get<int>(scriptVar.value);
+	} else if (type == TYPE_FLOAT) {
+		json["value"] = std::get<float>(scriptVar.value);
+	} else if (type == TYPE_STRING) {
+		json["value"] = std::get<std::string>(scriptVar.value);
+	} else assert(false);
+	json["type"] = type;
+}
+inline void from_json(const nlohmann::json& json, ScriptVar& scriptVar) {
+	int type = json["type"];
+	if (type == TYPE_INT) {
+		scriptVar.value = json["value"].get<int>();
+	} else if (type == TYPE_FLOAT) {
+		scriptVar.value = json["value"].get<float>();
+	} else if (type == TYPE_STRING) {
+		scriptVar.value = json["value"].get<std::string>();
+	} else assert(false);
+}
+
+// Define how ScriptData/GameObjectData/GameWorldData was edited
 enum class EditType {
 	None,
 	Modify,
@@ -13,34 +47,6 @@ enum class EditType {
 	Add,
 	Delete,
 };
-
-struct ScriptVar {
-	std::variant<int, float, std::string> value;
-	ScriptVar() { }
-	template<typename T> explicit ScriptVar(const T& value) : value(value) { }
-};
-
-inline void to_json(nlohmann::json& json, const ScriptVar& scriptVar) {
-	int type = scriptVar.value.index();
-	if (type == 0) {
-		json["value"] = std::get<int>(scriptVar.value);
-	} else if (type == 1) {
-		json["value"] = std::get<float>(scriptVar.value);
-	} else if (type == 2) {
-		json["value"] = std::get<std::string>(scriptVar.value);
-	} else assert(false);
-	json["type"] = type;
-}
-inline void from_json(const nlohmann::json& json, ScriptVar& scriptVar) {
-	int type = json["type"];
-	if (type == 0) {
-		scriptVar.value = json["value"].get<int>();
-	} else if (type == 1) {
-		scriptVar.value = json["value"].get<float>();
-	} else if (type == 2) {
-		scriptVar.value = json["value"].get<std::string>();
-	} else assert(false);
-}
 
 // Store all the data in a Script
 struct ScriptData {
