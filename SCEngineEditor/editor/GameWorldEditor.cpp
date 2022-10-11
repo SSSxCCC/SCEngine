@@ -57,18 +57,43 @@ void GameWorldEditor::doFrame(GameWorldData& gameWorldData) {
 			} else {
 				for (const auto& dataName : scriptData.dataList) {
 					int type = scriptData.getType(dataName);
-					if (type == TYPE_FLOAT) {
+					if (type == TYPE_INT) {
+						int intData = scriptData.get<int>(dataName);
+						std::shared_ptr<LimitBase> limit = scriptData.getLimit(dataName);
+						if (auto enumLimit = std::dynamic_pointer_cast<EnumLimit>(limit)) {
+							int oldIntData = intData;
+							auto it = std::find(enumLimit->mEnumValues.begin(), enumLimit->mEnumValues.end(), oldIntData);
+							int index = it == enumLimit->mEnumValues.end() ? 0 : (it - enumLimit->mEnumValues.begin());
+							ImGui::Combo(dataName.c_str(), &index, [](void* data, int idx, const char** out_text) {
+								auto enumNames = (std::vector<std::string>*) data;
+								*out_text = (*enumNames)[idx].c_str();
+								return true;
+							}, &enumLimit->mEnumNames, enumLimit->mEnumNames.size());
+							intData = enumLimit->apply(oldIntData, enumLimit->mEnumValues[index]); // TODO: move Limit::apply to ScriptData::set
+							if (oldIntData != intData) {
+								scriptData.set(dataName, intData);
+								modify = true;
+							}
+						} else if (auto intRangeLimit = std::dynamic_pointer_cast<IntRangeLimit>(limit)) {
+							int oldIntData = intData;
+							ImGui::InputInt(dataName.c_str(), &intData); // TODO: use a better ui
+							intData = intRangeLimit->apply(oldIntData, intData);
+							if (oldIntData != intData) {
+								scriptData.set(dataName, intData);
+								modify = true;
+							}
+						} else {
+							ImGui::InputInt(dataName.c_str(), &intData);
+							if (scriptData.get<int>(dataName) != intData) {
+								scriptData.set(dataName, intData);
+								modify = true;
+							}
+						}
+					} else if (type == TYPE_FLOAT) {
 						float floatData = scriptData.get<float>(dataName);
 						ImGui::InputFloat(dataName.c_str(), &floatData);
 						if (scriptData.get<float>(dataName) != floatData) {
 							scriptData.set(dataName, floatData);
-							modify = true;
-						}
-					} else if (type == TYPE_INT) {
-						int intData = scriptData.get<int>(dataName);
-						ImGui::InputInt(dataName.c_str(), &intData);
-						if (scriptData.get<int>(dataName) != intData) {
-							scriptData.set(dataName, intData);
 							modify = true;
 						}
 					} else if (type == TYPE_STRING) {

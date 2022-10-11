@@ -8,10 +8,14 @@
 #include <memory>
 #include "nlohmann/json.hpp"
 
+// The polymorphic base class of Limit
+class LimitBase {
+public:
+	virtual ~LimitBase() { }
+};
+
 // The value limit rule for ScriptVar::value
-class LimitBase { };
-template<typename T>
-class Limit : public LimitBase {
+template<typename T> class Limit : public LimitBase {
 public:
 	virtual T apply(const T& oldVal, const T& newVal) = 0;
 };
@@ -124,6 +128,10 @@ public:
 
 	int getType(const std::string& name) const {
 		return dataMap.at(name).value.index();
+	}
+
+	std::shared_ptr<LimitBase> getLimit(const std::string& name) const {
+		return dataMap.at(name).limit;
 	}
 private:
 	// key: variable name, value: variable value

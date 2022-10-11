@@ -40,6 +40,8 @@ void RigidBody::setData(const ScriptData& data) {
 
 ScriptData RigidBody::getData() {
 	ScriptData data = Script::getData();
-	data.add<int>("mBodyDef.type", mBodyDef.type);
+	std::vector<std::string> enumNames = { "static", "kinematic", "dynamicBody" };
+	std::vector<int> enumValues = { b2BodyType::b2_staticBody, b2BodyType::b2_kinematicBody, b2BodyType::b2_dynamicBody };
+	data.add<int>("mBodyDef.type", mBodyDef.type, std::make_shared<EnumLimit>(enumNames, enumValues));
 	return data;
 }
