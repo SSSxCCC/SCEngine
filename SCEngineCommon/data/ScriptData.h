@@ -5,48 +5,50 @@
 #include <vector>
 #include <variant>
 #include <algorithm>
+#include <memory>
 #include "nlohmann/json.hpp"
 
-// The value restrict rule for ScriptVar::value
+// The value limit rule for ScriptVar::value
+class LimitBase { };
 template<typename T>
-class Restrict {
+class Limit : public LimitBase {
 public:
 	virtual T apply(const T& oldVal, const T& newVal) = 0;
 };
 
-// Restrict int to some named values
-class EnumRestrict : public Restrict<int> {
+// Limit int to some named values
+class EnumLimit : public Limit<int> {
 public:
 	std::vector<std::string> mEnumNames;
 	std::vector<int> mEnumValues;
-	explicit EnumRestrict(const std::vector<std::string>& enumNames) {
+	explicit EnumLimit(const std::vector<std::string>& enumNames) {
 		std::vector<int> enumValues;
 		for (int i = 0, size = enumNames.size(); i < size; i++) {
 			enumValues.push_back(i);
 		}
-		new(this) EnumRestrict(enumNames, enumValues);
+		new(this) EnumLimit(enumNames, enumValues);
 	}
-	EnumRestrict(const std::vector<std::string>& enumNames, const std::vector<int>& enumValues) : mEnumNames(enumNames), mEnumValues(enumValues) { }
+	EnumLimit(const std::vector<std::string>& enumNames, const std::vector<int>& enumValues) : mEnumNames(enumNames), mEnumValues(enumValues) { }
 	int apply(const int& oldVal, const int& newVal) override {
 		return std::find(mEnumValues.begin(), mEnumValues.end(), newVal) != mEnumValues.end() ? newVal : oldVal;
 	}
 };
 
-// Restrict int inside range
-class IntRangeRestrict : public Restrict<int> {
+// Limit int inside range
+class IntRangeLimit : public Limit<int> {
 public:
 	const int mMin, mMax;
-	IntRangeRestrict(int min, int max) : mMin(min), mMax(max) { }
+	IntRangeLimit(int min, int max) : mMin(min), mMax(max) { }
 	int apply(const int& oldVal, const int& newVal) override {
 		return std::min(std::max(newVal, mMin), mMax);
 	}
 };
 
-// Restrict float inside range
-class FloatRangeRestrict : public Restrict<float> {
+// Limit float inside range
+class FloatRangeLimit : public Limit<float> {
 public:
 	const float mMin, mMax;
-	FloatRangeRestrict(float min, float max) : mMin(min), mMax(max) { }
+	FloatRangeLimit(float min, float max) : mMin(min), mMax(max) { }
 	float apply(const float& oldVal, const float& newVal) override {
 		return std::min(std::max(newVal, mMin), mMax);
 	}
@@ -57,9 +59,10 @@ static const int TYPE_INT = 0, TYPE_FLOAT = 1, TYPE_STRING = 2;
 
 // A single variable in a Script
 struct ScriptVar {
-	std::variant<int, float, std::string> value;
+	std::variant<int, float, std::string> value; // the value of this variable
+	std::shared_ptr<LimitBase> limit; // the limit on this variable, editor use only
 	ScriptVar() { }
-	template<typename T> explicit ScriptVar(const T& value) : value(value) { }
+	template<typename T> explicit ScriptVar(const T& value, std::shared_ptr<LimitBase> limit = nullptr) : value(value), limit(limit) { }
 };
 
 // Make ScriptVar can be converted to json
@@ -105,10 +108,23 @@ public:
 	// indicate how this Script was edited, editor use only
 	EditType editType = EditType::None;
 
-	template<typename T> void add(const std::string& name, const T& value) { dataList.push_back(name); dataMap[name] = ScriptVar(value); }
-	template<typename T> void set(const std::string& name, const T& value) { assert(dataMap.contains(name)); dataMap[name].value = value; }
-	template<typename T> T get(const std::string& name) const { return std::get<T>(dataMap.at(name).value); }
-	int getType(const std::string& name) const { return dataMap.at(name).value.index(); }
+	template<typename T> void add(const std::string& name, const T& value, std::shared_ptr<LimitBase> limit = nullptr) {
+		dataList.push_back(name);
+		dataMap[name] = ScriptVar(value, limit);
+	}
+
+	template<typename T> void set(const std::string& name, const T& value) {
+		assert(dataMap.contains(name));
+		dataMap[name].value = value;
+	}
+
+	template<typename T> T get(const std::string& name) const {
+		return std::get<T>(dataMap.at(name).value);
+	}
+
+	int getType(const std::string& name) const {
+		return dataMap.at(name).value.index();
+	}
 private:
 	// key: variable name, value: variable value
 	std::unordered_map<std::string, ScriptVar> dataMap;
