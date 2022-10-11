@@ -1,4 +1,5 @@
-﻿#include <Windows.h>
+﻿#define NOMINMAX
+#include <Windows.h>
 #include <iostream>
 #include <assert.h>
 #include "glad/gl.h"

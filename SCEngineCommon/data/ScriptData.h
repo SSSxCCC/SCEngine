@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <variant>
+#include <algorithm>
 #include "nlohmann/json.hpp"
 
 // The value restrict rule for ScriptVar::value
@@ -13,6 +14,7 @@ public:
 	virtual T apply(const T& oldVal, const T& newVal) = 0;
 };
 
+// Restrict int to some named values
 class EnumRestrict : public Restrict<int> {
 public:
 	std::vector<std::string> mEnumNames;
@@ -27,6 +29,26 @@ public:
 	EnumRestrict(const std::vector<std::string>& enumNames, const std::vector<int>& enumValues) : mEnumNames(enumNames), mEnumValues(enumValues) { }
 	int apply(const int& oldVal, const int& newVal) override {
 		return std::find(mEnumValues.begin(), mEnumValues.end(), newVal) != mEnumValues.end() ? newVal : oldVal;
+	}
+};
+
+// Restrict int inside range
+class IntRangeRestrict : public Restrict<int> {
+public:
+	const int mMin, mMax;
+	IntRangeRestrict(int min, int max) : mMin(min), mMax(max) { }
+	int apply(const int& oldVal, const int& newVal) override {
+		return std::min(std::max(newVal, mMin), mMax);
+	}
+};
+
+// Restrict float inside range
+class FloatRangeRestrict : public Restrict<float> {
+public:
+	const float mMin, mMax;
+	FloatRangeRestrict(float min, float max) : mMin(min), mMax(max) { }
+	float apply(const float& oldVal, const float& newVal) override {
+		return std::min(std::max(newVal, mMin), mMax);
 	}
 };
 
