@@ -17,12 +17,12 @@ std::shared_ptr<GameWorld> gameWorld;
 GameWorldData gameWorldData, tempGameWorldData;
 std::chrono::steady_clock::time_point startTime;
 
-static auto reloadGame = [&]() {
-	gameWorld->destroy();
-	gameWorld = GameWorld::create(gameWorldData);
-	gameWorld->create();
-	startTime = std::chrono::steady_clock::now();
-};
+void reloadGame() {
+    gameWorld->destroy();
+    gameWorld = GameWorld::create(gameWorldData);
+    gameWorld->create();
+    startTime = std::chrono::steady_clock::now();
+}
 
 void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer) {
 	openGLPointer.apply();
