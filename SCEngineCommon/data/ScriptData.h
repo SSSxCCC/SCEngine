@@ -117,21 +117,8 @@ public:
 		dataMap[name] = ScriptVar(value, limit);
 	}
 
-	template<typename T> void set(const std::string& name, const T& value) {
-		assert(dataMap.contains(name));
-		dataMap[name].value = value;
-	}
-
 	template<typename T> T get(const std::string& name) const {
 		return std::get<T>(dataMap.at(name).value);
-	}
-
-	int getType(const std::string& name) const {
-		return dataMap.at(name).value.index();
-	}
-
-	std::shared_ptr<LimitBase> getLimit(const std::string& name) const {
-		return dataMap.at(name).limit;
 	}
 private:
 	// key: variable name, value: variable value
@@ -139,6 +126,32 @@ private:
 
 	// store the order of variable, editor use only
 	std::vector<std::string> dataList;
+
+    // set data by editor, the data is not necessarily updated because Limit, return true if the data has been updated
+    template<typename T> bool set(const std::string& name, const T& value) {
+        assert(dataMap.contains(name));
+        T oldValue = std::get<T>(dataMap[name].value);
+        T newValue = value;
+        auto baseLimit = getLimit(name);
+        if (auto limit = std::dynamic_pointer_cast<Limit<T>>(baseLimit)) {
+            newValue = limit->apply(oldValue, newValue);
+        }
+        if (oldValue != newValue) {
+            dataMap[name].value = value;
+            return true;
+        }
+        return false;
+    }
+
+    // get data type, editor use only
+    int getType(const std::string& name) const {
+        return dataMap.at(name).value.index();
+    }
+
+    // get Limit, editor use only
+    std::shared_ptr<LimitBase> getLimit(const std::string& name) const {
+        return dataMap.at(name).limit;
+    }
 
 	friend class GameWorldEditor;
 };

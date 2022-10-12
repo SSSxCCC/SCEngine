@@ -36,73 +36,42 @@ void GameWorldEditor::doFrame(GameWorldData& gameWorldData) {
 			if (scriptData.name == "Transform") {
 				float position[3] = { scriptData.get<float>("mPosX"), scriptData.get<float>("mPosY"), scriptData.get<float>("mZ") };
 				ImGui::DragFloat3("position", position);
-				if (scriptData.get<float>("mPosX") != position[0] || scriptData.get<float>("mPosY") != position[1] || scriptData.get<float>("mZ") != position[2]) {
-					scriptData.set("mPosX", position[0]); scriptData.set("mPosY", position[1]); scriptData.set("mZ", position[2]);
-					modify = true;
-				}
+                modify |= scriptData.set("mPosX", position[0]); modify |= scriptData.set("mPosY", position[1]); modify |= scriptData.set("mZ", position[2]);
 
 				float rotation = glm::degrees(scriptData.get<float>("mRotation"));
 				ImGui::DragFloat("rotation", &rotation);
-				if (glm::degrees(scriptData.get<float>("mRotation")) != rotation) {
-					scriptData.set("mRotation", glm::radians(rotation));
-					modify = true;
-				}
+                modify |= scriptData.set("mRotation", glm::radians(rotation));
 
 				float scale[2] = { scriptData.get<float>("mScaleX"), scriptData.get<float>("mScaleY") };
 				ImGui::DragFloat2("scale", scale);
-				if (scriptData.get<float>("mScaleX") != scale[0] || scriptData.get<float>("mScaleY") != scale[1]) {
-					scriptData.set("mScaleX", scale[0]); scriptData.set("mScaleY", scale[1]);
-					modify = true;
-				}
+                modify |= scriptData.set("mScaleX", scale[0]); modify |= scriptData.set("mScaleY", scale[1]);
 			} else {
 				for (const auto& dataName : scriptData.dataList) {
 					int type = scriptData.getType(dataName);
 					if (type == TYPE_INT) {
 						int intData = scriptData.get<int>(dataName);
-						std::shared_ptr<LimitBase> limit = scriptData.getLimit(dataName);
+						auto limit = scriptData.getLimit(dataName);
 						if (auto enumLimit = std::dynamic_pointer_cast<EnumLimit>(limit)) {
-							int oldIntData = intData;
-							auto it = std::find(enumLimit->mEnumValues.begin(), enumLimit->mEnumValues.end(), oldIntData);
+							auto it = std::find(enumLimit->mEnumValues.begin(), enumLimit->mEnumValues.end(), intData);
 							int index = it == enumLimit->mEnumValues.end() ? 0 : (it - enumLimit->mEnumValues.begin());
 							ImGui::Combo(dataName.c_str(), &index, [](void* data, int idx, const char** out_text) {
 								auto enumNames = (std::vector<std::string>*) data;
 								*out_text = (*enumNames)[idx].c_str();
 								return true;
 							}, &enumLimit->mEnumNames, enumLimit->mEnumNames.size());
-							intData = enumLimit->apply(oldIntData, enumLimit->mEnumValues[index]); // TODO: move Limit::apply to ScriptData::set
-							if (oldIntData != intData) {
-								scriptData.set(dataName, intData);
-								modify = true;
-							}
-						} else if (auto intRangeLimit = std::dynamic_pointer_cast<IntRangeLimit>(limit)) {
-							int oldIntData = intData;
-							ImGui::InputInt(dataName.c_str(), &intData); // TODO: use a better ui
-							intData = intRangeLimit->apply(oldIntData, intData);
-							if (oldIntData != intData) {
-								scriptData.set(dataName, intData);
-								modify = true;
-							}
+                            modify |= scriptData.set(dataName, enumLimit->mEnumValues[index]);
 						} else {
 							ImGui::InputInt(dataName.c_str(), &intData);
-							if (scriptData.get<int>(dataName) != intData) {
-								scriptData.set(dataName, intData);
-								modify = true;
-							}
+                            modify |= scriptData.set(dataName, intData);
 						}
 					} else if (type == TYPE_FLOAT) {
 						float floatData = scriptData.get<float>(dataName);
 						ImGui::InputFloat(dataName.c_str(), &floatData);
-						if (scriptData.get<float>(dataName) != floatData) {
-							scriptData.set(dataName, floatData);
-							modify = true;
-						}
+                        modify |= scriptData.set(dataName, floatData);
 					} else if (type == TYPE_STRING) {
 						std::string stringData = scriptData.get<std::string>(dataName);
 						ImGui::InputText(dataName.c_str(), &stringData);
-						if (scriptData.get<std::string>(dataName) != stringData) {
-							scriptData.set(dataName, stringData);
-							modify = true;
-						}
+                        modify |= scriptData.set(dataName, stringData);
 					} else assert(false);
 				}
 			}
