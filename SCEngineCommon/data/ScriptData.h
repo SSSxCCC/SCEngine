@@ -5,13 +5,30 @@
 #include <memory>
 #include "nlohmann/json.hpp"
 #include "data/Limit.h"
+#include "glm/glm.hpp"
+
+// Make glm::vec can be converted to json
+namespace glm {
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(glm::vec2, x, y)
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(glm::vec3, x, y, z)
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(glm::vec4, x, y, z, w)
+}
 
 // The type index of ScriptVar::value
-static const int TYPE_INT = 0, TYPE_FLOAT = 1, TYPE_STRING = 2;
+// If you need add new types, you should update:
+// 1. type of ScriptVar::value
+// 2. to_json and from_json of ScriptVar in ScriptData.h
+// 3. GameWorldEditor.cpp
+static const int TYPE_INT = 0; // int
+static const int TYPE_FLOAT = 1; // float
+static const int TYPE_STRING = 2; // std::string
+static const int TYPE_VEC2 = 3; // glm::vec2
+static const int TYPE_VEC3 = 4; // glm::vec3
+static const int TYPE_VEC4 = 5; // glm::vec4
 
 // A single variable in a Script
 struct ScriptVar {
-	std::variant<int, float, std::string> value; // the value of this variable
+	std::variant<int, float, std::string, glm::vec2, glm::vec3, glm::vec4> value; // the value of this variable
 	std::shared_ptr<LimitBase> limit; // the limit on this variable, editor use only
 	ScriptVar() { }
 	template<typename T> explicit ScriptVar(const T& value, std::shared_ptr<LimitBase> limit = nullptr) : value(value), limit(limit) { }
@@ -26,7 +43,13 @@ inline void to_json(nlohmann::json& json, const ScriptVar& scriptVar) {
 		json["value"] = std::get<float>(scriptVar.value);
 	} else if (type == TYPE_STRING) {
 		json["value"] = std::get<std::string>(scriptVar.value);
-	} else assert(false);
+	} else if (type == TYPE_VEC2) {
+        json["value"] = std::get<glm::vec2>(scriptVar.value);
+    } else if (type == TYPE_VEC3) {
+        json["value"] = std::get<glm::vec3>(scriptVar.value);
+    } else if (type == TYPE_VEC4) {
+        json["value"] = std::get<glm::vec4>(scriptVar.value);
+    } else assert(false);
 	json["type"] = type;
 }
 inline void from_json(const nlohmann::json& json, ScriptVar& scriptVar) {
@@ -37,7 +60,13 @@ inline void from_json(const nlohmann::json& json, ScriptVar& scriptVar) {
 		scriptVar.value = json["value"].get<float>();
 	} else if (type == TYPE_STRING) {
 		scriptVar.value = json["value"].get<std::string>();
-	} else assert(false);
+	} else if (type == TYPE_VEC2) {
+        scriptVar.value = json["value"].get<glm::vec2>();
+    } else if (type == TYPE_VEC3) {
+        scriptVar.value = json["value"].get<glm::vec3>();
+    } else if (type == TYPE_VEC4) {
+        scriptVar.value = json["value"].get<glm::vec4>();
+    } else assert(false);
 }
 
 // Define how ScriptData/GameObjectData/GameWorldData was edited

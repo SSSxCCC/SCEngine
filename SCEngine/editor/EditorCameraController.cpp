@@ -20,8 +20,8 @@ void EditorCameraController::zoomOut() {
 void EditorCameraController::reset() {
 	auto transform = mGameObject->getScript<Transform>();
 	if (transform) {
-		transform->mPosX = 0.0f;
-		transform->mPosY = 0.0f;
+		transform->mPosition.x = 0.0f;
+		transform->mPosition.y = 0.0f;
 	}
 	mCamera->mZoom = 1.0f / gScale;
 }

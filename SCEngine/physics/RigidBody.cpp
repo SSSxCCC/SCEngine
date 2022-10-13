@@ -6,7 +6,7 @@
 void RigidBody::onCreate() {
 	auto transform = mGameObject->getScript<Transform>();
 	if (transform) {
-		mBodyDef.position.Set(transform->mPosX, transform->mPosY);
+		mBodyDef.position.Set(transform->mPosition.x, transform->mPosition.y);
 		mBodyDef.angle = transform->mRotation;
 	}
 	mBody = mGameObject->mGameWorld->mPhysicsWorld->mWorld->CreateBody(&mBodyDef);
@@ -23,8 +23,8 @@ void RigidBody::onUpdate() {
 	if (transform) {
 		b2Vec2 position = mBody->GetPosition();
 		float angle = mBody->GetAngle();
-		transform->mPosX = position.x;
-		transform->mPosY = position.y;
+		transform->mPosition.x = position.x;
+		transform->mPosition.y = position.y;
 		transform->mRotation = angle;
 	}
 }

@@ -2,28 +2,22 @@
 
 ScriptData Transform::getData() {
 	auto data = Script::getData();
-	data.add("mPosX", mPosX);
-	data.add("mPosY", mPosY);
-	data.add("mZ", mZ);
-	data.add("mRotation", mRotation);
-	data.add("mScaleX", mScaleX);
-	data.add("mScaleY", mScaleY);
+	data.add("mPosition", mPosition);
+	data.add("mRotation", glm::degrees(mRotation));
+	data.add("mScale", mScale);
 	return data;
 }
 
 void Transform::setData(const ScriptData& data) {
-	mPosX = data.get<float>("mPosX");
-	mPosY = data.get<float>("mPosY");
-	mZ = data.get<float>("mZ");
-	mRotation = data.get<float>("mRotation");
-	mScaleX = data.get<float>("mScaleX");
-	mScaleY = data.get<float>("mScaleY");
+    mPosition = data.get<glm::vec3>("mPosition");
+	mRotation = glm::radians(data.get<float>("mRotation"));
+	mScale = data.get<glm::vec2>("mScale");
 }
 
 glm::mat4 Transform::buildModelMatrix() {
 	glm::mat4 model(1.0f);
-	model = glm::translate(model, glm::vec3(mPosX, mPosY, mZ));
+	model = glm::translate(model, mPosition);
 	model = glm::rotate(model, mRotation, glm::vec3(0.0f, 0.0f, 1.0f));
-	model = glm::scale(model, glm::vec3(mScaleX, mScaleY, 1.0f));
+	model = glm::scale(model, glm::vec3(mScale, 1.0f));
 	return model;
 }

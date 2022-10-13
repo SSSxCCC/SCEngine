@@ -8,9 +8,9 @@
 // Keep a GameObject's position, rotation and scale. Every GameObject must have a Transform
 class Transform : public Script {
 public:
-	float mPosX, mPosY, mZ;
+	glm::vec3 mPosition;
 	float mRotation; // this is radians, use glm::degrees(mRotation) to get degree
-	float mScaleX, mScaleY;
+    glm::vec2 mScale;
 	std::string getName() override { return "Transform"; }
 	ScriptData getData() override;
 	void setData(const ScriptData& data) override;

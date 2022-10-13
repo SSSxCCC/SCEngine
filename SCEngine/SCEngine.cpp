@@ -55,10 +55,10 @@ void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer) {
 	auto gameObject = std::make_shared<GameObject>("Box1");
 	gameObject->addScript(std::make_shared<Transform>());
 	auto transform = gameObject->getScript<Transform>();
-	transform->mScaleX = 10.f;
-	transform->mScaleY = 10.f;
-	transform->mPosX = 0.0f;
-	transform->mPosY = 100.0f;
+	transform->mScale.x = 10.f;
+	transform->mScale.y = 10.f;
+	transform->mPosition.x = 0.0f;
+	transform->mPosition.y = 100.0f;
 	gameObject->addScript(std::make_shared<RectangleRender>());
 	gameObject->addScript(std::make_shared<RigidBody>());
 	gameObject->getScript<RigidBody>()->mBodyDef.type = b2_dynamicBody;
@@ -68,18 +68,18 @@ void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer) {
 	auto gameObject2 = gameObject->clone();
 	gameObject2->mName = "Box2";
 	transform = gameObject2->getScript<Transform>();
-	transform->mPosX = 5.0f;
-	transform->mPosY = 120.0f;
+	transform->mPosition.x = 5.0f;
+	transform->mPosition.y = 120.0f;
 	gameWorld->addGameObject(gameObject2);
 
 	auto groundObject = gameObject->clone();
 	groundObject->mName = "Ground";
 	groundObject->getScript<RigidBody>()->mBodyDef.type = b2_staticBody;
 	transform = groundObject->getScript<Transform>();
-	transform->mPosX = 0.0f;
-	transform->mPosY = -100.0f;
-	transform->mScaleX = 400.0f;
-	transform->mScaleY = 80.f;
+	transform->mPosition.x = 0.0f;
+	transform->mPosition.y = -100.0f;
+	transform->mScale.x = 400.0f;
+	transform->mScale.y = 80.f;
 	gameWorld->addGameObject(groundObject);
 
 	gameWorld->create();
