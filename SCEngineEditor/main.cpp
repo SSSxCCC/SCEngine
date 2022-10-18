@@ -13,8 +13,23 @@
 #include "editor/SubWindow.h"
 #include "data/GameWorldData.h"
 
-CallbackPointer gCallbackPointer;
 float gScale = 1.0f;
+GLFWwindow* gWindow;
+CallbackPointer gCallbackPointer;
+
+void initCallbackPointer() {
+    gCallbackPointer.mGetKey = [](int key) {
+        return glfwGetKey(gWindow, key);
+    };
+    gCallbackPointer.mGetMouseButton = [](int button) {
+        return glfwGetMouseButton(gWindow, button);
+    };
+    gCallbackPointer.mGetCursorPos = [](float& x, float& y) {
+        double xpos, ypos;
+        glfwGetCursorPos(gWindow, &xpos, &ypos);
+        x = (float) xpos; y = (float) ypos;
+    };
+}
 
 static void sCheckGLError() {
 	GLenum errCode = glGetError();
@@ -92,8 +107,8 @@ class SCEngine {
 public:
 	using SCEngine_init_fn = void(*)(OpenGLPointer&, CallbackPointer&);
 	using SCEngine_doFrame_fn = GameWorldData&(*)(bool);
-	using SCEngine_doEditorFrame_fn = void(*)(bool,int,int);
-	using SCEngine_doGameFrame_fn = void(*)(bool, int, int);
+	using SCEngine_doEditorFrame_fn = void(*)(bool,int,int,float,float);
+	using SCEngine_doGameFrame_fn = void(*)(bool,int,int,float,float);
 	using SCEngine_runGame_fn = void(*)();
 	using SCEngine_stopGame_fn = void(*)();
 	using SCEngine_save_fn = void(*)();
@@ -143,29 +158,29 @@ int main() {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(1920, 1080, "SCEngine", NULL, NULL);
-	if (window == NULL) {
-		fprintf(stderr, "Failed to create GLFW window.\n");
+	gWindow = glfwCreateWindow(1920, 1080, "SCEngine", NULL, NULL);
+	if (gWindow == NULL) {
+		fprintf(stderr, "Failed to create GLFW gWindow.\n");
 		glfwTerminate();
 		return -1;
 	}
 
-	glfwMakeContextCurrent(window);
+	glfwMakeContextCurrent(gWindow);
 	int version = gladLoadGL(glfwGetProcAddress);
 	printf("GLAD %d.%d\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
 	printf("OpenGL %s, GLSL %s\n", glGetString(GL_VERSION), glGetString(GL_SHADING_LANGUAGE_VERSION));
 
-	glfwSetScrollCallback(window, ScrollCallback);
-	glfwSetWindowSizeCallback(window, WindowSizeCallback);
-	glfwSetKeyCallback(window, KeyCallback);
-	glfwSetCharCallback(window, CharCallback);
-	glfwSetMouseButtonCallback(window, MouseButtonCallback);
-	glfwSetCursorPosCallback(window, CursorPosCallback);
+	glfwSetScrollCallback(gWindow, ScrollCallback);
+	glfwSetWindowSizeCallback(gWindow, WindowSizeCallback);
+	glfwSetKeyCallback(gWindow, KeyCallback);
+	glfwSetCharCallback(gWindow, CharCallback);
+	glfwSetMouseButtonCallback(gWindow, MouseButtonCallback);
+	glfwSetCursorPosCallback(gWindow, CursorPosCallback);
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 
-	if (!ImGui_ImplGlfw_InitForOpenGL(window, false)) {
+	if (!ImGui_ImplGlfw_InitForOpenGL(gWindow, false)) {
 		printf("ImGui_ImplGlfw_InitForOpenGL failed\n");
 		assert(false);
 	}
@@ -175,16 +190,17 @@ int main() {
 		assert(false);
 	}
 
-	glfwSetWindowContentScaleCallback(window, WindowContentScaleCallback);
+	glfwSetWindowContentScaleCallback(gWindow, WindowContentScaleCallback);
 	float xscale, yscale;
-	glfwGetWindowContentScale(window, &xscale, &yscale);
-	WindowContentScaleCallback(window, xscale, yscale);
+	glfwGetWindowContentScale(gWindow, &xscale, &yscale);
+	WindowContentScaleCallback(gWindow, xscale, yscale);
 
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
 
 	ImGui::GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
 
+    initCallbackPointer();
 	OpenGLPointer openGLPointer;
 	gSCEngine.init(openGLPointer, gCallbackPointer);
 
@@ -192,7 +208,7 @@ int main() {
 	SubWindow editorWindow("editor"), gameWindow("game");
 	GameWorldEditor worldEditor;
 
-	while (!glfwWindowShouldClose(window)) {
+	while (!glfwWindowShouldClose(gWindow)) {
 		glfwPollEvents();
 		//glfwGetWindowSize(mainWindow, &width, &height);
 		ImGui_ImplOpenGL3_NewFrame();
@@ -204,17 +220,17 @@ int main() {
 
 		editorWindow.update();
 		editorWindow.bind();
-		gSCEngine.doEditorFrame(editorWindow.isFocus(), editorWindow.getWidth(), editorWindow.getHeight());
+		gSCEngine.doEditorFrame(editorWindow.isFocus(), editorWindow.getWidth(), editorWindow.getHeight(), editorWindow.getCursorScreenPos().x, editorWindow.getCursorScreenPos().y);
 		editorWindow.unbind();
 		if (!editorMode) {
 			gameWindow.update();
 			gameWindow.bind();
-			gSCEngine.doGameFrame(gameWindow.isFocus(), gameWindow.getWidth(), gameWindow.getHeight());
+			gSCEngine.doGameFrame(gameWindow.isFocus(), gameWindow.getWidth(), gameWindow.getHeight(), gameWindow.getCursorScreenPos().x, gameWindow.getCursorScreenPos().y);
 			gameWindow.unbind();
 		}
 
 		int bufferWidth, bufferHeight;
-		glfwGetFramebufferSize(window, &bufferWidth, &bufferHeight);
+		glfwGetFramebufferSize(gWindow, &bufferWidth, &bufferHeight);
 		glViewport(0, 0, bufferWidth, bufferHeight);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -245,7 +261,7 @@ int main() {
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData()); // TODO: fix GLError 1281 in this line when switch between game mode and editor mode!
 		sCheckGLError();
 
-		glfwSwapBuffers(window);
+		glfwSwapBuffers(gWindow);
 
 		/*if (SCEngine::doFrame()) {
 			SCEngine::close();

@@ -30,6 +30,9 @@ void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer) {
 		gEditorInput.setScroll((float)dx, (float)dy);
 		gInput.setScroll((float)dx, (float)dy);
 	};
+    Input::sGetKey = callbackPointer.mGetKey;
+    Input::sGetMouseButton = callbackPointer.mGetMouseButton;
+    Input::sGetCursorPos = callbackPointer.mGetCursorPos;
 
 	printf("Box2D Version %d.%d.%d\n", b2_version.major, b2_version.minor, b2_version.revision);
 
@@ -122,17 +125,17 @@ GameWorldData& doFrame(bool editorMode) {
 	}
 }
 
-void doEditorFrame(bool focus, int with, int height) {
+void doEditorFrame(bool focus, int with, int height, float cursorOffsetX, float cursorOffsetY) {
 	gEditorInput.setFocus(focus);
-	//gEditorInput.setCursorOffset(cursorOffsetX, cursorOffsetY);
+	gEditorInput.setCursorOffset(cursorOffsetX, cursorOffsetY);
 	gameWorld->mEditorCamera->setSize(with, height);
 	gameWorld->draw(true);
 	gEditorInput.reset();
 }
 
-void doGameFrame(bool focus, int with, int height) {
+void doGameFrame(bool focus, int with, int height, float cursorOffsetX, float cursorOffsetY) {
 	gInput.setFocus(focus);
-	//gInput.setCursorOffset(cursorScreenPos.x, cursorScreenPos.y);
+	gInput.setCursorOffset(cursorOffsetX, cursorOffsetY);
 	gameWorld->mMainCamera->setSize(with, height);
 	gameWorld->draw();
 	gInput.reset();

@@ -36,20 +36,26 @@ void EditorCameraController::onUpdate() {
 		zoomOut();
 	}
 
+    // get transform
+    auto transform = mGameObject->getScript<Transform>();
+    if (!transform) {
+        return;
+    }
+
 	// press home key to reset
-	/*if (gEditorInput.getKey(GLFW_KEY_HOME) == GLFW_PRESS) {
+	if (gEditorInput.getKey(KEY_HOME) == PRESS) {
 		reset();
 	}
 
-	if (gEditorInput.getMouseButton(GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+	if (gEditorInput.getMouseButton(MOUSE_BUTTON_RIGHT) == PRESS) {
 		// move by mouse drag
 		float cursorX, cursorY;
 		gEditorInput.getCursorPosition(cursorX, cursorY);
 		if (mDragging) {
 			float worldX, worldY;
 			mCamera->screenToWorld(cursorX, cursorY, worldX, worldY);
-			mGameObject->mTransform.mPosX += (mLastWorldX - worldX);
-			mGameObject->mTransform.mPosY += (mLastWorldY - worldY);
+            transform->mPosition.x += (mLastWorldX - worldX);
+            transform->mPosition.y += (mLastWorldY - worldY);
 		} else {
 			mDragging = true;
 		}
@@ -59,21 +65,21 @@ void EditorCameraController::onUpdate() {
 
 		// move by WASD or arrow keys
 		float moveX = 0, moveY = 0;
-		if (gEditorInput.getKey(GLFW_KEY_LEFT) == GLFW_PRESS || gEditorInput.getKey(GLFW_KEY_A) == GLFW_PRESS) {
+		if (gEditorInput.getKey(KEY_LEFT) == PRESS || gEditorInput.getKey(KEY_A) == PRESS) {
 			moveX -= 1.0f;
 		}
-		if (gEditorInput.getKey(GLFW_KEY_RIGHT) == GLFW_PRESS || gEditorInput.getKey(GLFW_KEY_D) == GLFW_PRESS) {
+		if (gEditorInput.getKey(KEY_RIGHT) == PRESS || gEditorInput.getKey(KEY_D) == PRESS) {
 			moveX += 1.0f;
 		}
-		if (gEditorInput.getKey(GLFW_KEY_UP) == GLFW_PRESS || gEditorInput.getKey(GLFW_KEY_W) == GLFW_PRESS) {
+		if (gEditorInput.getKey(KEY_UP) == PRESS || gEditorInput.getKey(KEY_W) == PRESS) {
 			moveY += 1.0f;
 		}
-		if (gEditorInput.getKey(GLFW_KEY_DOWN) == GLFW_PRESS || gEditorInput.getKey(GLFW_KEY_S) == GLFW_PRESS) {
+		if (gEditorInput.getKey(KEY_DOWN) == PRESS || gEditorInput.getKey(KEY_S) == PRESS) {
 			moveY -= 1.0f;
 		}
-		mGameObject->mTransform.mPosX += moveX * mMoveSpeed * mGameObject->mGameWorld->mDeltaTime;
-		mGameObject->mTransform.mPosY += moveY * mMoveSpeed * mGameObject->mGameWorld->mDeltaTime;
-	}*/
+        transform->mPosition.x += moveX * mMoveSpeed * mGameObject->mGameWorld->mDeltaTime;
+        transform->mPosition.y += moveY * mMoveSpeed * mGameObject->mGameWorld->mDeltaTime;
+	}
 }
 
 void EditorCameraController::onDestroy() {

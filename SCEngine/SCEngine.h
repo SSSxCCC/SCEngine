@@ -9,9 +9,9 @@ extern "C" __declspec(dllexport) void init(OpenGLPointer& openGLPointer, Callbac
 
 extern "C" __declspec(dllexport) GameWorldData& doFrame(bool editorMode);
 
-extern "C" __declspec(dllexport) void doEditorFrame(bool focus, int with, int height);
+extern "C" __declspec(dllexport) void doEditorFrame(bool focus, int with, int height, float cursorOffsetX, float cursorOffsetY);
 
-extern "C" __declspec(dllexport) void doGameFrame(bool focus, int with, int height);
+extern "C" __declspec(dllexport) void doGameFrame(bool focus, int with, int height, float cursorOffsetX, float cursorOffsetY);
 
 extern "C" __declspec(dllexport) void runGame();
 

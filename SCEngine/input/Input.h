@@ -1,22 +1,27 @@
 #ifndef _Input_H_
 #define _Input_H_
 
+#include <functional>
+#include "input/InputConstants.h"
+
 // handle input in game
 class Input {
 public:
+    static std::function<int(int)> sGetKey;
+    static std::function<int(int)> sGetMouseButton;
+    static std::function<void(float&,float&)> sGetCursorPos;
+
 	void reset() {
 		mScrollX = 0.0f;
 		mScrollY = 0.0f;
 	}
 
 	int getKey(int key) {
-		//return mFocus ? glfwGetKey(mWindow, key) : GLFW_RELEASE;
-		return 0;
+		return mFocus ? sGetKey(key) : RELEASE;
 	}
 
 	int getMouseButton(int button) {
-		//return mFocus ? glfwGetMouseButton(mWindow, button) : GLFW_RELEASE;
-		return 0;
+		return mFocus ? sGetMouseButton(button) : RELEASE;
 	}
 
 	void getScroll(float& scrollX, float& scrollY) {
@@ -25,11 +30,9 @@ public:
 	}
 
 	void getCursorPosition(float& x, float& y) {
-		//double xpos, ypos;
-		//glfwGetCursorPos(mWindow, &xpos, &ypos);
-		//x = xpos - mCursorOffsetX;
-		//y = ypos - mCursorOffsetY;
-		x = 0; y = 0;
+        sGetCursorPos(x, y);
+		x -= mCursorOffsetX;
+		y -= mCursorOffsetY;
 	}
 
 	void setFocus(bool focus) {
