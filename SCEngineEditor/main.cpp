@@ -124,7 +124,7 @@ public:
 	SCEngine_load_fn load;
 	SCEngine_close_fn close;
 	void loadLibrary() {
-		dll = LoadLibrary("SCEngine.dll");
+		dll = LoadLibrary("SCEngineCore.dll");
 		init = (SCEngine_init_fn)GetProcAddress(dll, "init");
 		doFrame = (SCEngine_doFrame_fn)GetProcAddress(dll, "doFrame");
 		doEditorFrame = (SCEngine_doEditorFrame_fn)GetProcAddress(dll, "doEditorFrame");
