@@ -5,13 +5,6 @@ cmake_minimum_required (VERSION 3.12)
 
 project ("SCEngine" VERSION 0.1)
 
-add_subdirectory ("SCEngineCore")
+#add_subdirectory ("SCEngineCore")
 add_subdirectory ("SCEngineEditor")
-add_subdirectory ("SCEngineCommon")
-
-add_subdirectory ("Dependency/box2d/src")
-add_subdirectory ("Dependency/glad")
-add_subdirectory ("Dependency/glfw")
-add_subdirectory ("Dependency/glm")
-add_subdirectory ("Dependency/imgui")
-add_subdirectory("Dependency/nlohmann_json")
+#add_subdirectory ("DemoGames/EmptyProject")

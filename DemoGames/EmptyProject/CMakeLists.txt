@@ -2,9 +2,9 @@ cmake_minimum_required (VERSION 3.12)
 
 project ("EmptyProject")
 
-add_subdirectory ("../.." "SCEngineRoot")
+add_subdirectory ("../../SCEngineCore" "SCEngineCore")
 
-add_library (SCEngine SHARED "EmptyProject.cpp")
+add_library (SCEngine SHARED "../../SCEngineCore/SCEngine.cpp")
 
 set_property (TARGET SCEngine PROPERTY CXX_STANDARD 20)
 
