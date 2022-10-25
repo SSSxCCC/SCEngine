@@ -4,8 +4,10 @@
 #include "common/OpenGLPointer.h"
 #include "common/CallbackPointer.h"
 #include "data/GameWorldData.h"
+#include <filesystem>
+namespace fs = std::filesystem;
 
-extern "C" __declspec(dllexport) void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer);
+extern "C" __declspec(dllexport) void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer, const fs::path& assetDir);
 
 extern "C" __declspec(dllexport) GameWorldData& doFrame(bool editorMode);
 

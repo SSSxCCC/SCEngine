@@ -5,6 +5,7 @@
 #include "box2d/box2d.h"
 
 #include "utility/Window.h"
+#include "utility/Asset.h"
 #include "input/Input.h"
 #include "core/GameWorld.h"
 #include "graphics/RectangleRender.h"
@@ -24,7 +25,7 @@ void reloadGame() {
     startTime = std::chrono::steady_clock::now();
 }
 
-void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer) {
+void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer, const fs::path& assetDir) {
 	openGLPointer.apply();
 	callbackPointer.mScrollCallback = [](double dx, double dy) {
 		gEditorInput.setScroll((float)dx, (float)dy);
@@ -33,6 +34,7 @@ void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer) {
     Input::sGetKey = callbackPointer.mGetKey;
     Input::sGetMouseButton = callbackPointer.mGetMouseButton;
     Input::sGetCursorPos = callbackPointer.mGetCursorPos;
+    gAssetDir = assetDir;
 
 	printf("Box2D Version %d.%d.%d\n", b2_version.major, b2_version.minor, b2_version.revision);
 

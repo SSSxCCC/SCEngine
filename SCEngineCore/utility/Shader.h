@@ -6,13 +6,14 @@
 #include <sstream>
 #include <iostream>
 #include "glad/gl.h"
+#include "utility/Asset.h"
 
 class Shader {
 public:
 	unsigned int ID;
 	// constructor generates the shader on the fly
 	// ------------------------------------------------------------------------
-	Shader(const char* vertexPath, const char* fragmentPath) {
+	Shader(const fs::path& vertexPath, const fs::path& fragmentPath) {
 		// 1. retrieve the vertex/fragment source code from filePath
 		std::string vertexCode;
 		std::string fragmentCode;
@@ -23,8 +24,8 @@ public:
 		fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 		try {
 			// open files
-			vShaderFile.open(vertexPath);
-			fShaderFile.open(fragmentPath);
+			vShaderFile.open(gAssetDir / vertexPath);
+			fShaderFile.open(gAssetDir / fragmentPath);
 			std::stringstream vShaderStream, fShaderStream;
 			// read file's buffer contents into streams
 			vShaderStream << vShaderFile.rdbuf();

@@ -12,9 +12,11 @@ set_property (TARGET SCEngineEditor PROPERTY CXX_STANDARD 20)
 add_subdirectory ("../SCEngineCommon" "SCEngineCommon")
 add_subdirectory ("../Dependency/glfw" "glfw")
 add_subdirectory ("../Dependency/imgui" "imgui")
+add_subdirectory ("../Dependency/ImGuiFileDialog" "ImGuiFileDialog")
 
 target_link_libraries (SCEngineEditor PUBLIC SCEngineCommon)
 target_link_libraries (SCEngineEditor PUBLIC glfw)
 target_link_libraries (SCEngineEditor PUBLIC imgui)
+target_link_libraries (SCEngineEditor PUBLIC ImGuiFileDialog)
 
 install (TARGETS SCEngineEditor DESTINATION bin)

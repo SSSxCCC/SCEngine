@@ -1,0 +1,2 @@
+add_library(ImGuiFileDialog STATIC "ImGuiFileDialog.cpp")
+target_include_directories(ImGuiFileDialog PUBLIC .. "../imgui")

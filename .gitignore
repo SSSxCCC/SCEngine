@@ -365,3 +365,6 @@ FodyWeavers.xsd
 # Clion
 .idea/
 cmake-build-debug/
+
+# Cmake
+build/

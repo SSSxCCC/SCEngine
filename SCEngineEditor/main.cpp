@@ -1,21 +1,25 @@
 ﻿#define NOMINMAX
 #include <Windows.h>
 #include <iostream>
+#include <filesystem>
 #include <assert.h>
 #include "glad/gl.h"
 #include "GLFW/glfw3.h"
 #include "imgui/imgui.h"
 #include "imgui_backends/imgui_impl_glfw.h"
 #include "imgui_backends/imgui_impl_opengl3.h"
+#include "ImGuiFileDialog/ImGuiFileDialog.h"
 #include "common/OpenGLPointer.h"
 #include "common/CallbackPointer.h"
 #include "editor/GameWorldEditor.h"
 #include "editor/SubWindow.h"
 #include "data/GameWorldData.h"
+namespace fs = std::filesystem;
 
 float gScale = 1.0f;
 GLFWwindow* gWindow;
 CallbackPointer gCallbackPointer;
+fs::path gProjectDir = "";
 
 void initCallbackPointer() {
     gCallbackPointer.mGetKey = [](int key) {
@@ -105,7 +109,7 @@ static void WindowContentScaleCallback(GLFWwindow* window, float xscale, float y
 
 class SCEngine {
 public:
-	using SCEngine_init_fn = void(*)(OpenGLPointer&, CallbackPointer&);
+	using SCEngine_init_fn = void(*)(OpenGLPointer&, CallbackPointer&, const fs::path&);
 	using SCEngine_doFrame_fn = GameWorldData&(*)(bool);
 	using SCEngine_doEditorFrame_fn = void(*)(bool,int,int,float,float);
 	using SCEngine_doGameFrame_fn = void(*)(bool,int,int,float,float);
@@ -123,8 +127,13 @@ public:
 	SCEngine_save_fn save;
 	SCEngine_load_fn load;
 	SCEngine_close_fn close;
-	void loadLibrary() {
-		dll = LoadLibrary("SCEngine.dll");
+	void loadLibrary(const fs::path& dllFile) {
+		dll = LoadLibraryW(dllFile.c_str());
+        if (dll == nullptr) {
+            int error = GetLastError();
+            std::ifstream is(dllFile);
+            std::cout << "LoadLibrary Error! dll=" << dll << ", dllFile=" << dllFile << ", good=" << is.good() << ", error=" << error << std::endl;
+        }
 		init = (SCEngine_init_fn)GetProcAddress(dll, "init");
 		doFrame = (SCEngine_doFrame_fn)GetProcAddress(dll, "doFrame");
 		doEditorFrame = (SCEngine_doEditorFrame_fn)GetProcAddress(dll, "doEditorFrame");
@@ -144,8 +153,6 @@ private:
 
 
 int main() {
-	gSCEngine.loadLibrary();
-
 	glfwSetErrorCallback(glfwErrorCallback);
 
 	if (glfwInit() != GLFW_TRUE) {
@@ -202,7 +209,6 @@ int main() {
 
     initCallbackPointer();
 	OpenGLPointer openGLPointer;
-	gSCEngine.init(openGLPointer, gCallbackPointer);
 
 	bool editorMode = true;
 	SubWindow editorWindow("editor"), gameWindow("game");
@@ -215,45 +221,79 @@ int main() {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		auto& gameWorldData = gSCEngine.doFrame(editorMode);
-		worldEditor.doFrame(gameWorldData);
+        int bufferWidth, bufferHeight;
+        glfwGetFramebufferSize(gWindow, &bufferWidth, &bufferHeight);
+        glViewport(0, 0, bufferWidth, bufferHeight);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		editorWindow.update();
-		editorWindow.bind();
-		gSCEngine.doEditorFrame(editorWindow.isFocus(), editorWindow.getWidth(), editorWindow.getHeight(), editorWindow.getCursorScreenPos().x, editorWindow.getCursorScreenPos().y);
-		editorWindow.unbind();
-		if (!editorMode) {
-			gameWindow.update();
-			gameWindow.bind();
-			gSCEngine.doGameFrame(gameWindow.isFocus(), gameWindow.getWidth(), gameWindow.getHeight(), gameWindow.getCursorScreenPos().x, gameWindow.getCursorScreenPos().y);
-			gameWindow.unbind();
-		}
+        ImGui::Begin("Project");
+        ImGui::Text(gProjectDir.empty() ? "No project is opened" : ("Opened project: " + gProjectDir.string()).c_str());
+        ImGui::Button("Create new project"); // TODO: implement new project
+        if (ImGui::Button("Open project")) {
+            ImGuiFileDialog::Instance()->OpenDialog("ChooseDirDialogKey", "Open project", nullptr, ".");
+        }
+        if (!gProjectDir.empty()) {
+            if (ImGui::Button("Close project")) {
+                gProjectDir = "";
+                gSCEngine.close();
+                gSCEngine.freeLibrary();
+            }
+        }
+        ImGui::End();
+        if (ImGuiFileDialog::Instance()->Display("ChooseDirDialogKey")) {
+            if (ImGuiFileDialog::Instance()->IsOk()) {
+                std::string directory = ImGuiFileDialog::Instance()->GetCurrentPath();
+                std::cout << "directory=" << directory << std::endl;
+                if (!gProjectDir.empty()) {
+                    gSCEngine.close();
+                    gSCEngine.freeLibrary();
+                }
+                gProjectDir = directory;
+                gSCEngine.loadLibrary(gProjectDir / "build" / "install" / "bin" / "SCEngine.dll");
+                gSCEngine.init(openGLPointer, gCallbackPointer, gProjectDir / "build" / "install" / "asset");
+            }
+            ImGuiFileDialog::Instance()->Close();
+        }
 
-		int bufferWidth, bufferHeight;
-		glfwGetFramebufferSize(gWindow, &bufferWidth, &bufferHeight);
-		glViewport(0, 0, bufferWidth, bufferHeight);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        if (!gProjectDir.empty()) {
+            auto& gameWorldData = gSCEngine.doFrame(editorMode);
+            worldEditor.doFrame(gameWorldData);
 
-		ImGui::Begin("Game");
-		if (editorMode) {
-			if (ImGui::Button("Run")) {
-				editorMode = false;
-				gSCEngine.runGame();
-			} else {
-				if (ImGui::Button("Save")) {
-					gSCEngine.save();
-				}
-				if (ImGui::Button("Load")) {
-					gSCEngine.load();
-				}
-			}
-		} else {
-			if (ImGui::Button("Stop")) {
-				editorMode = true;
-				gSCEngine.stopGame();
-			}
-		}
-		ImGui::End();
+            editorWindow.update();
+            editorWindow.bind();
+            gSCEngine.doEditorFrame(editorWindow.isFocus(), editorWindow.getWidth(), editorWindow.getHeight(), editorWindow.getCursorScreenPos().x, editorWindow.getCursorScreenPos().y);
+            editorWindow.unbind();
+            if (!editorMode) {
+                gameWindow.update();
+                gameWindow.bind();
+                gSCEngine.doGameFrame(gameWindow.isFocus(), gameWindow.getWidth(), gameWindow.getHeight(), gameWindow.getCursorScreenPos().x, gameWindow.getCursorScreenPos().y);
+                gameWindow.unbind();
+            }
+
+            glViewport(0, 0, bufferWidth, bufferHeight);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            ImGui::Begin("Game");
+            if (editorMode) {
+                if (ImGui::Button("Run")) {
+                    editorMode = false;
+                    gSCEngine.runGame();
+                } else {
+                    if (ImGui::Button("Save")) {
+                        gSCEngine.save();
+                    }
+                    if (ImGui::Button("Load")) {
+                        gSCEngine.load();
+                    }
+                }
+            } else {
+                if (ImGui::Button("Stop")) {
+                    editorMode = true;
+                    gSCEngine.stopGame();
+                }
+            }
+            ImGui::End();
+        }
 
 		ImGui::ShowDemoWindow();
 
@@ -262,14 +302,6 @@ int main() {
 		sCheckGLError();
 
 		glfwSwapBuffers(gWindow);
-
-		/*if (SCEngine::doFrame()) {
-			SCEngine::close();
-			SCEngine::free();
-
-			SCEngine::load();
-			SCEngine::init(openGLPointer, gCallbackPointer);
-		}*/
 	}
 
 	gSCEngine.close();
