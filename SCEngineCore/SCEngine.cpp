@@ -36,7 +36,7 @@ void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer, const 
     Input::sGetCursorPos = callbackPointer.mGetCursorPos;
     gAssetDir = assetDir;
 
-	printf("Box2D Version %d.%d.%d\n", b2_version.major, b2_version.minor, b2_version.revision);
+    std::cout << "Box2D Version " << b2_version.major << "." << b2_version.minor << "." << b2_version.revision << std::endl;
 
 	// Add some GameObject to game world
 	gameWorld = std::make_shared<GameWorld>();
@@ -90,8 +90,8 @@ void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer, const 
 	gameWorld->create();
 	startTime = std::chrono::steady_clock::now();
 	gameWorldData = gameWorld->getData();
-	nlohmann::json j = gameWorldData;
-	std::cout << j.dump(4) << std::endl;
+	//nlohmann::json j = gameWorldData;
+	//std::cout << j.dump(4) << std::endl;
 }
 
 GameWorldData& doFrame(bool editorMode) {

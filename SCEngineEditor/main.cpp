@@ -19,6 +19,7 @@ namespace fs = std::filesystem;
 float gScale = 1.0f;
 GLFWwindow* gWindow;
 CallbackPointer gCallbackPointer;
+OpenGLPointer gOpenGLPointer;
 fs::path gProjectDir = "";
 
 void initCallbackPointer() {
@@ -38,12 +39,12 @@ void initCallbackPointer() {
 static void sCheckGLError() {
 	GLenum errCode = glGetError();
 	if (errCode != GL_NO_ERROR) {
-		fprintf(stderr, "OpenGL error = %d\n", errCode);
+        std::cout << "OpenGL error = " << errCode << std::endl;
 	}
 }
 
 static void glfwErrorCallback(int error, const char* description) {
-	fprintf(stderr, "GLFW error occured. Code: %d. Description: %s\n", error, description);
+    std::cout << "GLFW error occured. Code: " << error << ". Description: " << description << std::endl;
 }
 
 static void ScrollCallback(GLFWwindow* window, double dx, double dy) {
@@ -128,6 +129,7 @@ public:
 	SCEngine_load_fn load;
 	SCEngine_close_fn close;
 	void loadLibrary(const fs::path& dllFile) {
+        std::cout << "Load library " << dllFile << std::endl;
 		dll = LoadLibraryW(dllFile.c_str());
         if (dll == nullptr) {
             int error = GetLastError();
@@ -146,17 +148,66 @@ public:
 	}
 	void freeLibrary() {
 		FreeLibrary(dll);
+        std::cout << "Free library" << std::endl;
 	}
 private:
 	HMODULE dll;
 } gSCEngine;
 
+std::string exec(const std::string& cmd) {
+    std::cout << "cmd start ----------------------------------" << std::endl;
+    std::cout << cmd << std::endl;
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&_pclose)> pipe(_popen(cmd.c_str(), "r"), _pclose);
+    if (!pipe) {
+        std::cout << "popen() failed!" << std::endl;
+        //throw std::runtime_error("popen() failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    std::cout << result << std::endl;
+    std::cout << "cmd end ----------------------------------" << std::endl;
+    return result;
+}
+
+void buildProject() {
+    assert(!gProjectDir.empty());
+    fs::path cmakeExe = R"(..\compiler\cmake-3.25.0-rc1-windows-x86_64\bin\cmake.exe)";
+    fs::path sourceDir = gProjectDir;
+    fs::path buildDir = gProjectDir / "build";
+    fs::path installDir = buildDir / "install";
+    std::string cmd = cmakeExe.string() + " -S " + sourceDir.string() + " -B " + buildDir.string();
+    std::string result = exec(cmd); // TODO: handle result
+    cmd = cmakeExe.string() + " --build " + buildDir.string() + " --config Debug -j8";
+    result = exec(cmd); // TODO: handle result
+    cmd = cmakeExe.string() + " --install " + buildDir.string() + " --config Debug --prefix " + installDir.string();
+    result = exec(cmd); // TODO: handle result
+}
+
+void loadProject() {
+    assert(!gProjectDir.empty());
+    gSCEngine.loadLibrary(gProjectDir / "build" / "install" / "bin" / "SCEngine.dll");
+    // we must reset these function pointers before calling SCEngine::init, otherwise the program will crash
+    // TODO: figure out why the program crashes
+    gCallbackPointer.reset();
+    gSCEngine.init(gOpenGLPointer, gCallbackPointer, gProjectDir / "build" / "install" / "asset");
+}
+
+void closeProject() {
+    gSCEngine.close();
+    gSCEngine.freeLibrary();
+}
 
 int main() {
+    //std::ofstream out("output.txt");
+    //std::cout.rdbuf(out.rdbuf());
+
 	glfwSetErrorCallback(glfwErrorCallback);
 
 	if (glfwInit() != GLFW_TRUE) {
-		fprintf(stderr, "Failed to initialize GLFW\n");
+        std::cout << "Failed to initialize GLFW" << std::endl;
 		return -1;
 	}
 
@@ -165,17 +216,17 @@ int main() {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	gWindow = glfwCreateWindow(1920, 1080, "SCEngine", NULL, NULL);
-	if (gWindow == NULL) {
-		fprintf(stderr, "Failed to create GLFW gWindow.\n");
+	gWindow = glfwCreateWindow(1920, 1080, "SCEngine", nullptr, nullptr);
+	if (gWindow == nullptr) {
+        std::cout << "Failed to create GLFW gWindow." << std::endl;
 		glfwTerminate();
 		return -1;
 	}
 
 	glfwMakeContextCurrent(gWindow);
 	int version = gladLoadGL(glfwGetProcAddress);
-	printf("GLAD %d.%d\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
-	printf("OpenGL %s, GLSL %s\n", glGetString(GL_VERSION), glGetString(GL_SHADING_LANGUAGE_VERSION));
+    std::cout << "GLAD " << GLAD_VERSION_MAJOR(version) << "." << GLAD_VERSION_MINOR(version) << std::endl;
+    std::cout << "OpenGL " << glGetString(GL_VERSION) << ", GLSL " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
 	glfwSetScrollCallback(gWindow, ScrollCallback);
 	glfwSetWindowSizeCallback(gWindow, WindowSizeCallback);
@@ -188,12 +239,12 @@ int main() {
 	ImGui::CreateContext();
 
 	if (!ImGui_ImplGlfw_InitForOpenGL(gWindow, false)) {
-		printf("ImGui_ImplGlfw_InitForOpenGL failed\n");
+        std::cout << "ImGui_ImplGlfw_InitForOpenGL failed" << std::endl;
 		assert(false);
 	}
 
-	if (!ImGui_ImplOpenGL3_Init(NULL)) {
-		printf("ImGui_ImplOpenGL3_Init failed\n");
+	if (!ImGui_ImplOpenGL3_Init(nullptr)) {
+        std::cout << "ImGui_ImplOpenGL3_Init failed" << std::endl;
 		assert(false);
 	}
 
@@ -208,7 +259,7 @@ int main() {
 	ImGui::GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
 
     initCallbackPointer();
-	OpenGLPointer openGLPointer;
+    gOpenGLPointer = OpenGLPointer();
 
 	bool editorMode = true;
 	SubWindow editorWindow("editor"), gameWindow("game");
@@ -235,8 +286,12 @@ int main() {
         if (!gProjectDir.empty()) {
             if (ImGui::Button("Close project")) {
                 gProjectDir = "";
-                gSCEngine.close();
-                gSCEngine.freeLibrary();
+                closeProject();
+            }
+            if (ImGui::Button("Build")) {
+                closeProject();
+                buildProject();
+                loadProject();
             }
         }
         ImGui::End();
@@ -245,12 +300,11 @@ int main() {
                 std::string directory = ImGuiFileDialog::Instance()->GetCurrentPath();
                 std::cout << "directory=" << directory << std::endl;
                 if (!gProjectDir.empty()) {
-                    gSCEngine.close();
-                    gSCEngine.freeLibrary();
+                    closeProject();
                 }
                 gProjectDir = directory;
-                gSCEngine.loadLibrary(gProjectDir / "build" / "install" / "bin" / "SCEngine.dll");
-                gSCEngine.init(openGLPointer, gCallbackPointer, gProjectDir / "build" / "install" / "asset");
+                buildProject();
+                loadProject();
             }
             ImGuiFileDialog::Instance()->Close();
         }
@@ -304,8 +358,9 @@ int main() {
 		glfwSwapBuffers(gWindow);
 	}
 
-	gSCEngine.close();
-	gSCEngine.freeLibrary();
+    if (!gProjectDir.empty()) {
+        closeProject();
+    }
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	glfwTerminate();

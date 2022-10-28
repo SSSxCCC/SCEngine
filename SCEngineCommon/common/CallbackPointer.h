@@ -5,13 +5,17 @@
 
 class CallbackPointer {
 public:
-    // assign by core module
-    std::function<void(double, double)> mScrollCallback;
-
     // call by core module
     std::function<int(int)> mGetKey;
     std::function<int(int)> mGetMouseButton;
     std::function<void(float&,float&)> mGetCursorPos;
+
+    // assign by core module
+    std::function<void(double, double)> mScrollCallback;
+
+    void reset() {
+        mScrollCallback = nullptr;
+    }
 };
 
 #endif // _CallbackPointer_H_
