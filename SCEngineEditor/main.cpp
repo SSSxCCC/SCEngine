@@ -166,8 +166,8 @@ std::string exec(const std::string& cmd) {
     }
     while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
         result += buffer.data();
+        std::cout << buffer.data();
     }
-    std::cout << result << std::endl;
     std::cout << "cmd end ----------------------------------" << std::endl;
     return result;
 }
