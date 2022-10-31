@@ -172,8 +172,39 @@ std::string exec(const std::string& cmd) {
     return result;
 }
 
+fs::path getExePath() {
+    char fileName[MAX_PATH];
+    DWORD r = GetModuleFileNameA(nullptr, fileName, MAX_PATH);
+    if (r == 0) {
+        std::cout << "GetModuleFileNameA error=" << GetLastError() << std::endl;
+        assert(false);
+    }
+    return fileName;
+}
+
+std::string cmakePath(const std::string& windowsPath) {
+    std::string cmakePath = windowsPath;
+    std::replace(cmakePath.begin(), cmakePath.end(), '\\', '/');
+    return std::move(cmakePath);
+}
+
 void buildProject() {
     assert(!gProjectDir.empty());
+
+    // prepare
+    fs::path coreSource = getExePath().parent_path().parent_path() / "source" / "SCEngineCore";
+    fs::path fileCMakeLists = gProjectDir / "CMakeLists.txt";
+    std::ofstream ofs(fileCMakeLists);
+    ofs << R"(cmake_minimum_required (VERSION 3.12))" << std::endl
+        << R"(project ("SCEngineProject"))" << std::endl
+        << R"(add_subdirectory (")" << cmakePath(coreSource.string()) << R"(" "SCEngineCore"))" << std::endl
+        << R"(add_library (SCEngine SHARED ")" << cmakePath((coreSource / "SCEngine.cpp").string()) << R"("))" << std::endl
+        << R"(set_property (TARGET SCEngine PROPERTY CXX_STANDARD 20))" << std::endl
+        << R"(target_link_libraries (SCEngine PUBLIC SCEngineCore))" << std::endl
+        << R"(install (TARGETS SCEngine DESTINATION bin))" << std::endl;
+    ofs.close();
+
+    // build
     fs::path cmakeExe = R"(..\compiler\cmake-3.25.0-rc1-windows-x86_64\bin\cmake.exe)";
     fs::path sourceDir = gProjectDir;
     fs::path buildDir = gProjectDir / "build";
@@ -279,9 +310,8 @@ int main() {
 
         ImGui::Begin("Project");
         ImGui::Text(gProjectDir.empty() ? "No project is opened" : ("Opened project: " + gProjectDir.string()).c_str());
-        ImGui::Button("Create new project"); // TODO: implement new project
-        if (ImGui::Button("Open project")) {
-            ImGuiFileDialog::Instance()->OpenDialog("ChooseDirDialogKey", "Open project", nullptr, ".");
+        if (ImGui::Button("Open/Create project")) {
+            ImGuiFileDialog::Instance()->OpenDialog("ChooseDirDialogKey", "Open/Create project", nullptr, ".");
         }
         if (!gProjectDir.empty()) {
             if (ImGui::Button("Close project")) {
