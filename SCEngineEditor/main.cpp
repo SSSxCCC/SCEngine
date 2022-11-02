@@ -116,8 +116,8 @@ public:
 	using SCEngine_doGameFrame_fn = void(*)(bool,int,int,float,float);
 	using SCEngine_runGame_fn = void(*)();
 	using SCEngine_stopGame_fn = void(*)();
-	using SCEngine_save_fn = void(*)();
-	using SCEngine_load_fn = void(*)();
+	using SCEngine_save_fn = nlohmann::json(*)();
+	using SCEngine_load_fn = void(*)(const nlohmann::json&);
 	using SCEngine_close_fn = void(*)();
 	SCEngine_init_fn init;
 	SCEngine_doFrame_fn doFrame;
@@ -153,6 +153,23 @@ public:
 private:
 	HMODULE dll;
 } gSCEngine;
+
+void loadGame() {
+    std::ifstream i(gProjectDir / "GameWorldData.json");
+    nlohmann::json j;
+    if (i.good()) {
+        i >> j;
+    } else {
+        std::cout << "No GameWorldData.json" << std::endl;
+    }
+    gSCEngine.load(j);
+}
+
+void saveGame() {
+    nlohmann::json j = gSCEngine.save();
+    std::ofstream o(gProjectDir / "GameWorldData.json");
+    o << std::setw(4) << j << std::endl;
+}
 
 std::string exec(const std::string& cmd) {
     std::cout << "cmd start ----------------------------------" << std::endl;
@@ -224,6 +241,7 @@ void loadProject() {
     // TODO: figure out why the program crashes
     gCallbackPointer.reset();
     gSCEngine.init(gOpenGLPointer, gCallbackPointer, gProjectDir / "build" / "install" / "asset");
+    loadGame();
 }
 
 void closeProject() {
@@ -364,10 +382,10 @@ int main() {
                     gSCEngine.runGame();
                 } else {
                     if (ImGui::Button("Save")) {
-                        gSCEngine.save();
+                        saveGame();
                     }
                     if (ImGui::Button("Load")) {
-                        gSCEngine.load();
+                        loadGame();
                     }
                 }
             } else {

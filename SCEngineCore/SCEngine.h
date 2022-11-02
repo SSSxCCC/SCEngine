@@ -19,9 +19,9 @@ extern "C" __declspec(dllexport) void runGame();
 
 extern "C" __declspec(dllexport) void stopGame();
 
-extern "C" __declspec(dllexport) void save();
+extern "C" __declspec(dllexport) nlohmann::json save();
 
-extern "C" __declspec(dllexport) void load();
+extern "C" __declspec(dllexport) void load(const nlohmann::json& j);
 
 extern "C" __declspec(dllexport) void close();
 
