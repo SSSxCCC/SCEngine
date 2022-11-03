@@ -315,6 +315,10 @@ int main() {
 	SubWindow editorWindow("editor"), gameWindow("game");
 	GameWorldEditor worldEditor;
 
+    std::chrono::steady_clock::time_point lastTime = std::chrono::steady_clock::now();
+    int frame = 0;
+    float fps = 0.0f;
+
 	while (!glfwWindowShouldClose(gWindow)) {
 		glfwPollEvents();
 		//glfwGetWindowSize(mainWindow, &width, &height);
@@ -326,6 +330,17 @@ int main() {
         glfwGetFramebufferSize(gWindow, &bufferWidth, &bufferHeight);
         glViewport(0, 0, bufferWidth, bufferHeight);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        int duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - lastTime).count();
+        frame++;
+        if (duration > 1000) {
+            fps = (float) frame * 1000.0f / (float) duration;
+            frame = 0;
+            lastTime = std::chrono::steady_clock::now();
+        }
+        ImGui::Begin("Status");
+        ImGui::Text("fps: %f", fps);
+        ImGui::End();
 
         ImGui::Begin("Project");
         ImGui::Text(gProjectDir.empty() ? "No project is opened" : ("Opened project: " + gProjectDir.string()).c_str());
