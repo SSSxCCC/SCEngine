@@ -214,6 +214,9 @@ void buildProject() {
     std::ofstream ofs(fileCMakeLists);
     ofs << R"(cmake_minimum_required (VERSION 3.12))" << std::endl
         << R"(project ("SCEngineProject"))" << std::endl
+        #ifdef SANITIZE
+        << R"(add_compile_options(-fsanitize=address))" << std::endl
+        #endif
         << R"(add_subdirectory (")" << cmakePath(coreSource.string()) << R"(" "SCEngineCore"))" << std::endl
         << R"(add_library (SCEngine SHARED ")" << cmakePath((coreSource / "SCEngine.cpp").string()) << R"("))" << std::endl
         << R"(set_property (TARGET SCEngine PROPERTY CXX_STANDARD 20))" << std::endl
@@ -237,9 +240,6 @@ void buildProject() {
 void loadProject() {
     assert(!gProjectDir.empty());
     gSCEngine.loadLibrary(gProjectDir / "build" / "install" / "bin" / "SCEngine.dll");
-    // we must reset these function pointers before calling SCEngine::init, otherwise the program will crash
-    // TODO: figure out why the program crashes
-    gCallbackPointer.reset();
     gSCEngine.init(gOpenGLPointer, gCallbackPointer, gProjectDir / "build" / "install" / "asset");
     loadGame();
 }
@@ -247,6 +247,7 @@ void loadProject() {
 void closeProject() {
     gSCEngine.close();
     gSCEngine.freeLibrary();
+    gCallbackPointer.reset();
 }
 
 int main() {

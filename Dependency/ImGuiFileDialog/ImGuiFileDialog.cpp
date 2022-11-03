@@ -498,6 +498,15 @@ namespace IGFD
 			if (!token.empty() || (token.empty() && pushEmpty)) //-V728
 				arr.push_back(token);
 		}
+        #ifdef SANITIZE
+        for (auto it = arr.begin(); it != arr.end(); it++) {
+            std::string& s = *it;
+            if (s.c_str()[s.size()]) {
+                s += '\0';
+                s.pop_back();
+            }
+        }
+        #endif
 		return arr;
 	}
 
@@ -2558,6 +2567,18 @@ namespace IGFD
 #endif // USE_QUICK_PATH_SELECT
 					}
 
+                    /*bool click;
+                    std::string& s = *itPathDecomp;
+                    if (s.c_str()[s.size()]) {
+                        char cs[s.size() + 1];
+                        for (int i = 0; i < s.size(); i++) {
+                            cs[i] = s.c_str()[i];
+                        }
+                        cs[s.size()] = '\0';
+                        click = IMGUI_PATH_BUTTON(cs);
+                    } else {
+
+                    }*/
 					ImGui::PushID(_id++);
 					bool click = IMGUI_PATH_BUTTON((*itPathDecomp).c_str());
 					ImGui::PopID();

@@ -18,8 +18,18 @@ void GameWorldEditor::doFrame(GameWorldData& gameWorldData) {
 	if (current >= 0) {
 		auto& gameObjectData = gameWorldData.gameObjectsData[current];
 		ImGui::Begin("GameObject");
-		std::string name = gameObjectData.name;
+        #ifdef SANITIZE
+        char str[512];
+        for (int i = 0; i < gameObjectData.name.size(); i++) {
+            str[i] = gameObjectData.name[i];
+        }
+        str[gameObjectData.name.size()] = '\0';
+        ImGui::InputText("name", str, 512);
+        std::string name = str;
+        #else
+        std::string name = gameObjectData.name;
 		ImGui::InputText("name", &name);
+        #endif
 		if (gameObjectData.name != name) {
 			gameObjectData.name = name;
 			gameObjectData.editType = EditType::Modify;
@@ -32,7 +42,13 @@ void GameWorldEditor::doFrame(GameWorldData& gameWorldData) {
 			ImGui::Text("--------------------------------------------------");
 			ImGui::Text(scriptData.name.c_str());
 			bool modify = false;
-            for (const auto& dataName : scriptData.dataList) {
+            for (auto& dataName : scriptData.dataList) {
+                #ifdef SANITIZE // when delete this, add const to dataName!
+                if (dataName.c_str()[dataName.size()]) {
+                    dataName += '\0';
+                    dataName.pop_back();
+                }
+                #endif
                 int type = scriptData.getType(dataName);
                 if (type == TYPE_INT) {
                     auto intData = scriptData.get<int>(dataName);

@@ -18,5 +18,7 @@ cd [SCEngine]\build
 ```
 run:
 ```
+copy clang_rt.asan_dbg_dynamic-x86_64.dll to [SCEngine]\build\install\bin\
+example path: D:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.33.31629\bin\Hostx64\x64\clang_rt.asan_dbg_dynamic-x86_64.dll
 open [SCEngine]\build\install\bin\SCEngineEditor.exe
 ```

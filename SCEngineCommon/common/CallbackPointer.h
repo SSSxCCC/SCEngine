@@ -1,17 +1,19 @@
 #ifndef _CallbackPointer_H_
 #define _CallbackPointer_H_
 
-#include <functional>
-
 class CallbackPointer {
 public:
     // call by core module
-    std::function<int(int)> mGetKey;
-    std::function<int(int)> mGetMouseButton;
-    std::function<void(float&,float&)> mGetCursorPos;
+    using GetKey_fn = int(*)(int);
+    using GetMouseButton_fn = int(*)(int);
+    using GetCursorPos_fn = void(*)(float&,float&);
+    GetKey_fn mGetKey;
+    GetMouseButton_fn mGetMouseButton;
+    GetCursorPos_fn mGetCursorPos;
 
     // assign by core module
-    std::function<void(double, double)> mScrollCallback;
+    using ScrollCallback_fn = void(*)(double,double);
+    ScrollCallback_fn mScrollCallback;
 
     void reset() {
         mScrollCallback = nullptr;
