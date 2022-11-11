@@ -1,0 +1,22 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "cmake init",
+            "type": "shell",
+            "command": "&'${workspaceFolder}/SCEngineEditor/compiler/cmake-3.25.0-rc1-windows-x86_64/bin/cmake.exe' -S '${workspaceFolder}' -B '${workspaceFolder}/build'"
+        },
+        {
+            "label": "cmake build",
+            "type": "shell",
+            "command": "&'${workspaceFolder}/SCEngineEditor/compiler/cmake-3.25.0-rc1-windows-x86_64/bin/cmake.exe' --build '${workspaceFolder}/build' --config Debug -j8",
+            "dependsOn": ["cmake init"]
+        },
+        {
+            "label": "cmake install",
+            "type": "shell",
+            "command": "&'${workspaceFolder}/SCEngineEditor/compiler/cmake-3.25.0-rc1-windows-x86_64/bin/cmake.exe' --install '${workspaceFolder}/build' --config Debug --prefix '${workspaceFolder}/build/install'",
+            "dependsOn": ["cmake build"]
+        }
+    ]
+}
