@@ -128,30 +128,42 @@ public:
 	SCEngine_save_fn save;
 	SCEngine_load_fn load;
 	SCEngine_close_fn close;
-	void loadLibrary(const fs::path& dllFile) {
+
+	bool loadLibrary(const fs::path& dllFile) {
         std::cout << "Load library " << dllFile << std::endl;
-		dll = LoadLibraryW(dllFile.c_str());
-        if (dll == nullptr) {
+        if ((dll = LoadLibraryW(dllFile.c_str())) == nullptr) {
             int error = GetLastError();
             std::ifstream is(dllFile);
-            std::cout << "LoadLibrary Error! dll=" << dll << ", dllFile=" << dllFile << ", good=" << is.good() << ", error=" << error << std::endl;
+            std::cout << "LoadLibrary Error! dll == nullptr, dllFile=" << dllFile << ", good=" << is.good() << ", error=" << error << std::endl;
+            return false;
         }
-		init = (SCEngine_init_fn)GetProcAddress(dll, "init");
-		doFrame = (SCEngine_doFrame_fn)GetProcAddress(dll, "doFrame");
-		doEditorFrame = (SCEngine_doEditorFrame_fn)GetProcAddress(dll, "doEditorFrame");
-		doGameFrame = (SCEngine_doGameFrame_fn)GetProcAddress(dll, "doGameFrame");
-		runGame = (SCEngine_runGame_fn)GetProcAddress(dll, "runGame");
-		stopGame = (SCEngine_stopGame_fn)GetProcAddress(dll, "stopGame");
-		save = (SCEngine_save_fn)GetProcAddress(dll, "save");
-		load = (SCEngine_load_fn)GetProcAddress(dll, "load");
-		close = (SCEngine_close_fn)GetProcAddress(dll, "close");
-	}
-	void freeLibrary() {
+        return loadFunction(init, "init")
+            && loadFunction(doFrame, "doFrame")
+            && loadFunction(doEditorFrame, "doEditorFrame")
+            && loadFunction(doGameFrame, "doGameFrame")
+            && loadFunction(runGame, "runGame")
+            && loadFunction(stopGame, "stopGame")
+            && loadFunction(save, "save")
+            && loadFunction(load, "load")
+            && loadFunction(close, "close");
+    }
+
+    void freeLibrary() {
 		FreeLibrary(dll);
         std::cout << "Free library" << std::endl;
 	}
+
 private:
 	HMODULE dll;
+
+    template<typename F> bool loadFunction(F& f, std::string name) {
+        if ((f = (F)GetProcAddress(dll, name.c_str())) == nullptr) {
+            std::cout << "LoadLibrary Error! " << name << " == nullptr" << std::endl;
+            freeLibrary();
+            return false;
+        }
+        return true;
+    }
 } gSCEngine;
 
 void loadGame() {
@@ -237,11 +249,14 @@ void buildProject() {
     result = exec(cmd); // TODO: handle result
 }
 
-void loadProject() {
+bool loadProject() {
     assert(!gProjectDir.empty());
-    gSCEngine.loadLibrary(gProjectDir / "build" / "install" / "bin" / "SCEngine.dll");
+    if (!gSCEngine.loadLibrary(gProjectDir / "build" / "install" / "bin" / "SCEngine.dll")) {
+        return false;
+    }
     gSCEngine.init(gOpenGLPointer, gCallbackPointer, gProjectDir / "build" / "install" / "asset");
     loadGame();
+    return true;
 }
 
 void closeProject() {
@@ -355,7 +370,9 @@ int main() {
             if (ImGui::Button("Build")) {
                 closeProject();
                 buildProject();
-                loadProject();
+                if (!loadProject()) {
+                    gProjectDir = "";
+                }
             }
         }
         ImGui::End();
@@ -368,7 +385,9 @@ int main() {
                 }
                 gProjectDir = directory;
                 buildProject();
-                loadProject();
+                if (!loadProject()) {
+                    gProjectDir = "";
+                }
             }
             ImGuiFileDialog::Instance()->Close();
         }
