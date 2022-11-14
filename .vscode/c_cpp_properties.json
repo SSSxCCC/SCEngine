@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/SCEngineCore",
+                "${workspaceFolder}/SCEngineCommon",
+                "${workspaceFolder}/SCEngineEditor",
+                "${workspaceFolder}/Dependency/**"
+            ]
+        }
+    ],
+    "version": 4
+}
