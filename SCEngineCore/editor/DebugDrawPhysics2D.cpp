@@ -1,4 +1,4 @@
-#include "editor/PhysicsDebugDraw.h"
+#include "editor/DebugDrawPhysics2D.h"
 #include "utility/Shader.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -518,28 +518,28 @@ public:
 };
 
 
-void PhysicsDebugDraw::onCreate() {
+void DebugDrawPhysics2D::onCreate() {
 	mDebugDraw = new DebugDraw;
 	mDebugDraw->Create();
-	mPhysicsWorld = mGameObject->getScript<PhysicsWorld>();
-	mPhysicsWorld->mWorld->SetDebugDraw(mDebugDraw);
+	mPhysicsWorld2D = mGameObject->getScript<PhysicsWorld2D>();
+	mPhysicsWorld2D->mWorld->SetDebugDraw(mDebugDraw);
 }
 
-void PhysicsDebugDraw::onDraw(float* projectionMatrix, bool forEditor) {
-	if (forEditor) {
-		mDebugDraw->setProjectionMatrix(projectionMatrix);
-		mDebugDraw->SetFlags(b2Draw::e_shapeBit | b2Draw::e_jointBit | b2Draw::e_aabbBit | b2Draw::e_centerOfMassBit);
-		mPhysicsWorld->mWorld->DebugDraw();
-		mDebugDraw->Flush();
-	}
+void DebugDrawPhysics2D::onDraw(float* projectionMatrix, bool forEditor) {
+    if (forEditor) {
+        mDebugDraw->setProjectionMatrix(projectionMatrix);
+        mDebugDraw->SetFlags(b2Draw::e_shapeBit | b2Draw::e_jointBit | b2Draw::e_aabbBit | b2Draw::e_centerOfMassBit);
+        mPhysicsWorld2D->mWorld->DebugDraw();
+        mDebugDraw->Flush();
+    }
 }
 
-void PhysicsDebugDraw::onDestroy() {
-	if (mPhysicsWorld && mPhysicsWorld->mWorld) {
-		mPhysicsWorld->mWorld->SetDebugDraw(nullptr);
-	}
-	mPhysicsWorld = nullptr;
-	mDebugDraw->Destroy();
-	delete mDebugDraw;
-	mDebugDraw = nullptr;
+void DebugDrawPhysics2D::onDestroy() {
+    if (mPhysicsWorld2D && mPhysicsWorld2D->mWorld) {
+        mPhysicsWorld2D->mWorld->SetDebugDraw(nullptr);
+    }
+    mPhysicsWorld2D = nullptr;
+    mDebugDraw->Destroy();
+    delete mDebugDraw;
+    mDebugDraw = nullptr;
 }

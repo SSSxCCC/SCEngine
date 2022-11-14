@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "physics/PhysicsWorld.h"
+#include "physics2d/PhysicsWorld2D.h"
 #include "core/GameObject.h"
 #include "core/Camera.h"
 #include "data/GameWorldData.h"
@@ -26,7 +26,7 @@ public:
 	float mCurrentTime = 0.0f; // time since game start
 	float mDeltaTime = 0.0f;   // time spent in last frame
 
-	std::shared_ptr<PhysicsWorld> mPhysicsWorld; // the box2d physics world wrapper
+	std::shared_ptr<PhysicsWorld2D> mPhysicsWorld2D; // the box2d physics world wrapper
 	std::shared_ptr<Camera> mMainCamera; // the camera to display the game
 	std::shared_ptr<Camera> mEditorCamera; // the camera to display the editor
 private:

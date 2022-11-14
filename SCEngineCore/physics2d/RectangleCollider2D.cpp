@@ -1,8 +1,8 @@
-#include "physics/RectangleCollider.h"
+#include "physics2d/RectangleCollider2D.h"
 #include "core/GameObject.h"
 #include "core/Transform2D.h"
 
-void RectangleCollider::onCreate() {
+void RectangleCollider2D::onCreate() {
 	auto transform2D = mGameObject->getScript<Transform2D>();
 	mRectangleShape.SetAsBox((transform2D ? transform2D->mScale.x : 1.0f) * 0.5f, (transform2D ? transform2D->mScale.y : 1.0f) * 0.5f);
 

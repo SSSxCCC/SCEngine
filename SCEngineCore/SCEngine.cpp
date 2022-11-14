@@ -10,10 +10,10 @@
 #include "core/GameWorld.h"
 #include "core/Transform2D.h"
 #include "graphics/RectangleRender.h"
-#include "physics/RigidBody.h"
-#include "physics/RectangleCollider.h"
+#include "physics2d/RigidBody2D.h"
+#include "physics2d/RectangleCollider2D.h"
 #include "editor/EditorCameraController.h"
-#include "editor/PhysicsDebugDraw.h"
+#include "editor/DebugDrawPhysics2D.h"
 
 std::shared_ptr<GameWorld> gameWorld;
 GameWorldData gameWorldData, tempGameWorldData;
@@ -27,9 +27,9 @@ void createEmptyGame() {
     // Add some GameObject to game world
     gameWorld = std::make_shared<GameWorld>();
 
-    auto physicsObject = std::make_shared<GameObject>("PhysicsWorld");
-    physicsObject->addScript(std::make_shared<PhysicsWorld>());
-    physicsObject->addScript(std::make_shared<PhysicsDebugDraw>());
+    auto physicsObject = std::make_shared<GameObject>("PhysicsWorld2D");
+    physicsObject->addScript(std::make_shared<PhysicsWorld2D>());
+    physicsObject->addScript(std::make_shared<DebugDrawPhysics2D>());
     gameWorld->addGameObject(physicsObject);
 
     auto cameraObject = std::make_shared<GameObject>("EditorCamera");
@@ -51,9 +51,9 @@ void createEmptyGame() {
     transform2D->mPosition.x = 0.0f;
     transform2D->mPosition.y = 100.0f;
     gameObject->addScript(std::make_shared<RectangleRender>());
-    gameObject->addScript(std::make_shared<RigidBody>());
-    gameObject->getScript<RigidBody>()->mBodyDef.type = b2_dynamicBody;
-    gameObject->addScript(std::make_shared<RectangleCollider>());
+    gameObject->addScript(std::make_shared<RigidBody2D>());
+    gameObject->getScript<RigidBody2D>()->mBodyDef.type = b2_dynamicBody;
+    gameObject->addScript(std::make_shared<RectangleCollider2D>());
     gameWorld->addGameObject(gameObject);
 
     auto gameObject2 = gameObject->clone();
@@ -65,7 +65,7 @@ void createEmptyGame() {
 
     auto groundObject = gameObject->clone();
     groundObject->mName = "Ground";
-    groundObject->getScript<RigidBody>()->mBodyDef.type = b2_staticBody;
+    groundObject->getScript<RigidBody2D>()->mBodyDef.type = b2_staticBody;
     transform2D = groundObject->getScript<Transform2D>();
     transform2D->mPosition.x = 0.0f;
     transform2D->mPosition.y = -100.0f;
