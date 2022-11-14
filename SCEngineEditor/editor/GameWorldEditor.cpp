@@ -72,7 +72,17 @@ void GameWorldEditor::doFrame(GameWorldData& gameWorldData) {
                     modify |= scriptData.set(dataName, floatData);
                 } else if (type == TYPE_STRING) {
                     auto stringData = scriptData.get<std::string>(dataName);
+                    #ifdef SANITIZE
+                    char str[512];
+                    for (int i = 0; i < stringData.size(); i++) {
+                        str[i] = stringData[i];
+                    }
+                    str[stringData.size()] = '\0';
+                    ImGui::InputText(dataName.c_str(), str, 512);
+                    stringData = str;
+                    #else
                     ImGui::InputText(dataName.c_str(), &stringData);
+                    #endif
                     modify |= scriptData.set(dataName, stringData);
                 } else if (type == TYPE_VEC2) {
                     auto vecData = scriptData.get<glm::vec2>(dataName);

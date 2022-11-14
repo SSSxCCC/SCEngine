@@ -5,8 +5,9 @@ cmake_minimum_required (VERSION 3.12)
 
 project ("SCEngine" VERSION 0.1)
 
-add_compile_options(-fsanitize=address)
-add_compile_definitions(SANITIZE)
+# Currently asan generates more bugs than it fixes
+#add_compile_options(-fsanitize=address)
+#add_compile_definitions(SANITIZE)
 
 #add_subdirectory ("SCEngineCore")
 add_subdirectory ("SCEngineEditor")
