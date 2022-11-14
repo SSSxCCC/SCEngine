@@ -4,7 +4,6 @@
 #include <vector>
 #include <memory>
 #include "core/Script.h"
-#include "core/Transform.h"
 #include "data/GameObjectData.h"
 
 // Predefine GameWorld here to solve circular reference problem

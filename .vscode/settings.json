@@ -1,4 +1,15 @@
 {
     "editor.formatOnPaste": true,
-    "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 4, ColumnLimit: 0}"
+    "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 4, ColumnLimit: 0}",
+    "files.associations": {
+        "algorithm": "cpp",
+        "ranges": "cpp",
+        "chrono": "cpp",
+        "system_error": "cpp",
+        "xlocale": "cpp",
+        "filesystem": "cpp",
+        "memory": "cpp",
+        "numeric": "cpp",
+        "xmemory": "cpp"
+    }
 }

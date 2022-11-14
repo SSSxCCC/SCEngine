@@ -2,12 +2,13 @@
 #include "physics/Collider.h"
 #include "core/GameObject.h"
 #include "core/GameWorld.h"
+#include "core/Transform2D.h"
 
 void RigidBody::onCreate() {
-	auto transform = mGameObject->getScript<Transform>();
-	if (transform) {
-		mBodyDef.position.Set(transform->mPosition.x, transform->mPosition.y);
-		mBodyDef.angle = transform->mRotation;
+	auto transform2D = mGameObject->getScript<Transform2D>();
+	if (transform2D) {
+		mBodyDef.position.Set(transform2D->mPosition.x, transform2D->mPosition.y);
+		mBodyDef.angle = transform2D->mRotation;
 	}
 	mBody = mGameObject->mGameWorld->mPhysicsWorld->mWorld->CreateBody(&mBodyDef);
 }
@@ -19,13 +20,13 @@ void RigidBody::onStart() {
 }
 
 void RigidBody::onUpdate() {
-	auto transform = mGameObject->getScript<Transform>();
-	if (transform) {
+	auto transform2D = mGameObject->getScript<Transform2D>();
+	if (transform2D) {
 		b2Vec2 position = mBody->GetPosition();
 		float angle = mBody->GetAngle();
-		transform->mPosition.x = position.x;
-		transform->mPosition.y = position.y;
-		transform->mRotation = angle;
+		transform2D->mPosition.x = position.x;
+		transform2D->mPosition.y = position.y;
+		transform2D->mRotation = angle;
 	}
 }
 

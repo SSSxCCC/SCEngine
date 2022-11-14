@@ -4,6 +4,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "core/GameObject.h"
 #include "core/GameWorld.h"
+#include "core/Transform2D.h"
 
 void RectangleRender::onCreate() {
 	mShader = new Shader("shaders/shader.vs", "shaders/shader.fs");
@@ -43,8 +44,8 @@ void RectangleRender::onCreate() {
 }
 
 void RectangleRender::onDraw(float* projectionMatrix, bool forEditor) {
-	auto transform = mGameObject->getScript<Transform>();
-	glm::mat4 model = transform ? transform->buildModelMatrix() : glm::mat4(1.0f);
+	auto transform2D = mGameObject->getScript<Transform2D>();
+	glm::mat4 model = transform2D ? transform2D->buildModelMatrix() : glm::mat4(1.0f);
 	mShader->use();
 	mShader->setMat4("model", glm::value_ptr(model));
 	mShader->setMat4("projection", projectionMatrix);

@@ -2,6 +2,7 @@
 #include "input/Input.h"
 #include "core/GameObject.h"
 #include "core/GameWorld.h"
+#include "core/Transform2D.h"
 #include <iostream>
 
 void EditorCameraController::onCreate() {
@@ -18,11 +19,11 @@ void EditorCameraController::zoomOut() {
 }
 
 void EditorCameraController::reset() {
-	auto transform = mGameObject->getScript<Transform>();
-	if (transform) {
-		transform->mPosition.x = 0.0f;
-		transform->mPosition.y = 0.0f;
-	}
+	auto transform2D = mGameObject->getScript<Transform2D>();
+	if (transform2D) {
+        transform2D->mPosition.x = 0.0f;
+        transform2D->mPosition.y = 0.0f;
+    }
 	mCamera->mZoom = 1.0f / gScale;
 }
 
@@ -36,9 +37,9 @@ void EditorCameraController::onUpdate() {
 		zoomOut();
 	}
 
-    // get transform
-    auto transform = mGameObject->getScript<Transform>();
-    if (!transform) {
+    // get transform2D
+    auto transform2D = mGameObject->getScript<Transform2D>();
+    if (!transform2D) {
         return;
     }
 
@@ -54,8 +55,8 @@ void EditorCameraController::onUpdate() {
 		if (mDragging) {
 			float worldX, worldY;
 			mCamera->screenToWorld(cursorX, cursorY, worldX, worldY);
-            transform->mPosition.x += (mLastWorldX - worldX);
-            transform->mPosition.y += (mLastWorldY - worldY);
+            transform2D->mPosition.x += (mLastWorldX - worldX);
+            transform2D->mPosition.y += (mLastWorldY - worldY);
 		} else {
 			mDragging = true;
 		}
@@ -77,8 +78,8 @@ void EditorCameraController::onUpdate() {
 		if (gEditorInput.getKey(KEY_DOWN) == PRESS || gEditorInput.getKey(KEY_S) == PRESS) {
 			moveY -= 1.0f;
 		}
-        transform->mPosition.x += moveX * mMoveSpeed * mGameObject->mGameWorld->mDeltaTime;
-        transform->mPosition.y += moveY * mMoveSpeed * mGameObject->mGameWorld->mDeltaTime;
+        transform2D->mPosition.x += moveX * mMoveSpeed * mGameObject->mGameWorld->mDeltaTime;
+        transform2D->mPosition.y += moveY * mMoveSpeed * mGameObject->mGameWorld->mDeltaTime;
 	}
 }
 

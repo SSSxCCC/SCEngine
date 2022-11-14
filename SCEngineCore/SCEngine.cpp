@@ -8,6 +8,7 @@
 #include "utility/Asset.h"
 #include "input/Input.h"
 #include "core/GameWorld.h"
+#include "core/Transform2D.h"
 #include "graphics/RectangleRender.h"
 #include "physics/RigidBody.h"
 #include "physics/RectangleCollider.h"
@@ -32,23 +33,23 @@ void createEmptyGame() {
     gameWorld->addGameObject(physicsObject);
 
     auto cameraObject = std::make_shared<GameObject>("EditorCamera");
-    cameraObject->addScript(std::make_shared<Transform>());
+    cameraObject->addScript(std::make_shared<Transform2D>());
     cameraObject->addScript(std::make_shared<Camera>());
     cameraObject->addScript(std::make_shared<EditorCameraController>());
     gameWorld->addGameObject(cameraObject);
 
     auto camera2Object = std::make_shared<GameObject>("GameCamera");
-    camera2Object->addScript(std::make_shared<Transform>());
+    camera2Object->addScript(std::make_shared<Transform2D>());
     camera2Object->addScript(std::make_shared<Camera>());
     gameWorld->addGameObject(camera2Object);
 
     auto gameObject = std::make_shared<GameObject>("Box1");
-    gameObject->addScript(std::make_shared<Transform>());
-    auto transform = gameObject->getScript<Transform>();
-    transform->mScale.x = 10.f;
-    transform->mScale.y = 10.f;
-    transform->mPosition.x = 0.0f;
-    transform->mPosition.y = 100.0f;
+    gameObject->addScript(std::make_shared<Transform2D>());
+    auto transform2D = gameObject->getScript<Transform2D>();
+    transform2D->mScale.x = 10.f;
+    transform2D->mScale.y = 10.f;
+    transform2D->mPosition.x = 0.0f;
+    transform2D->mPosition.y = 100.0f;
     gameObject->addScript(std::make_shared<RectangleRender>());
     gameObject->addScript(std::make_shared<RigidBody>());
     gameObject->getScript<RigidBody>()->mBodyDef.type = b2_dynamicBody;
@@ -57,19 +58,19 @@ void createEmptyGame() {
 
     auto gameObject2 = gameObject->clone();
     gameObject2->mName = "Box2";
-    transform = gameObject2->getScript<Transform>();
-    transform->mPosition.x = 5.0f;
-    transform->mPosition.y = 120.0f;
+    transform2D = gameObject2->getScript<Transform2D>();
+    transform2D->mPosition.x = 5.0f;
+    transform2D->mPosition.y = 120.0f;
     gameWorld->addGameObject(gameObject2);
 
     auto groundObject = gameObject->clone();
     groundObject->mName = "Ground";
     groundObject->getScript<RigidBody>()->mBodyDef.type = b2_staticBody;
-    transform = groundObject->getScript<Transform>();
-    transform->mPosition.x = 0.0f;
-    transform->mPosition.y = -100.0f;
-    transform->mScale.x = 400.0f;
-    transform->mScale.y = 80.f;
+    transform2D = groundObject->getScript<Transform2D>();
+    transform2D->mPosition.x = 0.0f;
+    transform2D->mPosition.y = -100.0f;
+    transform2D->mScale.x = 400.0f;
+    transform2D->mScale.y = 80.f;
     gameWorld->addGameObject(groundObject);
 
     gameWorld->create();
