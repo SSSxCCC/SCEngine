@@ -1,5 +1,4 @@
 #include "editor/SubWindow.h"
-#include "glad/gl.h"
 #include "imgui/imgui.h"
 #include <iostream>
 

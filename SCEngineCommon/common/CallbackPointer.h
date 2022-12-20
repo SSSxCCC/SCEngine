@@ -3,21 +3,18 @@
 
 class CallbackPointer {
 public:
-    // call by core module
-    using GetKey_fn = int(*)(int);
-    using GetMouseButton_fn = int(*)(int);
-    using GetCursorPos_fn = void(*)(float&,float&);
-    GetKey_fn mGetKey;
-    GetMouseButton_fn mGetMouseButton;
-    GetCursorPos_fn mGetCursorPos;
+    // Call by core module. (We can't use function pointer here because 'a lambda can only be converted to a function pointer if it does not capture')
+    std::function<int(int)> mGetKey;
+    std::function<int(int)> mGetMouseButton;
+    std::function<void(float&, float&)> mGetCursorPos;
 
-    // assign by core module
-    using ScrollCallback_fn = void(*)(double,double);
+    // Assign by core module
+    using ScrollCallback_fn = void (*)(double, double);
     ScrollCallback_fn mScrollCallback;
 
     void reset() {
         mScrollCallback = nullptr;
-    }
+        }
 };
 
 #endif // _CallbackPointer_H_

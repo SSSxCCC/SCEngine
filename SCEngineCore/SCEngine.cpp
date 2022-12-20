@@ -87,8 +87,7 @@ void reloadGame() {
     startTime = std::chrono::steady_clock::now();
 }
 
-void init(OpenGLPointer& openGLPointer, CallbackPointer& callbackPointer, const fs::path& assetDir) {
-	openGLPointer.apply();
+void init(CallbackPointer& callbackPointer, const fs::path& assetDir) {
 	callbackPointer.mScrollCallback = [](double dx, double dy) {
 		gEditorInput.setScroll((float)dx, (float)dy);
 		gInput.setScroll((float)dx, (float)dy);
