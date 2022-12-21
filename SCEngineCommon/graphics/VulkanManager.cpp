@@ -123,14 +123,14 @@ void VulkanManager::initVulkan() {
     pickPhysicalDevice();
     createLogicalDevice();
     createSwapChain();
-    createImageViews();
+    createResolveImageViews(mSwapChainImages, mSwapChainImageViews);
     createRenderPass();
     createDescriptorSetLayout();
     createGraphicsPipeline();
     createCommandPool();
-    createColorResources();
-    createDepthResources();
-    createFramebuffers();
+    createColorResources(mSwapChainExtent.width, mSwapChainExtent.height, mColorImage, mColorImageMemory, mColorImageView);
+    createDepthResources(mSwapChainExtent.width, mSwapChainExtent.height, mDepthImage, mDepthImageMemory, mDepthImageView);
+    createFramebuffers(mSwapChainExtent.width, mSwapChainExtent.height, mColorImageView, mDepthImageView, mSwapChainImageViews, mSwapChainFramebuffers);
     createVertexBuffer();
     createIndexBuffer();
     createUniformBuffers();
@@ -452,7 +452,7 @@ VkExtent2D VulkanManager::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capab
     }
 }
 
-void VulkanManager::createImageViews() {
+void VulkanManager::createResolveImageViews(const std::vector<VkImage>& resolveImages, std::vector<VkImageView>& resolveImageViews) {
     mSwapChainImageViews.resize(mSwapChainImages.size());
     for (size_t i = 0; i < mSwapChainImages.size(); i++) {
         mSwapChainImageViews[i] = createImageView(mSwapChainImages[i], mSwapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
@@ -733,20 +733,20 @@ VkShaderModule VulkanManager::createShaderModule(const std::vector<char>& code) 
     return shaderModule;
 }
 
-void VulkanManager::createFramebuffers() {
-    mSwapChainFramebuffers.resize(mSwapChainImageViews.size());
-    for (size_t i = 0; i < mSwapChainImageViews.size(); i++) {
-        std::array<VkImageView, 3> attachments = { mColorImageView, mDepthImageView, mSwapChainImageViews[i] };
+void VulkanManager::createFramebuffers(uint32_t width, uint32_t height, VkImageView colorImageView, VkImageView depthImageView, const std::vector<VkImageView>& resolveImageViews, std::vector<VkFramebuffer>& framebuffers) {
+    framebuffers.resize(resolveImageViews.size());
+    for (size_t i = 0; i < resolveImageViews.size(); i++) {
+        std::array<VkImageView, 3> attachments = { colorImageView, depthImageView, resolveImageViews[i] };
 
         VkFramebufferCreateInfo framebufferInfo { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
         framebufferInfo.renderPass = mRenderPass;
         framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
         framebufferInfo.pAttachments = attachments.data();
-        framebufferInfo.width = mSwapChainExtent.width;
-        framebufferInfo.height = mSwapChainExtent.height;
+        framebufferInfo.width = width;
+        framebufferInfo.height = height;
         framebufferInfo.layers = 1;
 
-        if (vkCreateFramebuffer(mDevice, &framebufferInfo, nullptr, &mSwapChainFramebuffers[i]) != VK_SUCCESS) {
+        if (vkCreateFramebuffer(mDevice, &framebufferInfo, nullptr, &framebuffers[i]) != VK_SUCCESS) {
             throw std::runtime_error("failed to create framebuffer!");
         }
     }
@@ -764,16 +764,16 @@ void VulkanManager::createCommandPool() {
     }
 }
 
-void VulkanManager::createColorResources() {
+void VulkanManager::createColorResources(uint32_t width, uint32_t height, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView) {
     VkFormat colorFormat = mSwapChainImageFormat;
-    createImage(mSwapChainExtent.width, mSwapChainExtent.height, 1, mMsaaSamples, colorFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mColorImage, mColorImageMemory);
-    mColorImageView = createImageView(mColorImage, colorFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+    createImage(width, height, 1, mMsaaSamples, colorFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image, imageMemory);
+    imageView = createImageView(mColorImage, colorFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 }
 
-void VulkanManager::createDepthResources() {
+void VulkanManager::createDepthResources(uint32_t width, uint32_t height, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView) {
     VkFormat depthFormat = findDepthFormat();
-    createImage(mSwapChainExtent.width, mSwapChainExtent.height, 1, mMsaaSamples, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mDepthImage, mDepthImageMemory);
-    mDepthImageView = createImageView(mDepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
+    createImage(width, height, 1, mMsaaSamples, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image, imageMemory);
+    imageView = createImageView(mDepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
 
     // We don't need to explicitly transition the layout of the image to a depth attachment because we'll take care of this in the render pass. However, for completeness I'll still describe the process in this section. You may skip it if you like.
     transitionImageLayout(mDepthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1);
@@ -1210,10 +1210,10 @@ void VulkanManager::recreateSwapChain() {
     cleanupSwapChain();
 
     createSwapChain();
-    createImageViews();
-    createColorResources();
-    createDepthResources();
-    createFramebuffers();
+    createResolveImageViews(mSwapChainImages, mSwapChainImageViews);
+    createColorResources(mSwapChainExtent.width, mSwapChainExtent.height, mColorImage, mColorImageMemory, mColorImageView);
+    createDepthResources(mSwapChainExtent.width, mSwapChainExtent.height, mDepthImage, mDepthImageMemory, mDepthImageView);
+    createFramebuffers(mSwapChainExtent.width, mSwapChainExtent.height, mColorImageView, mDepthImageView, mSwapChainImageViews, mSwapChainFramebuffers);
 }
 
 void VulkanManager::cleanupSwapChain() {

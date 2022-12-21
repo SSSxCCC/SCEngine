@@ -204,7 +204,7 @@ private:
 
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
-    void createImageViews();
+    void createResolveImageViews(const std::vector<VkImage>& resolveImages, std::vector<VkImageView>& resolveImageViews);
 
     VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
 
@@ -216,13 +216,13 @@ private:
 
     VkShaderModule createShaderModule(const std::vector<char>& code);
 
-    void createFramebuffers();
+    void createFramebuffers(uint32_t width, uint32_t height, VkImageView colorImageView, VkImageView depthImageView, const std::vector<VkImageView>& resolveImageViews, std::vector<VkFramebuffer>& framebuffers);
 
     void createCommandPool();
 
-    void createColorResources();
+    void createColorResources(uint32_t width, uint32_t height, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView);
 
-    void createDepthResources();
+    void createDepthResources(uint32_t width, uint32_t height, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView);
 
     VkFormat findDepthFormat();
 
