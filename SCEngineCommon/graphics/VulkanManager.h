@@ -67,70 +67,53 @@ public:
     }
 
 private:
-    std::shared_ptr<Platform> mPlatform;
-
-    // Common used vulkan objects start
-    VkInstance mInstance;
-
-    const std::vector<const char*> VALIDATION_LAYERS = {
-            "VK_LAYER_KHRONOS_validation"
-    };
+    const std::vector<const char*> VALIDATION_LAYERS = { "VK_LAYER_KHRONOS_validation" };
 #ifdef NDEBUG
     const bool ENABLE_VALIDATION_LAYERS = false;
 #else
     const bool ENABLE_VALIDATION_LAYERS = true;
 #endif
+    const std::vector<const char*> DEVICE_EXTENSIONS = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+    const int MAX_FRAMES_IN_FLIGHT = 2;
 
+    std::shared_ptr<Platform> mPlatform;
+
+    // Common used vulkan objects start
+    VkInstance mInstance;
     VkPhysicalDevice mPhysicalDevice = VK_NULL_HANDLE;
     VkDevice mDevice;
     VkQueue mGraphicsQueue;
-
-    const std::vector<const char*> DEVICE_EXTENSIONS = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-
     VkFormat mSwapChainImageFormat;
-
     VkRenderPass mRenderPass;
     VkDescriptorSetLayout mDescriptorSetLayout;
     VkPipelineLayout mPipelineLayout;
     VkPipeline mGraphicsPipeline;
-
-    const int MAX_FRAMES_IN_FLIGHT = 2;
-
     VkCommandPool mCommandPool;
-
     VkDescriptorPool mDescriptorPool;
-
     VkSampleCountFlagBits mMsaaSamples = VK_SAMPLE_COUNT_1_BIT;
     // Common used vulkan objects end
 
     // Main window used only vulkan objects start
-    VkQueue mPresentQueue;
     VkSurfaceKHR mSurface;
-
+    VkQueue mPresentQueue;
     VkSwapchainKHR mSwapChain;
-    std::vector<VkImage> mSwapChainImages;
     VkExtent2D mSwapChainExtent;
+    std::vector<VkImage> mSwapChainImages;
     std::vector<VkImageView> mSwapChainImageViews;
-
-    std::vector<VkFramebuffer> mSwapChainFramebuffers;
-
-    std::vector<VkCommandBuffer> mCommandBuffers;
-
-    std::vector<VkSemaphore> mImageAvailableSemaphores;
-    std::vector<VkSemaphore> mRenderFinishedSemaphores;
-    std::vector<VkFence> mInFlightFences;
-
-    uint32_t mCurrentFrame = 0;
-    uint32_t mImageIndex;
-    bool mFramebufferResized = false;
-
     VkImage mDepthImage;
     VkDeviceMemory mDepthImageMemory;
     VkImageView mDepthImageView;
-
     VkImage mColorImage;
     VkDeviceMemory mColorImageMemory;
     VkImageView mColorImageView;
+    std::vector<VkFramebuffer> mSwapChainFramebuffers;
+    std::vector<VkCommandBuffer> mCommandBuffers;
+    std::vector<VkSemaphore> mImageAvailableSemaphores;
+    std::vector<VkSemaphore> mRenderFinishedSemaphores;
+    std::vector<VkFence> mInFlightFences;
+    uint32_t mCurrentFrame = 0;
+    uint32_t mImageIndex;
+    bool mFramebufferResized = false;
     // Main window used only vulkan objects end
 
     struct QueueFamilyIndices {
