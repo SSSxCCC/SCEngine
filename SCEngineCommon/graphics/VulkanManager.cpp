@@ -79,10 +79,6 @@ void VulkanManager::initVulkan() {
     createColorResources();
     createDepthResources();
     createFramebuffers();
-    createTextureImage();
-    createTextureImageView();
-    createTextureSampler();
-    loadModel();
     createVertexBuffer();
     createIndexBuffer();
     createUniformBuffers();
@@ -523,8 +519,8 @@ void VulkanManager::createDescriptorSetLayout() {
 }
 
 void VulkanManager::createGraphicsPipeline() {
-    auto vertShaderCode = mPlatform->readFile("Shader/vert.spv");
-    auto fragShaderCode = mPlatform->readFile("Shader/frag.spv");
+    auto vertShaderCode = mPlatform->readFile("D:/work/vert.spv");
+    auto fragShaderCode = mPlatform->readFile("D:/work/frag.spv");
     VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
     VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
 
@@ -545,7 +541,7 @@ void VulkanManager::createGraphicsPipeline() {
     dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
     dynamicState.pDynamicStates = dynamicStates.data();
 
-    VkPipelineVertexInputStateCreateInfo vertexInputInfo{ VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
+    VkPipelineVertexInputStateCreateInfo vertexInputInfo { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
     auto bindingDescription = Vertex::getBindingDescription();
     auto attributeDescriptions = Vertex::getAttributeDescriptions();
     vertexInputInfo.vertexBindingDescriptionCount = 1;
@@ -753,36 +749,6 @@ bool VulkanManager::hasStencilComponent(VkFormat format) {
     return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
 }
 
-void VulkanManager::createTextureImage() {
-    int texWidth, texHeight, texChannels;
-    auto texture = mPlatform->readFile("Texture/viking_room.png");
-    stbi_uc* pixels = stbi_load_from_memory(reinterpret_cast<stbi_uc const*>(texture.data()), texture.size(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-    if (!pixels) {
-        throw std::runtime_error("failed to load texture image!");
-    }
-    VkDeviceSize imageSize = texWidth * texHeight * 4;
-    mMipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
-
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-    void* data;
-    vkMapMemory(mDevice, stagingBufferMemory, 0, imageSize, 0, &data);
-    memcpy(data, pixels, static_cast<size_t>(imageSize));
-    vkUnmapMemory(mDevice, stagingBufferMemory);
-    stbi_image_free(pixels);
-
-    createImage(texWidth, texHeight, mMipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mTextureImage, mTextureImageMemory);
-
-    transitionImageLayout(mTextureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mMipLevels);
-    copyBufferToImage(stagingBuffer, mTextureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-    //transitionImageLayout(mTextureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mMipLevels);
-    generateMipmaps(mTextureImage, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, mMipLevels);
-
-    vkDestroyBuffer(mDevice, stagingBuffer, nullptr);
-    vkFreeMemory(mDevice, stagingBufferMemory, nullptr);
-}
-
 void VulkanManager::createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory) {
     VkImageCreateInfo imageInfo { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
     imageInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -970,79 +936,11 @@ void VulkanManager::generateMipmaps(VkImage image, VkFormat imageFormat, int32_t
     endSingleTimeCommands(commandBuffer);
 }
 
-void VulkanManager::createTextureImageView() {
-    mTextureImageView = createImageView(mTextureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, mMipLevels);
-}
-
-void VulkanManager::createTextureSampler() {
-    VkSamplerCreateInfo samplerInfo { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
-    samplerInfo.magFilter = VK_FILTER_LINEAR;
-    samplerInfo.minFilter = VK_FILTER_LINEAR;
-    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.anisotropyEnable = VK_TRUE;
-    VkPhysicalDeviceProperties properties{};
-    vkGetPhysicalDeviceProperties(mPhysicalDevice, &properties);
-    samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-    samplerInfo.unnormalizedCoordinates = VK_FALSE;
-    samplerInfo.compareEnable = VK_FALSE;
-    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-    samplerInfo.mipLodBias = 0.0f;
-    samplerInfo.minLod = 0.0f;
-    samplerInfo.maxLod = static_cast<float>(mMipLevels);
-    if (vkCreateSampler(mDevice, &samplerInfo, nullptr, &mTextureSampler) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create texture sampler!");
-    }
-}
-
 struct membuf : std::streambuf {
     membuf(char* begin, char* end) {
         this->setg(begin, begin, end);
     }
 };
-
-void VulkanManager::loadModel() {
-    tinyobj::attrib_t attrib;
-    std::vector<tinyobj::shape_t> shapes;
-    std::vector<tinyobj::material_t> materials;
-    std::string warn, err;
-
-    auto obj = mPlatform->readFile("Model/viking_room.obj");
-    membuf objbuf(obj.data(), obj.data() + sizeof(char) * obj.size());
-    std::istream in(&objbuf);
-    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, &in)) {
-        throw std::runtime_error(warn + err);
-    }
-
-    std::unordered_map<Vertex, uint32_t> uniqueVertices{};
-    for (const auto& shape : shapes) {
-        for (const auto& index : shape.mesh.indices) {
-            Vertex vertex{};
-
-            vertex.pos = {
-                attrib.vertices[3 * index.vertex_index + 0],
-                attrib.vertices[3 * index.vertex_index + 1],
-                attrib.vertices[3 * index.vertex_index + 2]
-            };
-
-            vertex.texCoord = {
-                attrib.texcoords[2 * index.texcoord_index + 0],
-                1.0f - attrib.texcoords[2 * index.texcoord_index + 1]  // The OBJ format assumes a coordinate system where a vertical coordinate of 0 means the bottom of the image, however we've uploaded our image into Vulkan in a top to bottom orientation where 0 means the top of the image. Solve this by flipping the vertical component of the texture coordinates.
-            };
-
-            vertex.color = {1.0f, 1.0f, 1.0f};
-
-            if (uniqueVertices.count(vertex) == 0) {
-                uniqueVertices[vertex] = static_cast<uint32_t>(mVertices.size());
-                mVertices.push_back(vertex);
-            }
-            mIndices.push_back(uniqueVertices[vertex]);
-        }
-    }
-}
 
 void VulkanManager::createVertexBuffer() {
     VkDeviceSize bufferSize = sizeof(mVertices[0]) * mVertices.size();
@@ -1199,12 +1097,7 @@ void VulkanManager::createDescriptorSets() {
         bufferInfo.offset = 0;
         bufferInfo.range = sizeof(UniformBufferObject);
 
-        VkDescriptorImageInfo imageInfo{};
-        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfo.imageView = mTextureImageView;
-        imageInfo.sampler = mTextureSampler;
-
-        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+        std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
 
         descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptorWrites[0].dstSet = mDescriptorSets[i];
@@ -1213,14 +1106,6 @@ void VulkanManager::createDescriptorSets() {
         descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         descriptorWrites[0].descriptorCount = 1;
         descriptorWrites[0].pBufferInfo = &bufferInfo;
-
-        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrites[1].dstSet = mDescriptorSets[i];
-        descriptorWrites[1].dstBinding = 1;
-        descriptorWrites[1].dstArrayElement = 0;
-        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        descriptorWrites[1].descriptorCount = 1;
-        descriptorWrites[1].pImageInfo = &imageInfo;
 
         vkUpdateDescriptorSets(mDevice, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
@@ -1359,10 +1244,10 @@ void VulkanManager::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t 
 void VulkanManager::cleanup() {
     vkDeviceWaitIdle(mDevice);
     cleanupSwapChain();
-    vkDestroySampler(mDevice, mTextureSampler, nullptr);
-    vkDestroyImageView(mDevice, mTextureImageView, nullptr);
-    vkDestroyImage(mDevice, mTextureImage, nullptr);
-    vkFreeMemory(mDevice, mTextureImageMemory, nullptr);
+    //vkDestroySampler(mDevice, mTextureSampler, nullptr);
+    //vkDestroyImageView(mDevice, mTextureImageView, nullptr);
+    //vkDestroyImage(mDevice, mTextureImage, nullptr);
+    //vkFreeMemory(mDevice, mTextureImageMemory, nullptr);
     vkDestroyDescriptorPool(mDevice, mDescriptorPool, nullptr);
     vkDestroyDescriptorSetLayout(mDevice, mDescriptorSetLayout, nullptr);
     vkDestroyBuffer(mDevice, mIndexBuffer, nullptr);

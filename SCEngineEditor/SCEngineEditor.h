@@ -268,7 +268,7 @@ private:
     }
 
     static void ScrollCallback(GLFWwindow* window, double dx, double dy) {
-        ImGui_ImplGlfw_ScrollCallback(window, dx, dy);
+        //ImGui_ImplGlfw_ScrollCallback(window, dx, dy);
 
         auto editor = reinterpret_cast<SCEngineEditor*>(glfwGetWindowUserPointer(window));
 
@@ -286,7 +286,7 @@ private:
     }
 
     static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-        ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+        //ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
         if (ImGui::GetIO().WantCaptureKeyboard) {
             return;
         }
@@ -303,15 +303,15 @@ private:
     }
 
     static void CharCallback(GLFWwindow* window, unsigned int c) {
-        ImGui_ImplGlfw_CharCallback(window, c);
+        //ImGui_ImplGlfw_CharCallback(window, c);
     }
 
     static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-        ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+        //ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
     }
 
     static void CursorPosCallback(GLFWwindow* window, double xd, double yd) {
-        ImGui_ImplGlfw_CursorPosCallback(window, xd, yd);
+        //ImGui_ImplGlfw_CursorPosCallback(window, xd, yd);
     }
 
     static void FramebufferSizeCallback(GLFWwindow* window, int width, int height) {

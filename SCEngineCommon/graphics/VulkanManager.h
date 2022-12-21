@@ -18,10 +18,9 @@
 struct Vertex {
     glm::vec3 pos;
     glm::vec3 color;
-    glm::vec2 texCoord;
 
     bool operator==(const Vertex& other) const {
-        return pos == other.pos && color == other.color && texCoord == other.texCoord;
+        return pos == other.pos && color == other.color;
     }
 
     static VkVertexInputBindingDescription getBindingDescription() {
@@ -32,8 +31,8 @@ struct Vertex {
         return bindingDescription;
     }
 
-    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
-        std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
+    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
         attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -42,10 +41,6 @@ struct Vertex {
         attributeDescriptions[1].location = 1;
         attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
         attributeDescriptions[1].offset = offsetof(Vertex, color);
-        attributeDescriptions[2].binding = 0;
-        attributeDescriptions[2].location = 2;
-        attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-        attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
         return attributeDescriptions;
     }
 };
@@ -54,8 +49,7 @@ template <>
 struct std::hash<Vertex> {
     size_t operator()(Vertex const& vertex) const {
         return ((std::hash<glm::vec3>()(vertex.pos) ^
-                (std::hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
-                (std::hash<glm::vec2>()(vertex.texCoord) << 1);
+                (std::hash<glm::vec3>()(vertex.color) << 1)) >> 1);
     }
 };
 
@@ -134,25 +128,16 @@ private:
         std::vector<VkPresentModeKHR> presentModes;
     };
 
-    /*const std::vector<Vertex> mVertices = {
-        {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-        {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-        {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-        {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
-
-        {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-        {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-        {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-        {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
+    const std::vector<Vertex> mVertices = {
+        {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+        {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+        {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}}
     };
 
-    const std::vector<uint16_t> mIndices = {
-        0, 1, 2, 2, 3, 0,
-        4, 5, 6, 6, 7, 4
-    };*/
-
-    std::vector<Vertex> mVertices;
-    std::vector<uint32_t> mIndices;
+    const std::vector<uint32_t> mIndices = {
+        0, 1, 2, 2, 3, 0
+    };
 
     VkBuffer mVertexBuffer;
     VkDeviceMemory mVertexBufferMemory;
@@ -172,11 +157,11 @@ private:
     VkDescriptorPool mDescriptorPool;
     std::vector<VkDescriptorSet> mDescriptorSets;
 
-    uint32_t mMipLevels;
-    VkImage mTextureImage;
-    VkDeviceMemory mTextureImageMemory;
-    VkImageView mTextureImageView;
-    VkSampler mTextureSampler;
+    //uint32_t mMipLevels;
+    //VkImage mTextureImage;
+    //VkDeviceMemory mTextureImageMemory;
+    //VkImageView mTextureImageView;
+    //VkSampler mTextureSampler;
 
     VkImage mDepthImage;
     VkDeviceMemory mDepthImageMemory;
@@ -243,8 +228,6 @@ private:
 
     bool hasStencilComponent(VkFormat format);
 
-    void createTextureImage();
-
     void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
@@ -252,12 +235,6 @@ private:
     void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 
     void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
-
-    void createTextureImageView();
-
-    void createTextureSampler();
-
-    void loadModel();
 
     void createVertexBuffer();
 
