@@ -116,7 +116,7 @@ public:
             ImGui::Text("fps: %f", mFps);
             ImGui::End();
 
-            /*ImGui::Begin("Project");
+            ImGui::Begin("Project");
             ImGui::Text(mProjectDir.empty() ? "No project is opened" : ("Opened project: " + mProjectDir.string()).c_str());
             if (ImGui::Button("Open/Create project")) {
                 ImGuiFileDialog::Instance()->OpenDialog("ChooseDirDialogKey", "Open/Create project", nullptr, ".");
@@ -152,27 +152,24 @@ public:
             }
 
             if (!mProjectDir.empty()) {
-                auto& gameWorldData = mSCEngine.doFrame(editorMode);
+                /*auto& gameWorldData = mSCEngine.doFrame(mEditorMode);
                 worldEditor.doFrame(gameWorldData);
 
                 editorWindow.update();
                 editorWindow.bind();
                 mSCEngine.doEditorFrame(editorWindow.isFocus(), editorWindow.getWidth(), editorWindow.getHeight(), editorWindow.getCursorScreenPos().x, editorWindow.getCursorScreenPos().y);
                 editorWindow.unbind();
-                if (!editorMode) {
+                if (!mEditorMode) {
                     gameWindow.update();
                     gameWindow.bind();
                     mSCEngine.doGameFrame(gameWindow.isFocus(), gameWindow.getWidth(), gameWindow.getHeight(), gameWindow.getCursorScreenPos().x, gameWindow.getCursorScreenPos().y);
                     gameWindow.unbind();
-                }
-
-                glViewport(0, 0, bufferWidth, bufferHeight);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                }*/
 
                 ImGui::Begin("Game");
-                if (editorMode) {
+                if (mEditorMode) {
                     if (ImGui::Button("Run")) {
-                        editorMode = false;
+                        mEditorMode = false;
                         mSCEngine.runGame();
                     } else {
                         if (ImGui::Button("Save")) {
@@ -184,12 +181,12 @@ public:
                     }
                 } else {
                     if (ImGui::Button("Stop")) {
-                        editorMode = true;
+                        mEditorMode = true;
                         mSCEngine.stopGame();
                     }
                 }
                 ImGui::End();
-            }*/
+            }
 
             ImGui::ShowDemoWindow();
 

@@ -1,60 +1,16 @@
 #include "editor/DebugDrawPhysics2D.h"
-#include "utility/Shader.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "core/GameWorld.h"
 #include "imgui/imgui.h"
 
-static void sCheckGLError() {
-	GLenum errCode = glGetError();
-	if (errCode != GL_NO_ERROR) {
-		fprintf(stderr, "OpenGL error = %d\n", errCode);
-		//assert(false);
-	}
-}
-
 struct GLRenderPoints {
 	void Create() {
-		// Generate
-		glGenVertexArrays(1, &m_vaoId);
-		glGenBuffers(3, m_vboIds);
-
-		glBindVertexArray(m_vaoId);
-		glEnableVertexAttribArray(0);
-		glEnableVertexAttribArray(1);
-		glEnableVertexAttribArray(2);
-
-		// Vertex buffer
-		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[0]);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(m_vertices), m_vertices, GL_DYNAMIC_DRAW);
-
-		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[1]);
-		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(m_colors), m_colors, GL_DYNAMIC_DRAW);
-
-		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[2]);
-		glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 0, (void*)0);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(m_sizes), m_sizes, GL_DYNAMIC_DRAW);
-
-		sCheckGLError();
-
-		// Cleanup
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
-
 		m_count = 0;
 	}
 
 	void Destroy() {
-		if (m_vaoId) {
-			glDeleteVertexArrays(1, &m_vaoId);
-			glDeleteBuffers(3, m_vboIds);
-			m_vaoId = 0;
-		}
-
-		m_shader.destroy();
 	}
 
 	void Vertex(const b2Vec2& v, const b2Color& c, float size) {
@@ -75,7 +31,7 @@ struct GLRenderPoints {
 		if (m_count == 0)
 			return;
 
-		m_shader.use();
+		/*m_shader.use();
 		m_shader.setMat4("projectionMatrix", mProjectionMatrix);
 
 		glBindVertexArray(m_vaoId);
@@ -97,7 +53,7 @@ struct GLRenderPoints {
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
-		glUseProgram(0);
+		glUseProgram(0);*/
 
 		m_count = 0;
 	}
@@ -109,49 +65,16 @@ struct GLRenderPoints {
 
 	int32 m_count;
 
-	GLuint m_vaoId;
-	GLuint m_vboIds[3];
-	Shader m_shader = Shader("shaders/shaderPoints.vs", "shaders/shaderPoints.fs");
 	float* mProjectionMatrix;
 };
 
 
 struct GLRenderLines {
 	void Create() {
-		// Generate
-		glGenVertexArrays(1, &m_vaoId);
-		glGenBuffers(2, m_vboIds);
-
-		glBindVertexArray(m_vaoId);
-		glEnableVertexAttribArray(0);
-		glEnableVertexAttribArray(1);
-
-		// Vertex buffer
-		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[0]);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(m_vertices), m_vertices, GL_DYNAMIC_DRAW);
-
-		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[1]);
-		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(m_colors), m_colors, GL_DYNAMIC_DRAW);
-
-		sCheckGLError();
-
-		// Cleanup
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
-
 		m_count = 0;
 	}
 
 	void Destroy() {
-		if (m_vaoId) {
-			glDeleteVertexArrays(1, &m_vaoId);
-			glDeleteBuffers(2, m_vboIds);
-			m_vaoId = 0;
-		}
-
-		m_shader.destroy();
 	}
 
 	void Vertex(const b2Vec2& v, const b2Color& c) {
@@ -171,7 +94,7 @@ struct GLRenderLines {
 		if (m_count == 0)
 			return;
 
-		m_shader.use();
+		/*m_shader.use();
 		m_shader.setMat4("projectionMatrix", mProjectionMatrix);
 
 		glBindVertexArray(m_vaoId);
@@ -188,7 +111,7 @@ struct GLRenderLines {
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
-		glUseProgram(0);
+		glUseProgram(0);*/
 
 		m_count = 0;
 	}
@@ -199,49 +122,16 @@ struct GLRenderLines {
 
 	int32 m_count;
 
-	GLuint m_vaoId;
-	GLuint m_vboIds[2];
-	Shader m_shader = Shader("shaders/shaderLines.vs", "shaders/shaderLines.fs");
 	float* mProjectionMatrix;
 };
 
 
 struct GLRenderTriangles {
 	void Create() {
-		// Generate
-		glGenVertexArrays(1, &m_vaoId);
-		glGenBuffers(2, m_vboIds);
-
-		glBindVertexArray(m_vaoId);
-		glEnableVertexAttribArray(0);
-		glEnableVertexAttribArray(1);
-
-		// Vertex buffer
-		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[0]);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(m_vertices), m_vertices, GL_DYNAMIC_DRAW);
-
-		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[1]);
-		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(m_colors), m_colors, GL_DYNAMIC_DRAW);
-
-		sCheckGLError();
-
-		// Cleanup
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
-
 		m_count = 0;
 	}
 
 	void Destroy() {
-		if (m_vaoId) {
-			glDeleteVertexArrays(1, &m_vaoId);
-			glDeleteBuffers(2, m_vboIds);
-			m_vaoId = 0;
-		}
-
-		m_shader.destroy();
 	}
 
 	void Vertex(const b2Vec2& v, const b2Color& c) {
@@ -261,7 +151,7 @@ struct GLRenderTriangles {
 		if (m_count == 0)
 			return;
 
-		m_shader.use();
+		/*m_shader.use();
 		m_shader.setMat4("projectionMatrix", mProjectionMatrix);
 
 		glBindVertexArray(m_vaoId);
@@ -281,7 +171,7 @@ struct GLRenderTriangles {
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
-		glUseProgram(0);
+		glUseProgram(0);*/
 
 		m_count = 0;
 	}
@@ -292,9 +182,6 @@ struct GLRenderTriangles {
 
 	int32 m_count;
 
-	GLuint m_vaoId;
-	GLuint m_vboIds[2];
-	Shader m_shader = Shader("shaders/shaderTriangles.vs", "shaders/shaderTriangles.fs");
 	float* mProjectionMatrix;
 };
 

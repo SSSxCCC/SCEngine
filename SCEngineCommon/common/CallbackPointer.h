@@ -1,6 +1,8 @@
 #ifndef _CallbackPointer_H_
 #define _CallbackPointer_H_
 
+#include <functional>
+
 class CallbackPointer {
 public:
     // Call by core module. (We can't use function pointer here because 'a lambda can only be converted to a function pointer if it does not capture')
@@ -14,7 +16,7 @@ public:
 
     void reset() {
         mScrollCallback = nullptr;
-        }
+    }
 };
 
 #endif // _CallbackPointer_H_
