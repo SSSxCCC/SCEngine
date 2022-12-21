@@ -11,14 +11,13 @@
 #include <tiny_obj_loader.h>
 #include <unordered_map>
 
-void VulkanManager::drawFrame() {
+VkCommandBuffer VulkanManager::preDrawFrame() {
     vkWaitForFences(mDevice, 1, &mInFlightFences[mCurrentFrame], VK_TRUE, UINT64_MAX);
 
-    uint32_t imageIndex;
-    VkResult result = vkAcquireNextImageKHR(mDevice, mSwapChain, UINT64_MAX, mImageAvailableSemaphores[mCurrentFrame], VK_NULL_HANDLE, &imageIndex);
+    VkResult result = vkAcquireNextImageKHR(mDevice, mSwapChain, UINT64_MAX, mImageAvailableSemaphores[mCurrentFrame], VK_NULL_HANDLE, &mImageIndex);
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
         recreateSwapChain();
-        return;
+        return VK_NULL_HANDLE;
     } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
         throw std::runtime_error("failed to acquire swap chain image!");
     }
@@ -29,32 +28,85 @@ void VulkanManager::drawFrame() {
     updateUniformBuffer(mCurrentFrame);
 
     vkResetCommandBuffer(mCommandBuffers[mCurrentFrame], 0);
-    recordCommandBuffer(mCommandBuffers[mCurrentFrame], imageIndex);
 
-    VkSubmitInfo submitInfo { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-    VkSemaphore waitSemaphores[] = { mImageAvailableSemaphores[mCurrentFrame] };
-    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+    VkCommandBufferBeginInfo beginInfo{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+    beginInfo.flags = 0;                   // Optional
+    beginInfo.pInheritanceInfo = nullptr;  // Optional
+    if (vkBeginCommandBuffer(mCommandBuffers[mCurrentFrame], &beginInfo) != VK_SUCCESS) {
+        throw std::runtime_error("failed to begin recording command buffer!");
+    }
+
+    VkRenderPassBeginInfo renderPassInfo{VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
+    renderPassInfo.renderPass = mRenderPass;
+    renderPassInfo.framebuffer = mSwapChainFramebuffers[mImageIndex];
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = mSwapChainExtent;
+    std::array<VkClearValue, 2> clearValues{};
+    clearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+    clearValues[1].depthStencil = {1.0f, 0};
+    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+    renderPassInfo.pClearValues = clearValues.data();
+    vkCmdBeginRenderPass(mCommandBuffers[mCurrentFrame], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+    vkCmdBindPipeline(mCommandBuffers[mCurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, mGraphicsPipeline);
+
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(mSwapChainExtent.width);
+    viewport.height = static_cast<float>(mSwapChainExtent.height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(mCommandBuffers[mCurrentFrame], 0, 1, &viewport);
+
+    VkRect2D scissor{};
+    scissor.offset = {0, 0};
+    scissor.extent = mSwapChainExtent;
+    vkCmdSetScissor(mCommandBuffers[mCurrentFrame], 0, 1, &scissor);
+
+    VkBuffer vertexBuffers[] = {mVertexBuffer};
+    VkDeviceSize offsets[] = {0};
+    vkCmdBindVertexBuffers(mCommandBuffers[mCurrentFrame], 0, 1, vertexBuffers, offsets);
+    vkCmdBindIndexBuffer(mCommandBuffers[mCurrentFrame], mIndexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    vkCmdBindDescriptorSets(mCommandBuffers[mCurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, mPipelineLayout, 0, 1, &mDescriptorSets[mCurrentFrame], 0, nullptr);
+
+    // vkCmdDraw(commandBuffer, static_cast<uint32_t>(mVertices.size()), 1, 0, 0);
+    vkCmdDrawIndexed(mCommandBuffers[mCurrentFrame], static_cast<uint32_t>(mIndices.size()), 1, 0, 0, 0);
+
+    return mCommandBuffers[mCurrentFrame];
+}
+
+void VulkanManager::postDrawFrame() {
+    vkCmdEndRenderPass(mCommandBuffers[mCurrentFrame]);
+
+    if (vkEndCommandBuffer(mCommandBuffers[mCurrentFrame]) != VK_SUCCESS) {
+        throw std::runtime_error("failed to record command buffer!");
+    }
+
+    VkSubmitInfo submitInfo{VK_STRUCTURE_TYPE_SUBMIT_INFO};
+    VkSemaphore waitSemaphores[] = {mImageAvailableSemaphores[mCurrentFrame]};
+    VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = waitSemaphores;
     submitInfo.pWaitDstStageMask = waitStages;
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &mCommandBuffers[mCurrentFrame];
-    VkSemaphore signalSemaphores[] = { mRenderFinishedSemaphores[mCurrentFrame] };
+    VkSemaphore signalSemaphores[] = {mRenderFinishedSemaphores[mCurrentFrame]};
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
     if (vkQueueSubmit(mGraphicsQueue, 1, &submitInfo, mInFlightFences[mCurrentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit draw command buffer!");
     }
 
-    VkPresentInfoKHR presentInfo { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
+    VkPresentInfoKHR presentInfo{VK_STRUCTURE_TYPE_PRESENT_INFO_KHR};
     presentInfo.waitSemaphoreCount = 1;
     presentInfo.pWaitSemaphores = signalSemaphores;
-    VkSwapchainKHR swapChains[] = { mSwapChain };
+    VkSwapchainKHR swapChains[] = {mSwapChain};
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = swapChains;
-    presentInfo.pImageIndices = &imageIndex;
+    presentInfo.pImageIndices = &mImageIndex;
     presentInfo.pResults = nullptr;  // Optional
-    result = vkQueuePresentKHR(mPresentQueue, &presentInfo);
+    VkResult result = vkQueuePresentKHR(mPresentQueue, &presentInfo);
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || mFramebufferResized) {
         mFramebufferResized = false;
         recreateSwapChain();
@@ -263,7 +315,7 @@ VulkanManager::SwapChainSupportDetails VulkanManager::querySwapChainSupport(VkPh
 }
 
 VkSampleCountFlagBits VulkanManager::getMaxUsableSampleCount() {
-    VkPhysicalDeviceProperties physicalDeviceProperties;
+    /*VkPhysicalDeviceProperties physicalDeviceProperties;
     vkGetPhysicalDeviceProperties(mPhysicalDevice, &physicalDeviceProperties);
     VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts & physicalDeviceProperties.limits.framebufferDepthSampleCounts;
     if (counts & VK_SAMPLE_COUNT_64_BIT) { return VK_SAMPLE_COUNT_64_BIT; }
@@ -272,7 +324,8 @@ VkSampleCountFlagBits VulkanManager::getMaxUsableSampleCount() {
     if (counts & VK_SAMPLE_COUNT_8_BIT) { return VK_SAMPLE_COUNT_8_BIT; }
     if (counts & VK_SAMPLE_COUNT_4_BIT) { return VK_SAMPLE_COUNT_4_BIT; }
     if (counts & VK_SAMPLE_COUNT_2_BIT) { return VK_SAMPLE_COUNT_2_BIT; }
-    return VK_SAMPLE_COUNT_1_BIT;
+    return VK_SAMPLE_COUNT_1_BIT;*/
+    return VK_SAMPLE_COUNT_2_BIT;
 }
 
 void VulkanManager::createLogicalDevice() {
@@ -377,12 +430,13 @@ VkSurfaceFormatKHR VulkanManager::chooseSwapSurfaceFormat(const std::vector<VkSu
 }
 
 VkPresentModeKHR VulkanManager::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
-    for (const auto& availablePresentMode : availablePresentModes) {
+    /*for (const auto& availablePresentMode : availablePresentModes) {
         if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
             return availablePresentMode;
         }
     }
-    return VK_PRESENT_MODE_FIFO_KHR;
+    return VK_PRESENT_MODE_FIFO_KHR;*/
+    return VK_PRESENT_MODE_IMMEDIATE_KHR;
 }
 
 VkExtent2D VulkanManager::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
@@ -1064,17 +1118,22 @@ void VulkanManager::createUniformBuffers() {
 }
 
 void VulkanManager::createDescriptorPool() {
-    std::array<VkDescriptorPoolSize, 2> poolSizes{};
-    poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-    poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-
+    std::array<VkDescriptorPoolSize, 11> poolSizes = {
+        VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+        VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+        VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+        VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+        VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+        VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+        VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+        VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+        VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+        VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+        VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }};
     VkDescriptorPoolCreateInfo poolInfo { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
     poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
     poolInfo.pPoolSizes = poolSizes.data();
-    poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-
+    poolInfo.maxSets = static_cast<uint32_t>(poolSizes.size()) * 1000;
     if (vkCreateDescriptorPool(mDevice, &poolInfo, nullptr, &mDescriptorPool) != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor pool!");
     }
@@ -1143,6 +1202,7 @@ void VulkanManager::createSyncObjects() {
 }
 
 void VulkanManager::recreateSwapChain() {
+    mPlatform->mOut << "VulkanManager::recreateSwapChain" << std::endl;
     mPlatform->waitSurfaceSize();
 
     vkDeviceWaitIdle(mDevice);
@@ -1189,60 +1249,7 @@ void VulkanManager::updateUniformBuffer(uint32_t currentImage) {
     memcpy(mUniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
 }
 
-void VulkanManager::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
-    VkCommandBufferBeginInfo beginInfo { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-    beginInfo.flags = 0;                   // Optional
-    beginInfo.pInheritanceInfo = nullptr;  // Optional
-    if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
-        throw std::runtime_error("failed to begin recording command buffer!");
-    }
-
-    VkRenderPassBeginInfo renderPassInfo { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-    renderPassInfo.renderPass = mRenderPass;
-    renderPassInfo.framebuffer = mSwapChainFramebuffers[imageIndex];
-    renderPassInfo.renderArea.offset = { 0, 0 };
-    renderPassInfo.renderArea.extent = mSwapChainExtent;
-    std::array<VkClearValue, 2> clearValues{};
-    clearValues[0].color = {{ 0.0f, 0.0f, 0.0f, 1.0f }};
-    clearValues[1].depthStencil = { 1.0f, 0 };
-    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-    renderPassInfo.pClearValues = clearValues.data();
-    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mGraphicsPipeline);
-
-    VkViewport viewport{};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = static_cast<float>(mSwapChainExtent.width);
-    viewport.height = static_cast<float>(mSwapChainExtent.height);
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-    VkRect2D scissor{};
-    scissor.offset = { 0, 0 };
-    scissor.extent = mSwapChainExtent;
-    vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-    VkBuffer vertexBuffers[] = { mVertexBuffer };
-    VkDeviceSize offsets[] = { 0 };
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(commandBuffer, mIndexBuffer, 0, VK_INDEX_TYPE_UINT32);
-    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mPipelineLayout, 0, 1, &mDescriptorSets[mCurrentFrame], 0, nullptr);
-    
-    //vkCmdDraw(commandBuffer, static_cast<uint32_t>(mVertices.size()), 1, 0, 0);
-    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mIndices.size()), 1, 0, 0, 0);
-
-    vkCmdEndRenderPass(commandBuffer);
-
-    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
-        throw std::runtime_error("failed to record command buffer!");
-    }
-}
-
 void VulkanManager::cleanup() {
-    vkDeviceWaitIdle(mDevice);
     cleanupSwapChain();
     //vkDestroySampler(mDevice, mTextureSampler, nullptr);
     //vkDestroyImageView(mDevice, mTextureImageView, nullptr);

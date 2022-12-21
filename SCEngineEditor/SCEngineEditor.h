@@ -76,13 +76,15 @@ public:
     SCEngineEditor() {
         initWindow();
         initVulkan();
-        //initImgui();
+        initImgui();
     }
 
     ~SCEngineEditor() {
         if (!mProjectDir.empty()) {
             closeProject();
         }
+
+        vkDeviceWaitIdle(mVulkanManager->mDevice);
 
         ImGui_ImplVulkan_Shutdown();
         ImGui_ImplGlfw_Shutdown();
@@ -98,9 +100,9 @@ public:
         while (!glfwWindowShouldClose(mWindow)) {
             glfwPollEvents();
 
-            //ImGui_ImplOpenGL3_NewFrame();
-            //ImGui_ImplGlfw_NewFrame();
-            //ImGui::NewFrame();
+            ImGui_ImplVulkan_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
 
             int duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - mLastTime).count();
             mFrame++;
@@ -110,9 +112,9 @@ public:
                 mLastTime = std::chrono::steady_clock::now();
             }
 
-            //ImGui::Begin("Status");
-            //ImGui::Text("fps: %f", fps);
-            //ImGui::End();
+            ImGui::Begin("Status");
+            ImGui::Text("fps: %f", mFps);
+            ImGui::End();
 
             /*ImGui::Begin("Project");
             ImGui::Text(mProjectDir.empty() ? "No project is opened" : ("Opened project: " + mProjectDir.string()).c_str());
@@ -187,13 +189,16 @@ public:
                     }
                 }
                 ImGui::End();
-            }
+            }*/
 
             ImGui::ShowDemoWindow();
 
             ImGui::Render();
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());*/
-            mVulkanManager->drawFrame();
+            auto commandBuffer = mVulkanManager->preDrawFrame();
+            if (commandBuffer != VK_NULL_HANDLE) {
+                ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
+                mVulkanManager->postDrawFrame();
+            }
         }
     }
 private:
@@ -234,6 +239,9 @@ private:
         glfwSetCharCallback(mWindow, CharCallback);
         glfwSetMouseButtonCallback(mWindow, MouseButtonCallback);
         glfwSetCursorPosCallback(mWindow, CursorPosCallback);
+        glfwSetCursorEnterCallback(mWindow, CursorEnterCallback);
+        glfwSetWindowFocusCallback(mWindow, WindowFocusCallback);
+        glfwSetMonitorCallback(MonitorCallback);
 
         initCallbackPointer();
     }
@@ -251,9 +259,24 @@ private:
             throw std::runtime_error("ImGui_ImplGlfw_InitForOpenGL failed.");
         }
 
-        //if (!ImGui_ImplOpenGL3_Init(nullptr)) {
-        //    throw std::runtime_error("ImGui_ImplOpenGL3_Init failed.");
-        //}
+        ImGui_ImplVulkan_InitInfo initInfo{};
+        initInfo.Instance = mVulkanManager->mInstance;
+        initInfo.PhysicalDevice = mVulkanManager->mPhysicalDevice;
+        initInfo.Device = mVulkanManager->mDevice;
+        VulkanManager::QueueFamilyIndices queueFamilyIndices = mVulkanManager->findQueueFamilies(mVulkanManager->mPhysicalDevice);
+        initInfo.QueueFamily = queueFamilyIndices.graphicsFamily.value();
+        initInfo.Queue = mVulkanManager->mGraphicsQueue;
+        initInfo.PipelineCache = nullptr;
+        initInfo.DescriptorPool = mVulkanManager->mDescriptorPool;
+        initInfo.Subpass = 0;
+        initInfo.MinImageCount = mVulkanManager->MAX_FRAMES_IN_FLIGHT;
+        initInfo.ImageCount = mVulkanManager->MAX_FRAMES_IN_FLIGHT;
+        initInfo.MSAASamples = mVulkanManager->mMsaaSamples;
+        initInfo.Allocator = nullptr;
+        initInfo.CheckVkResultFn = nullptr;
+        if (!ImGui_ImplVulkan_Init(&initInfo, mVulkanManager->mRenderPass)) {
+            throw std::runtime_error("ImGui_ImplVulkan_Init failed.");
+        }
 
         glfwSetWindowContentScaleCallback(mWindow, WindowContentScaleCallback);
         float xscale, yscale;
@@ -268,7 +291,7 @@ private:
     }
 
     static void ScrollCallback(GLFWwindow* window, double dx, double dy) {
-        //ImGui_ImplGlfw_ScrollCallback(window, dx, dy);
+        ImGui_ImplGlfw_ScrollCallback(window, dx, dy);
 
         auto editor = reinterpret_cast<SCEngineEditor*>(glfwGetWindowUserPointer(window));
 
@@ -281,12 +304,16 @@ private:
         }
     }
 
+    static void MonitorCallback(GLFWmonitor* monitor, int event) {
+        ImGui_ImplGlfw_MonitorCallback(monitor, event);
+    }
+
     static void WindowSizeCallback(GLFWwindow*, int width, int height) {
         // gCamera.setSize(width, height);
     }
 
     static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-        //ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+        ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
         if (ImGui::GetIO().WantCaptureKeyboard) {
             return;
         }
@@ -303,15 +330,23 @@ private:
     }
 
     static void CharCallback(GLFWwindow* window, unsigned int c) {
-        //ImGui_ImplGlfw_CharCallback(window, c);
+        ImGui_ImplGlfw_CharCallback(window, c);
     }
 
     static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-        //ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+        ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
     }
 
     static void CursorPosCallback(GLFWwindow* window, double xd, double yd) {
-        //ImGui_ImplGlfw_CursorPosCallback(window, xd, yd);
+        ImGui_ImplGlfw_CursorPosCallback(window, xd, yd);
+    }
+
+    static void CursorEnterCallback(GLFWwindow* window, int entered) {
+        ImGui_ImplGlfw_CursorEnterCallback(window, entered);
+    }
+
+    static void WindowFocusCallback(GLFWwindow* window, int focused) {
+        ImGui_ImplGlfw_WindowFocusCallback(window, focused);
     }
 
     static void FramebufferSizeCallback(GLFWwindow* window, int width, int height) {
@@ -327,13 +362,16 @@ private:
             editor->mScale = (xscale + yscale) / 2.0f;
         }
         // scale font so that we can see texts in high dpi display clearly
-        /*ImFontConfig fontConfig;
-        fontConfig.SizePixels = 13.0f * mScale;
+        ImFontConfig fontConfig;
+        fontConfig.SizePixels = 13.0f * editor->mScale;
         ImGui::GetIO().Fonts->Clear();
         ImFont* font = ImGui::GetIO().Fonts->AddFontDefault(&fontConfig);
         // ImGui::GetStyle().ScaleAllSizes(mScale);
         // ImGui::GetIO().Fonts->Build();
-        ImGui_ImplOpenGL3_CreateFontsTexture();*/
+        auto commandBuffer = editor->mVulkanManager->beginSingleTimeCommands();
+        ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
+        editor->mVulkanManager->endSingleTimeCommands(commandBuffer);
+        ImGui_ImplVulkan_DestroyFontUploadObjects();
     }
 
     void initCallbackPointer() {

@@ -10,7 +10,7 @@ public:
 
     // Assign by core module
     using ScrollCallback_fn = void (*)(double, double);
-    ScrollCallback_fn mScrollCallback;
+    ScrollCallback_fn mScrollCallback = nullptr;
 
     void reset() {
         mScrollCallback = nullptr;

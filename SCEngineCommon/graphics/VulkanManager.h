@@ -59,7 +59,8 @@ public:
     VulkanManager(std::shared_ptr<Platform> platform) : mPlatform(platform) { initVulkan(); }
     ~VulkanManager() { cleanup(); }
 
-    void drawFrame();
+    VkCommandBuffer preDrawFrame();
+    void postDrawFrame();
 
     void framebufferResized() {
         mFramebufferResized = true;
@@ -111,6 +112,7 @@ private:
     std::vector<VkFence> mInFlightFences;
 
     uint32_t mCurrentFrame = 0;
+    uint32_t mImageIndex;
     bool mFramebufferResized = false;
 
     struct QueueFamilyIndices {
@@ -265,8 +267,6 @@ private:
     void cleanupSwapChain();
 
     void updateUniformBuffer(uint32_t currentImage);
-
-    void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
     void cleanup();
 };
