@@ -69,6 +69,7 @@ public:
 private:
     std::shared_ptr<Platform> mPlatform;
 
+    // Common used vulkan objects start
     VkInstance mInstance;
 
     const std::vector<const char*> VALIDATION_LAYERS = {
@@ -83,28 +84,36 @@ private:
     VkPhysicalDevice mPhysicalDevice = VK_NULL_HANDLE;
     VkDevice mDevice;
     VkQueue mGraphicsQueue;
-    VkQueue mPresentQueue;
-
-    VkSurfaceKHR mSurface;
 
     const std::vector<const char*> DEVICE_EXTENSIONS = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
-    VkSwapchainKHR mSwapChain;
-    std::vector<VkImage> mSwapChainImages;
     VkFormat mSwapChainImageFormat;
-    VkExtent2D mSwapChainExtent;
-    std::vector<VkImageView> mSwapChainImageViews;
 
     VkRenderPass mRenderPass;
     VkDescriptorSetLayout mDescriptorSetLayout;
     VkPipelineLayout mPipelineLayout;
     VkPipeline mGraphicsPipeline;
 
-    std::vector<VkFramebuffer> mSwapChainFramebuffers;
-
     const int MAX_FRAMES_IN_FLIGHT = 2;
 
     VkCommandPool mCommandPool;
+
+    VkDescriptorPool mDescriptorPool;
+
+    VkSampleCountFlagBits mMsaaSamples = VK_SAMPLE_COUNT_1_BIT;
+    // Common used vulkan objects end
+
+    // Main window used only vulkan objects start
+    VkQueue mPresentQueue;
+    VkSurfaceKHR mSurface;
+
+    VkSwapchainKHR mSwapChain;
+    std::vector<VkImage> mSwapChainImages;
+    VkExtent2D mSwapChainExtent;
+    std::vector<VkImageView> mSwapChainImageViews;
+
+    std::vector<VkFramebuffer> mSwapChainFramebuffers;
+
     std::vector<VkCommandBuffer> mCommandBuffers;
 
     std::vector<VkSemaphore> mImageAvailableSemaphores;
@@ -114,6 +123,15 @@ private:
     uint32_t mCurrentFrame = 0;
     uint32_t mImageIndex;
     bool mFramebufferResized = false;
+
+    VkImage mDepthImage;
+    VkDeviceMemory mDepthImageMemory;
+    VkImageView mDepthImageView;
+
+    VkImage mColorImage;
+    VkDeviceMemory mColorImageMemory;
+    VkImageView mColorImageView;
+    // Main window used only vulkan objects end
 
     struct QueueFamilyIndices {
         std::optional<uint32_t> graphicsFamily;
@@ -156,7 +174,6 @@ private:
     std::vector<VkDeviceMemory> mUniformBuffersMemory;
     std::vector<void*> mUniformBuffersMapped;
 
-    VkDescriptorPool mDescriptorPool;
     std::vector<VkDescriptorSet> mDescriptorSets;
 
     //uint32_t mMipLevels;
@@ -165,110 +182,64 @@ private:
     //VkImageView mTextureImageView;
     //VkSampler mTextureSampler;
 
-    VkImage mDepthImage;
-    VkDeviceMemory mDepthImageMemory;
-    VkImageView mDepthImageView;
-
-    VkSampleCountFlagBits mMsaaSamples = VK_SAMPLE_COUNT_1_BIT;
-    VkImage mColorImage;
-    VkDeviceMemory mColorImageMemory;
-    VkImageView mColorImageView;
-
     void initVulkan();
+    void cleanup();
 
+    // Create common vulkan objects
     void createInstance();
-
     bool checkValidationLayerSupport();
-
-    void createSurface();
-
     void pickPhysicalDevice();
-
     bool isDeviceSuitable(VkPhysicalDevice device);
-
-    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
-
     bool checkDeviceExtensionSupport(VkPhysicalDevice device);
-
-    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
-
+    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
     VkSampleCountFlagBits getMaxUsableSampleCount();
-
     void createLogicalDevice();
-
-    void createSwapChain();
-
-    VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
-
-    VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
-
-    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
-
-    void createResolveImageViews(const std::vector<VkImage>& resolveImages, std::vector<VkImageView>& resolveImageViews);
-
-    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
-
     void createRenderPass();
-
-    void createDescriptorSetLayout();
-
-    void createGraphicsPipeline();
-
-    VkShaderModule createShaderModule(const std::vector<char>& code);
-
-    void createFramebuffers(uint32_t width, uint32_t height, VkImageView colorImageView, VkImageView depthImageView, const std::vector<VkImageView>& resolveImageViews, std::vector<VkFramebuffer>& framebuffers);
-
     void createCommandPool();
-
-    void createColorResources(uint32_t width, uint32_t height, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView);
-
-    void createDepthResources(uint32_t width, uint32_t height, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView);
-
-    VkFormat findDepthFormat();
-
-    VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
-
-    bool hasStencilComponent(VkFormat format);
-
-    void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
-
-    void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
-
-    void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
-
-    void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
-
-    void createVertexBuffer();
-
-    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-
-    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-
-    void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-
-    VkCommandBuffer beginSingleTimeCommands();
-
-    void endSingleTimeCommands(VkCommandBuffer commandBuffer);
-
-    void createIndexBuffer();
-
-    void createUniformBuffers();
-
     void createDescriptorPool();
 
-    void createDescriptorSets();
-
+    // Create vulkan objects for main window
+    void createSurface();
+    void createSwapChain();
+    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+    VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+    VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
     void createCommandBuffers();
-
     void createSyncObjects();
-
     void recreateSwapChain();
-
     void cleanupSwapChain();
 
-    void updateUniformBuffer(uint32_t currentImage);
+    // Help methods to create vulkan objects for main window or sub window
+    void createResolveImageViews(const std::vector<VkImage>& resolveImages, std::vector<VkImageView>& resolveImageViews);
+    void createColorResources(uint32_t width, uint32_t height, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView);
+    void createDepthResources(uint32_t width, uint32_t height, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView);
+    void createFramebuffers(uint32_t width, uint32_t height, VkImageView colorImageView, VkImageView depthImageView, const std::vector<VkImageView>& resolveImageViews, std::vector<VkFramebuffer>& framebuffers);
 
-    void cleanup();
+    // Help functions
+    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
+    VkFormat findDepthFormat();
+    VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+    bool hasStencilComponent(VkFormat format);
+    void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+    void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
+    void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+    void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
+    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+    void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+    VkCommandBuffer beginSingleTimeCommands();
+    void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+
+    // To be deleted
+    void createDescriptorSetLayout();
+    void createGraphicsPipeline();
+    VkShaderModule createShaderModule(const std::vector<char>& code);
+    void createVertexBuffer();
+    void createIndexBuffer();
+    void createUniformBuffers();
+    void createDescriptorSets();
+    void updateUniformBuffer(uint32_t currentImage);
 };
 
 #endif // _VulkanManager_H_
