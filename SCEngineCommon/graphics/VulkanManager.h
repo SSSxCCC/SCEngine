@@ -91,27 +91,27 @@ private:
     VkCommandPool mCommandPool;
     VkDescriptorPool mDescriptorPool;
     VkSampleCountFlagBits mMsaaSamples = VK_SAMPLE_COUNT_1_BIT;
+    uint32_t mCurrentFrame = 0;  // sub windows use this property to synchronize with the main window
     // Common used vulkan objects end
 
     // Main window used only vulkan objects start
     VkSurfaceKHR mSurface;
     VkQueue mPresentQueue;
-    VkSwapchainKHR mSwapChain;
-    VkExtent2D mSwapChainExtent;
-    std::vector<VkImage> mSwapChainImages;
-    std::vector<VkImageView> mSwapChainImageViews;
     VkImage mDepthImage;
     VkDeviceMemory mDepthImageMemory;
     VkImageView mDepthImageView;
     VkImage mColorImage;
     VkDeviceMemory mColorImageMemory;
     VkImageView mColorImageView;
-    std::vector<VkFramebuffer> mSwapChainFramebuffers;
-    std::vector<VkCommandBuffer> mCommandBuffers;
-    std::vector<VkSemaphore> mImageAvailableSemaphores;
-    std::vector<VkSemaphore> mRenderFinishedSemaphores;
-    std::vector<VkFence> mInFlightFences;
-    uint32_t mCurrentFrame = 0;
+    VkSwapchainKHR mSwapChain;
+    VkExtent2D mSwapChainExtent;
+    std::vector<VkImage> mSwapChainImages;  // size is the number of images in swapchain
+    std::vector<VkImageView> mSwapChainImageViews;  // size is the number of images in swapchain
+    std::vector<VkFramebuffer> mSwapChainFramebuffers;  // size is the number of images in swapchain
+    std::vector<VkCommandBuffer> mCommandBuffers;  // size is MAX_FRAMES_IN_FLIGHT
+    std::vector<VkSemaphore> mImageAvailableSemaphores;  // size is MAX_FRAMES_IN_FLIGHT
+    std::vector<VkSemaphore> mRenderFinishedSemaphores;  // size is MAX_FRAMES_IN_FLIGHT
+    std::vector<VkFence> mInFlightFences;  // size is MAX_FRAMES_IN_FLIGHT
     uint32_t mImageIndex;
     bool mFramebufferResized = false;
     // Main window used only vulkan objects end
@@ -188,8 +188,6 @@ private:
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
     VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
-    void createCommandBuffers();
-    void createSyncObjects();
     void recreateSwapChain();
     void cleanupSwapChain();
 
@@ -198,6 +196,8 @@ private:
     void createColorResources(uint32_t width, uint32_t height, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView);
     void createDepthResources(uint32_t width, uint32_t height, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView);
     void createFramebuffers(uint32_t width, uint32_t height, VkImageView colorImageView, VkImageView depthImageView, const std::vector<VkImageView>& resolveImageViews, std::vector<VkFramebuffer>& framebuffers);
+    void createCommandBuffers();
+    void createSyncObjects();
 
     // Help functions
     VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);

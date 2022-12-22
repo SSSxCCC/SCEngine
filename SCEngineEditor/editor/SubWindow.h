@@ -23,9 +23,22 @@ private:
 	int mHeight;
 	ImVec2 mCursorScreenPos;
 
-	unsigned int mTexture;
-	unsigned int mFbo;
-	unsigned int mRbo;
+	VkImage mDepthImage;
+    VkDeviceMemory mDepthImageMemory;
+    VkImageView mDepthImageView;
+    VkImage mColorImage;
+    VkDeviceMemory mColorImageMemory;
+    VkImageView mColorImageView;
+    std::vector<VkImage> mResovleImages;
+    std::vector<VkDeviceMemory> mResovleImageMemories;
+    std::vector<VkImageView> mResovleImageViews;
+    std::vector<VkFramebuffer> mFramebuffers;
+    std::vector<VkCommandBuffer> mCommandBuffers;
+    std::vector<VkSemaphore> mImageAvailableSemaphores;
+    std::vector<VkSemaphore> mRenderFinishedSemaphores;
+    std::vector<VkFence> mInFlightFences;
+    uint32_t mCurrentFrame = 0;
+	std::vector<VkDescriptorSet> mResolveDescriptorSet;
 
 	void updateFrameBuffer();
 };
