@@ -27,26 +27,7 @@ VkCommandBuffer VulkanManager::preDrawFrame() {
 
     updateUniformBuffer(mCurrentFrame);
 
-    vkResetCommandBuffer(mCommandBuffers[mCurrentFrame], 0);
-
-    VkCommandBufferBeginInfo beginInfo { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-    beginInfo.flags = 0;                   // Optional
-    beginInfo.pInheritanceInfo = nullptr;  // Optional
-    if (vkBeginCommandBuffer(mCommandBuffers[mCurrentFrame], &beginInfo) != VK_SUCCESS) {
-        throw std::runtime_error("failed to begin recording command buffer!");
-    }
-
-    VkRenderPassBeginInfo renderPassInfo { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-    renderPassInfo.renderPass = mRenderPass;
-    renderPassInfo.framebuffer = mSwapChainFramebuffers[mImageIndex];
-    renderPassInfo.renderArea.offset = { 0, 0 };
-    renderPassInfo.renderArea.extent = mSwapChainExtent;
-    std::array<VkClearValue, 2> clearValues{};
-    clearValues[0].color = {{ 0.0f, 0.0f, 0.0f, 1.0f }};
-    clearValues[1].depthStencil = { 1.0f, 0 };
-    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-    renderPassInfo.pClearValues = clearValues.data();
-    vkCmdBeginRenderPass(mCommandBuffers[mCurrentFrame], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    beginRender(mCommandBuffers[mCurrentFrame], mSwapChainFramebuffers[mImageIndex], mSwapChainExtent);
 
     vkCmdBindPipeline(mCommandBuffers[mCurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, mGraphicsPipeline);
 
@@ -77,30 +58,14 @@ VkCommandBuffer VulkanManager::preDrawFrame() {
 }
 
 void VulkanManager::postDrawFrame() {
-    vkCmdEndRenderPass(mCommandBuffers[mCurrentFrame]);
-
-    if (vkEndCommandBuffer(mCommandBuffers[mCurrentFrame]) != VK_SUCCESS) {
-        throw std::runtime_error("failed to record command buffer!");
-    }
-
-    VkSubmitInfo submitInfo { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-    VkSemaphore waitSemaphores[] = { mImageAvailableSemaphores[mCurrentFrame] };
-    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-    submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = waitSemaphores;
-    submitInfo.pWaitDstStageMask = waitStages;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &mCommandBuffers[mCurrentFrame];
-    VkSemaphore signalSemaphores[] = { mRenderFinishedSemaphores[mCurrentFrame] };
-    submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = signalSemaphores;
-    if (vkQueueSubmit(mGraphicsQueue, 1, &submitInfo, mInFlightFences[mCurrentFrame]) != VK_SUCCESS) {
-        throw std::runtime_error("failed to submit draw command buffer!");
-    }
+    std::vector<VkSemaphore> waitSemaphores = { mImageAvailableSemaphores[mCurrentFrame] };
+    std::vector<VkPipelineStageFlags> waitStages = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+    std::vector<VkSemaphore> signalSemaphores = { mRenderFinishedSemaphores[mCurrentFrame] };
+    endRender(mCommandBuffers[mCurrentFrame], waitSemaphores, waitStages, signalSemaphores, mInFlightFences[mCurrentFrame]);
 
     VkPresentInfoKHR presentInfo { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
-    presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = signalSemaphores;
+    presentInfo.waitSemaphoreCount = static_cast<uint32_t>(signalSemaphores.size());
+    presentInfo.pWaitSemaphores = signalSemaphores.data();
     VkSwapchainKHR swapChains[] = { mSwapChain };
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = swapChains;
@@ -117,13 +82,56 @@ void VulkanManager::postDrawFrame() {
     mCurrentFrame = (mCurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
+void VulkanManager::beginRender(VkCommandBuffer commandBuffer, VkFramebuffer frameBuffer, VkExtent2D extent) {
+    vkResetCommandBuffer(commandBuffer, 0);
+
+    VkCommandBufferBeginInfo beginInfo { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+    beginInfo.flags = 0;                   // Optional
+    beginInfo.pInheritanceInfo = nullptr;  // Optional
+    if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+        throw std::runtime_error("failed to begin recording command buffer!");
+    }
+
+    VkRenderPassBeginInfo renderPassInfo { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+    renderPassInfo.renderPass = mRenderPass;
+    renderPassInfo.framebuffer = frameBuffer;
+    renderPassInfo.renderArea.offset = { 0, 0 };
+    renderPassInfo.renderArea.extent = extent;
+    std::array<VkClearValue, 2> clearValues{};
+    clearValues[0].color = {{ 0.0f, 0.0f, 0.0f, 1.0f }};
+    clearValues[1].depthStencil = { 1.0f, 0 };
+    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+    renderPassInfo.pClearValues = clearValues.data();
+    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+void VulkanManager::endRender(VkCommandBuffer commandBuffer, const std::vector<VkSemaphore>& waitSemaphores, const std::vector<VkPipelineStageFlags>& waitStages, const std::vector<VkSemaphore>& signalSemaphores, VkFence fence) {
+    vkCmdEndRenderPass(commandBuffer);
+
+    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+        throw std::runtime_error("failed to record command buffer!");
+    }
+
+    VkSubmitInfo submitInfo { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+    submitInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
+    submitInfo.pWaitSemaphores = waitSemaphores.data();
+    submitInfo.pWaitDstStageMask = waitStages.data();
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffer;
+    submitInfo.signalSemaphoreCount = static_cast<uint32_t>(signalSemaphores.size());
+    submitInfo.pSignalSemaphores = signalSemaphores.data();
+    if (vkQueueSubmit(mGraphicsQueue, 1, &submitInfo, fence) != VK_SUCCESS) {
+        throw std::runtime_error("failed to submit draw command buffer!");
+    }
+}
+
 void VulkanManager::initVulkan() {
     createInstance();
     createSurface();
     pickPhysicalDevice();
     createLogicalDevice();
     createSwapChain();
-    createResolveImageViews(mSwapChainImages, mSwapChainImageViews);
+    createSwapChainImageViews();
     createRenderPass();
     createDescriptorSetLayout();
     createGraphicsPipeline();
@@ -136,7 +144,7 @@ void VulkanManager::initVulkan() {
     createUniformBuffers();
     createDescriptorPool();
     createDescriptorSets();
-    createCommandBuffers();
+    createCommandBuffers(mCommandBuffers);
     createSyncObjects();
 }
 
@@ -452,7 +460,7 @@ VkExtent2D VulkanManager::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capab
     }
 }
 
-void VulkanManager::createResolveImageViews(const std::vector<VkImage>& resolveImages, std::vector<VkImageView>& resolveImageViews) {
+void VulkanManager::createSwapChainImageViews() {
     mSwapChainImageViews.resize(mSwapChainImages.size());
     for (size_t i = 0; i < mSwapChainImages.size(); i++) {
         mSwapChainImageViews[i] = createImageView(mSwapChainImages[i], mSwapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
@@ -990,6 +998,30 @@ void VulkanManager::generateMipmaps(VkImage image, VkFormat imageFormat, int32_t
     endSingleTimeCommands(commandBuffer);
 }
 
+VkSampler VulkanManager::createSampler() {
+    VkSampler sampler;
+    VkSamplerCreateInfo samplerInfo { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
+    samplerInfo.magFilter = VK_FILTER_LINEAR;
+    samplerInfo.minFilter = VK_FILTER_LINEAR;
+    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.anisotropyEnable = VK_TRUE;
+    samplerInfo.maxAnisotropy = 1.0f;
+    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    samplerInfo.unnormalizedCoordinates = VK_FALSE;
+    samplerInfo.compareEnable = VK_FALSE;
+    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerInfo.minLod = -1000.0f;
+    samplerInfo.maxLod = 1000.0f;
+    samplerInfo.mipLodBias = 0.0f;
+    if (vkCreateSampler(mDevice, &samplerInfo, nullptr, &sampler) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create texture sampler!");
+    }
+    return sampler;
+}
+
 struct membuf : std::streambuf {
     membuf(char* begin, char* end) {
         this->setg(begin, begin, end);
@@ -1170,14 +1202,14 @@ void VulkanManager::createDescriptorSets() {
     }
 }
 
-void VulkanManager::createCommandBuffers() {
-    mCommandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+void VulkanManager::createCommandBuffers(std::vector<VkCommandBuffer>& commandBuffers) {
+    commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     VkCommandBufferAllocateInfo allocInfo { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
     allocInfo.commandPool = mCommandPool;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount = mCommandBuffers.size();
+    allocInfo.commandBufferCount = commandBuffers.size();
 
-    if (vkAllocateCommandBuffers(mDevice, &allocInfo, mCommandBuffers.data()) != VK_SUCCESS) {
+    if (vkAllocateCommandBuffers(mDevice, &allocInfo, commandBuffers.data()) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
 }
@@ -1210,7 +1242,7 @@ void VulkanManager::recreateSwapChain() {
     cleanupSwapChain();
 
     createSwapChain();
-    createResolveImageViews(mSwapChainImages, mSwapChainImageViews);
+    createSwapChainImageViews();
     createColorResources(mSwapChainExtent.width, mSwapChainExtent.height, mColorImage, mColorImageMemory, mColorImageView);
     createDepthResources(mSwapChainExtent.width, mSwapChainExtent.height, mDepthImage, mDepthImageMemory, mDepthImageView);
     createFramebuffers(mSwapChainExtent.width, mSwapChainExtent.height, mColorImageView, mDepthImageView, mSwapChainImageViews, mSwapChainFramebuffers);

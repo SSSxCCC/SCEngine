@@ -13,7 +13,7 @@
 #include "imgui_backends/imgui_impl_vulkan.h"
 #include "ImGuiFileDialog/ImGuiFileDialog.h"
 //#include "editor/GameWorldEditor.h"
-//#include "editor/SubWindow.h"
+#include "editor/SubWindow.h"
 #include "data/GameWorldData.h"
 #include "graphics/VulkanManager.h"
 #include "common/CallbackPointer.h"
@@ -24,8 +24,8 @@ class SCEngine {
 public:
     using SCEngine_init_fn = void (*)(CallbackPointer&, const fs::path&);
     using SCEngine_doFrame_fn = GameWorldData& (*)(bool);
-    using SCEngine_doEditorFrame_fn = void (*)(bool, int, int, float, float);
-    using SCEngine_doGameFrame_fn = void (*)(bool, int, int, float, float);
+    using SCEngine_doEditorFrame_fn = void (*)(bool, int, int, float, float, VkCommandBuffer);
+    using SCEngine_doGameFrame_fn = void (*)(bool, int, int, float, float, VkCommandBuffer);
     using SCEngine_runGame_fn = void (*)();
     using SCEngine_stopGame_fn = void (*)();
     using SCEngine_save_fn = nlohmann::json (*)();
@@ -90,6 +90,8 @@ public:
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
 
+        delete mEditorWindow;
+        delete mGameWindow;
         delete mVulkanManager;
 
         glfwDestroyWindow(mWindow);
@@ -153,18 +155,16 @@ public:
 
             if (!mProjectDir.empty()) {
                 /*auto& gameWorldData = mSCEngine.doFrame(mEditorMode);
-                worldEditor.doFrame(gameWorldData);
+                worldEditor.doFrame(gameWorldData);*/
 
-                editorWindow.update();
-                editorWindow.bind();
-                mSCEngine.doEditorFrame(editorWindow.isFocus(), editorWindow.getWidth(), editorWindow.getHeight(), editorWindow.getCursorScreenPos().x, editorWindow.getCursorScreenPos().y);
-                editorWindow.unbind();
+                VkCommandBuffer commandBuffer = mEditorWindow->preDrawFrame();
+                mSCEngine.doEditorFrame(mEditorWindow->isFocus(), mEditorWindow->getWidth(), mEditorWindow->getHeight(), mEditorWindow->getCursorScreenPos().x, mEditorWindow->getCursorScreenPos().y, commandBuffer);
+                mEditorWindow->postDrawFrame();
                 if (!mEditorMode) {
-                    gameWindow.update();
-                    gameWindow.bind();
-                    mSCEngine.doGameFrame(gameWindow.isFocus(), gameWindow.getWidth(), gameWindow.getHeight(), gameWindow.getCursorScreenPos().x, gameWindow.getCursorScreenPos().y);
-                    gameWindow.unbind();
-                }*/
+                    commandBuffer = mGameWindow->preDrawFrame();
+                    mSCEngine.doGameFrame(mGameWindow->isFocus(), mGameWindow->getWidth(), mGameWindow->getHeight(), mGameWindow->getCursorScreenPos().x, mGameWindow->getCursorScreenPos().y, commandBuffer);
+                    mGameWindow->postDrawFrame();
+                }
 
                 ImGui::Begin("Game");
                 if (mEditorMode) {
@@ -208,7 +208,8 @@ private:
     VulkanManager* mVulkanManager;
 
     bool mEditorMode = true;
-	//SubWindow mEditorWindow("editor"), mGameWindow("game");
+	SubWindow* mEditorWindow;
+    SubWindow* mGameWindow;
 	//GameWorldEditor mWorldEditor;
 
     std::chrono::steady_clock::time_point mLastTime = std::chrono::steady_clock::now();
@@ -246,6 +247,8 @@ private:
     void initVulkan() {
         mVulkanManager = new VulkanManager(std::make_shared<Platform>(mWindow));
         glfwSetFramebufferSizeCallback(mWindow, FramebufferSizeCallback);
+        mEditorWindow = new SubWindow("editor", mVulkanManager);
+        mGameWindow = new SubWindow("game", mVulkanManager);
     }
 
     void initImgui() {

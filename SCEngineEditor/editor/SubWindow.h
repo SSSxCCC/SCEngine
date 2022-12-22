@@ -3,24 +3,24 @@
 
 #include <string>
 #include "imgui/imgui.h"
+#include "graphics/VulkanManager.h"
 
 class SubWindow {
 public:
-	SubWindow(const std::string& title);
+	SubWindow(const std::string& title, VulkanManager* vulkanManager);
 	~SubWindow();
-	void update();
-	void bind();
-	void unbind();
+	VkCommandBuffer preDrawFrame();
+	void postDrawFrame();
 	bool isFocus() { return mFocus; }
 	int getWidth() { return mWidth; }
 	int getHeight() { return mHeight; }
 	ImVec2 getCursorScreenPos() { return mCursorScreenPos; }
-	unsigned int getTexture() { return mTexture; }
 private:
 	std::string mTitle;
+	VulkanManager* mVulkanManager;
 	bool mFocus;
-	int mWidth;
-	int mHeight;
+	uint32_t mWidth;
+	uint32_t mHeight;
 	ImVec2 mCursorScreenPos;
 
 	VkImage mDepthImage;
@@ -29,18 +29,19 @@ private:
     VkImage mColorImage;
     VkDeviceMemory mColorImageMemory;
     VkImageView mColorImageView;
-    std::vector<VkImage> mResovleImages;
-    std::vector<VkDeviceMemory> mResovleImageMemories;
-    std::vector<VkImageView> mResovleImageViews;
-    std::vector<VkFramebuffer> mFramebuffers;
-    std::vector<VkCommandBuffer> mCommandBuffers;
-    std::vector<VkSemaphore> mImageAvailableSemaphores;
-    std::vector<VkSemaphore> mRenderFinishedSemaphores;
-    std::vector<VkFence> mInFlightFences;
-    uint32_t mCurrentFrame = 0;
-	std::vector<VkDescriptorSet> mResolveDescriptorSet;
+    std::vector<VkImage> mResovleImages;  // size is MAX_FRAMES_IN_FLIGHT
+    std::vector<VkDeviceMemory> mResovleImageMemories;  // size is MAX_FRAMES_IN_FLIGHT
+    std::vector<VkImageView> mResovleImageViews;  // size is MAX_FRAMES_IN_FLIGHT
+    std::vector<VkSampler> mResovleImageSamplers;  // size is MAX_FRAMES_IN_FLIGHT
+    std::vector<VkDescriptorSet> mResolveDescriptorSet;  // size is MAX_FRAMES_IN_FLIGHT
+    std::vector<VkFramebuffer> mFramebuffers;  // size is MAX_FRAMES_IN_FLIGHT
+    std::vector<VkCommandBuffer> mCommandBuffers;  // size is MAX_FRAMES_IN_FLIGHT
+    //std::vector<VkSemaphore> mImageAvailableSemaphores;  // size is MAX_FRAMES_IN_FLIGHT
+    //std::vector<VkSemaphore> mRenderFinishedSemaphores;  // size is MAX_FRAMES_IN_FLIGHT
+    //std::vector<VkFence> mInFlightFences;  // size is MAX_FRAMES_IN_FLIGHT
 
-	void updateFrameBuffer();
+    void createRenderObjects();
+    void cleanupRenderObjects();
 };
 
 #endif // _SubWindow_H_

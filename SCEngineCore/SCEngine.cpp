@@ -133,16 +133,16 @@ GameWorldData& doFrame(bool editorMode) {
 	}
 }
 
-void doEditorFrame(bool focus, int with, int height, float cursorOffsetX, float cursorOffsetY) {
-	gEditorInput.setFocus(focus);
+void doEditorFrame(bool focus, int with, int height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer) {
+        gEditorInput.setFocus(focus);
 	gEditorInput.setCursorOffset(cursorOffsetX, cursorOffsetY);
 	gameWorld->mEditorCamera->setSize(with, height);
 	gameWorld->draw(true);
 	gEditorInput.reset();
 }
 
-void doGameFrame(bool focus, int with, int height, float cursorOffsetX, float cursorOffsetY) {
-	gInput.setFocus(focus);
+void doGameFrame(bool focus, int with, int height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer) {
+        gInput.setFocus(focus);
 	gInput.setCursorOffset(cursorOffsetX, cursorOffsetY);
 	gameWorld->mMainCamera->setSize(with, height);
 	gameWorld->draw();

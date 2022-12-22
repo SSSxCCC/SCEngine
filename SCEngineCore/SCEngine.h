@@ -3,6 +3,7 @@
 
 #include "common/CallbackPointer.h"
 #include "data/GameWorldData.h"
+#include <vulkan/vulkan.h>
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -10,9 +11,9 @@ extern "C" __declspec(dllexport) void init(CallbackPointer& callbackPointer, con
 
 extern "C" __declspec(dllexport) GameWorldData& doFrame(bool editorMode);
 
-extern "C" __declspec(dllexport) void doEditorFrame(bool focus, int with, int height, float cursorOffsetX, float cursorOffsetY);
+extern "C" __declspec(dllexport) void doEditorFrame(bool focus, int with, int height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer);
 
-extern "C" __declspec(dllexport) void doGameFrame(bool focus, int with, int height, float cursorOffsetX, float cursorOffsetY);
+extern "C" __declspec(dllexport) void doGameFrame(bool focus, int with, int height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer);
 
 extern "C" __declspec(dllexport) void runGame();
 
