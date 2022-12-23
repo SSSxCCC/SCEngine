@@ -37,9 +37,9 @@ void Platform::waitSurfaceSize() {
 #endif
 }
 
-std::vector<char> Platform::readFile(const std::string& filename) {
+std::vector<char> Platform::readFile(const fs::path& filePath) {
 #if defined(WINDOWS)
-    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+    std::ifstream file(filePath, std::ios::ate | std::ios::binary);
 
     if (!file.is_open()) {
         throw std::runtime_error("failed to open file!");
@@ -53,7 +53,7 @@ std::vector<char> Platform::readFile(const std::string& filename) {
 
     return buffer;
 #elif defined(ANDROID)
-    AAsset* file = AAssetManager_open(mApp->activity->assetManager, filename.c_str(), AASSET_MODE_BUFFER);
+    AAsset* file = AAssetManager_open(mApp->activity->assetManager, filePath.c_str(), AASSET_MODE_BUFFER);
 
     if (!file) {
         throw std::runtime_error("failed to open file!");

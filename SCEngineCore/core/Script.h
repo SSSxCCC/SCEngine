@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include "utility/StaticBlock.h"
 #include "data/ScriptData.h"
+#include "graphics/DrawData.h"
 
 // Predefine GameObject here to solve circular reference problem
 class GameObject;
@@ -30,7 +31,7 @@ public:
 	virtual void onCreate() { } // called when the GameObject is created or this Script is first added to a created GameObject
 	virtual void onStart() { } // called before the first onUpdate call
 	virtual void onUpdate() { } // called every frame
-	virtual void onDraw(float* projectionMatrix, bool forEditor=false) { } // called every frame after onUpdate
+	virtual void onDraw(const DrawData& drawData) { } // called every frame after onUpdate
 	virtual void onDestroy() { } // called when the Script is removed from GameObject or the GameObject is destroyed
 	virtual std::string getName() = 0; // return the class name of this Script (we need this because C++ dosen't have reflective)
 	virtual ScriptData getData() { ScriptData data; data.name = getName(); return data; } // data serialization

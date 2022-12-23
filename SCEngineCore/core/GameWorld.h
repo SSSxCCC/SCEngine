@@ -13,7 +13,7 @@ class GameWorld : public std::enable_shared_from_this<GameWorld> {
 public:
 	void create();
 	void update();
-	void draw(bool forEditor = false);
+	void draw(const DrawData& drawData);
 	void destroy();
 	void addGameObject(const std::shared_ptr<GameObject>& gameObject);
 	void removeGameObject(int GameObjectId);

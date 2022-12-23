@@ -16,11 +16,11 @@ void GameWorld::update() {
 	}
 }
 
-void GameWorld::draw(bool forEditor) {
-	glm::mat4 projection = forEditor ? mEditorCamera->buildProjectionMatrix() : mMainCamera->buildProjectionMatrix();
+void GameWorld::draw(const DrawData& drawData) {
+	glm::mat4 projection = drawData.forEditor ? mEditorCamera->buildProjectionMatrix() : mMainCamera->buildProjectionMatrix();
 	float* projectionMatrix = glm::value_ptr(projection);
 	for (const auto& [_, gameObject] : mGameObjects) {
-		gameObject->draw(projectionMatrix, forEditor);
+		gameObject->draw(drawData);
 	}
 }
 

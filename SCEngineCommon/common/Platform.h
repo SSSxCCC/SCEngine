@@ -40,6 +40,8 @@ private:
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <iostream>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 class Platform {
 public:
@@ -53,7 +55,7 @@ public:
     void createSurface(VkInstance& instance, VkSurfaceKHR& surface);
     void getSurfaceSize(int& width, int& height);
     void waitSurfaceSize();
-    std::vector<char> readFile(const std::string& filename);
+    std::vector<char> readFile(const fs::path& filePath);
     std::vector<const char*> getExtensions();
     VkCompositeAlphaFlagBitsKHR getCompositeAlpha();
 private:

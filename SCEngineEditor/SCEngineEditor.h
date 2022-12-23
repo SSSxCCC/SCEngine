@@ -20,21 +20,19 @@
 namespace fs = std::filesystem;
 
 // This is the class which stores function pointers of SCEngine.dll
-class SCEngine {
+class SCEnginePointer {
 public:
     using SCEngine_init_fn = void (*)(CallbackPointer&, const fs::path&);
-    using SCEngine_doFrame_fn = GameWorldData& (*)(bool);
-    using SCEngine_doEditorFrame_fn = void (*)(bool, int, int, float, float, VkCommandBuffer);
-    using SCEngine_doGameFrame_fn = void (*)(bool, int, int, float, float, VkCommandBuffer);
+    using SCEngine_update_fn = GameWorldData& (*)(bool);
+    using SCEngine_draw_fn = void (*)(bool, int, int, float, float, VkCommandBuffer, bool);
     using SCEngine_runGame_fn = void (*)();
     using SCEngine_stopGame_fn = void (*)();
     using SCEngine_save_fn = nlohmann::json (*)();
     using SCEngine_load_fn = void (*)(const nlohmann::json&);
     using SCEngine_close_fn = void (*)();
     SCEngine_init_fn init;
-    SCEngine_doFrame_fn doFrame;
-    SCEngine_doEditorFrame_fn doEditorFrame;
-    SCEngine_doGameFrame_fn doGameFrame;
+    SCEngine_update_fn update;
+    SCEngine_draw_fn draw;
     SCEngine_runGame_fn runGame;
     SCEngine_stopGame_fn stopGame;
     SCEngine_save_fn save;
@@ -49,7 +47,7 @@ public:
             std::cout << "LoadLibrary Error! dll == nullptr, dllFile=" << dllFile << ", good=" << is.good() << ", error=" << error << std::endl;
             return false;
         }
-        return loadFunction(init, "init") && loadFunction(doFrame, "doFrame") && loadFunction(doEditorFrame, "doEditorFrame") && loadFunction(doGameFrame, "doGameFrame") && loadFunction(runGame, "runGame") && loadFunction(stopGame, "stopGame") && loadFunction(save, "save") && loadFunction(load, "load") && loadFunction(close, "close");
+        return loadFunction(init, "init") && loadFunction(update, "update") && loadFunction(draw, "draw") && loadFunction(runGame, "runGame") && loadFunction(stopGame, "stopGame") && loadFunction(save, "save") && loadFunction(load, "load") && loadFunction(close, "close");
     }
 
     void freeLibrary() {
@@ -154,15 +152,15 @@ public:
             }
 
             if (!mProjectDir.empty()) {
-                /*auto& gameWorldData = mSCEngine.doFrame(mEditorMode);
+                /*auto& gameWorldData = mSCEngine.update(mEditorMode);
                 worldEditor.doFrame(gameWorldData);*/
 
                 VkCommandBuffer commandBuffer = mEditorWindow->preDrawFrame();
-                mSCEngine.doEditorFrame(mEditorWindow->isFocus(), mEditorWindow->getWidth(), mEditorWindow->getHeight(), mEditorWindow->getCursorScreenPos().x, mEditorWindow->getCursorScreenPos().y, commandBuffer);
+                mSCEngine.draw(mEditorWindow->isFocus(), mEditorWindow->getWidth(), mEditorWindow->getHeight(), mEditorWindow->getCursorScreenPos().x, mEditorWindow->getCursorScreenPos().y, commandBuffer, true);
                 mEditorWindow->postDrawFrame();
                 if (!mEditorMode) {
                     commandBuffer = mGameWindow->preDrawFrame();
-                    mSCEngine.doGameFrame(mGameWindow->isFocus(), mGameWindow->getWidth(), mGameWindow->getHeight(), mGameWindow->getCursorScreenPos().x, mGameWindow->getCursorScreenPos().y, commandBuffer);
+                    mSCEngine.draw(mGameWindow->isFocus(), mGameWindow->getWidth(), mGameWindow->getHeight(), mGameWindow->getCursorScreenPos().x, mGameWindow->getCursorScreenPos().y, commandBuffer, false);
                     mGameWindow->postDrawFrame();
                 }
 
@@ -203,7 +201,7 @@ private:
     float mScale = 1.0f;
     CallbackPointer mCallbackPointer;
     fs::path mProjectDir = "";
-    SCEngine mSCEngine;
+    SCEnginePointer mSCEngine;
 
     VulkanManager* mVulkanManager;
 
@@ -456,7 +454,6 @@ private:
     void closeProject() {
         mSCEngine.close();
         mSCEngine.freeLibrary();
-        mCallbackPointer.reset();
     }
 
     // Help function: execute exe program in windows and return console output.

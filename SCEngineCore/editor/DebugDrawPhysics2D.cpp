@@ -412,13 +412,13 @@ void DebugDrawPhysics2D::onCreate() {
 	mPhysicsWorld2D->mWorld->SetDebugDraw(mDebugDraw);
 }
 
-void DebugDrawPhysics2D::onDraw(float* projectionMatrix, bool forEditor) {
-    if (forEditor) {
-        mDebugDraw->setProjectionMatrix(projectionMatrix);
-        mDebugDraw->SetFlags(b2Draw::e_shapeBit | b2Draw::e_jointBit | b2Draw::e_aabbBit | b2Draw::e_centerOfMassBit);
-        mPhysicsWorld2D->mWorld->DebugDraw();
-        mDebugDraw->Flush();
-    }
+void DebugDrawPhysics2D::onDraw(const DrawData& drawData) {
+    //if (drawData.forEditor) {
+    //    mDebugDraw->setProjectionMatrix(projectionMatrix);
+    //    mDebugDraw->SetFlags(b2Draw::e_shapeBit | b2Draw::e_jointBit | b2Draw::e_aabbBit | b2Draw::e_centerOfMassBit);
+    //    mPhysicsWorld2D->mWorld->DebugDraw();
+    //    mDebugDraw->Flush();
+    //}
 }
 
 void DebugDrawPhysics2D::onDestroy() {

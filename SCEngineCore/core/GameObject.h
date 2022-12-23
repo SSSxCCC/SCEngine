@@ -15,7 +15,7 @@ public:
 	GameObject(const std::string& name) : mName(name) { }
 	void create();
 	void update();
-	void draw(float* projectionMatrix, bool forEditor = false);
+	void draw(const DrawData& drawData);
 	void destroy();
 
 	// add a Script to this GameObject

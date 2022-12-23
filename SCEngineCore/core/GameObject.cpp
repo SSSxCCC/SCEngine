@@ -18,9 +18,9 @@ void GameObject::update() {
 	}
 }
 
-void GameObject::draw(float* projectionMatrix, bool forEditor) {
+void GameObject::draw(const DrawData& drawData) {
 	for (const auto& script : mScripts) {
-		script->onDraw(projectionMatrix, forEditor);
+		script->onDraw(drawData);
 	}
 }
 

@@ -8,7 +8,7 @@ class DebugDraw;
 class DebugDrawPhysics2D : public Script {
 public:
 	void onCreate() override;
-	void onDraw(float* projectionMatrix, bool forEditor = false) override;
+	void onDraw(const DrawData& drawData) override;
 	void onDestroy() override;
 	std::string getName() override { return "DebugDrawPhysics2D"; }
 private:
