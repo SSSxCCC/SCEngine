@@ -15,18 +15,18 @@
 #include "editor/EditorCameraController.h"
 #include "editor/DebugDrawPhysics2D.h"
 
-SCEnigne* gSCEngine;
+SCEngine* gSCEngine;
 
-void init(CallbackPointer& callbackPointer, const fs::path& assetDir) {
-    gSCEngine = new SCEngine();
+void init(Platform* platform, VulkanManager* vulkanManager, CallbackPointer& callbackPointer, const fs::path& assetDir) {
+    gSCEngine = new SCEngine(platform, vulkanManager, callbackPointer, assetDir);
 }
 
 GameWorldData& update(bool editorMode) {
-	gSCEngine->update(editorMode);
+	return gSCEngine->update(editorMode);
 }
 
 void draw(bool focus, int with, int height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer, bool forEditor) {
-    gSCEngine->draw(bool focus, int with, int height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer, forEditor);
+    gSCEngine->draw(focus, with, height, cursorOffsetX, cursorOffsetY, commandBuffer, forEditor);
 }
 
 void runGame() {
@@ -123,7 +123,7 @@ void SCEngine::createEmptyGame() {
     transform2D->mScale.y = 80.f;
     mGameWorld->addGameObject(groundObject);
 
-    gamemGameWorldWorld->create();
+    mGameWorld->create();
     mStartTime = std::chrono::steady_clock::now();
     mGameWorldData = mGameWorld->getData();
 }
@@ -132,7 +132,7 @@ void SCEngine::reloadGame() {
     if (mGameWorld) {
         mGameWorld->destroy();
     }
-    mGameWorld = GameWorld::create(gameWorldData);
+    mGameWorld = GameWorld::create(mGameWorldData);
     mGameWorld->create();
     mStartTime = std::chrono::steady_clock::now();
 }
@@ -150,7 +150,7 @@ GameWorldData& SCEngine::update(bool editorMode) {
         }  // TODO: hanle other edit type
     }
 
-    float currentTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - startTime).count() / 1000000000.0f;
+    float currentTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - mStartTime).count() / 1000000000.0f;
     mGameWorld->mDeltaTime = currentTime - mGameWorld->mCurrentTime;
     mGameWorld->mCurrentTime = currentTime;
     // std::cout << "editorMode=" << editorMode << ", currentTime=" << gameWorld->mCurrentTime << ", deltaTime=" << gameWorld->mDeltaTime << std::endl;
@@ -170,7 +170,7 @@ GameWorldData& SCEngine::update(bool editorMode) {
     }
 }
 
-void SCEngine::draw(bool focus, int with, int height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer, bool forEdtor) {
+void SCEngine::draw(bool focus, int with, int height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer, bool forEditor) {
     if (forEditor) {
         gEditorInput.setFocus(focus);
         gEditorInput.setCursorOffset(cursorOffsetX, cursorOffsetY);

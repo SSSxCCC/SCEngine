@@ -2,7 +2,6 @@
 #define _VulkanManager_H_
 
 #include "common/Platform.h"
-#include <memory>
 #include <optional>
 #include <vector>
 #include <cstdint>    // Necessary for uint32_t
@@ -57,7 +56,7 @@ class VulkanManager {
 friend class SCEngineEditor;
 friend class SubWindow;
 public:
-    VulkanManager(std::shared_ptr<Platform> platform) : mPlatform(platform) { initVulkan(); }
+    VulkanManager(Platform* platform) : mPlatform(platform) { initVulkan(); }
     ~VulkanManager() { cleanup(); }
 
     VkCommandBuffer preDrawFrame();
@@ -77,7 +76,7 @@ private:
     const std::vector<const char*> DEVICE_EXTENSIONS = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
     const int MAX_FRAMES_IN_FLIGHT = 2;
 
-    std::shared_ptr<Platform> mPlatform;
+    Platform* mPlatform;
 
     // Common used vulkan objects start
     VkInstance mInstance;

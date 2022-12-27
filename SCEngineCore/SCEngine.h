@@ -6,11 +6,12 @@
 #include "common/Platform.h"
 #include "graphics/VulkanManager.h"
 #include "asset/AssetManager.h"
+#include "core/GameWorld.h"
 #include <vulkan/vulkan.h>
 #include <filesystem>
 namespace fs = std::filesystem;
 
-extern "C" __declspec(dllexport) void init(CallbackPointer& callbackPointer, const fs::path& assetDir);
+extern "C" __declspec(dllexport) void init(Platform* platform, VulkanManager* vulkanManager, CallbackPointer& callbackPointer, const fs::path& assetDir);
 
 extern "C" __declspec(dllexport) GameWorldData& update(bool editorMode);
 

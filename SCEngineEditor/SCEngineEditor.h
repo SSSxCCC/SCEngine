@@ -22,7 +22,7 @@ namespace fs = std::filesystem;
 // This is the class which stores function pointers of SCEngine.dll
 class SCEnginePointer {
 public:
-    using SCEngine_init_fn = void (*)(CallbackPointer&, const fs::path&);
+    using SCEngine_init_fn = void (*)(Platform*, VulkanManager*, CallbackPointer&, const fs::path&);
     using SCEngine_update_fn = GameWorldData& (*)(bool);
     using SCEngine_draw_fn = void (*)(bool, int, int, float, float, VkCommandBuffer, bool);
     using SCEngine_runGame_fn = void (*)();
@@ -91,6 +91,7 @@ public:
         delete mEditorWindow;
         delete mGameWindow;
         delete mVulkanManager;
+        delete mPlatform;
 
         glfwDestroyWindow(mWindow);
         glfwTerminate();
@@ -203,6 +204,7 @@ private:
     fs::path mProjectDir = "";
     SCEnginePointer mSCEngine;
 
+    Platform* mPlatform;
     VulkanManager* mVulkanManager;
 
     bool mEditorMode = true;
@@ -243,7 +245,8 @@ private:
     }
 
     void initVulkan() {
-        mVulkanManager = new VulkanManager(std::make_shared<Platform>(mWindow));
+        mPlatform = new Platform(mWindow);
+        mVulkanManager = new VulkanManager(mPlatform);
         glfwSetFramebufferSizeCallback(mWindow, FramebufferSizeCallback);
         mEditorWindow = new SubWindow("editor", mVulkanManager);
         mGameWindow = new SubWindow("game", mVulkanManager);
@@ -444,7 +447,7 @@ private:
         if (!mSCEngine.loadLibrary(mProjectDir / "build" / "install" / "bin" / "SCEngine.dll")) {
             return false;
         }
-        mSCEngine.init(mCallbackPointer, mProjectDir / "build" / "install" / "asset");
+        mSCEngine.init(mPlatform, mVulkanManager, mCallbackPointer, mProjectDir / "build" / "install" / "asset");
         loadGame();
         return true;
     }
