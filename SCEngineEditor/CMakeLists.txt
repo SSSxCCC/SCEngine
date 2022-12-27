@@ -20,5 +20,4 @@ target_link_libraries (SCEngineEditor PUBLIC imgui)
 target_link_libraries (SCEngineEditor PUBLIC ImGuiFileDialog)
 
 install (TARGETS SCEngineEditor DESTINATION bin)
-install (DIRECTORY "compiler" DESTINATION .)
 install (DIRECTORY "../SCEngineCore" "../SCEngineCommon" "../Dependency" DESTINATION source)

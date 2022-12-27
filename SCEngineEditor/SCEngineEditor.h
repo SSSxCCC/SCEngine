@@ -427,15 +427,14 @@ private:
         ofs.close();
 
         // build
-        fs::path cmakeExe = R"(..\compiler\cmake-3.25.0-rc1-windows-x86_64\bin\cmake.exe)";
         fs::path sourceDir = mProjectDir;
         fs::path buildDir = mProjectDir / "build";
         fs::path installDir = buildDir / "install";
-        std::string cmd = cmakeExe.string() + " -S " + sourceDir.string() + " -B " + buildDir.string();
+        std::string cmd = "cmake -S " + sourceDir.string() + " -B " + buildDir.string();
         std::string result = exec(cmd); // TODO: handle result
-        cmd = cmakeExe.string() + " --build " + buildDir.string() + " --config Debug -j8";
+        cmd = "cmake --build " + buildDir.string() + " --config Debug -j8";
         result = exec(cmd); // TODO: handle result
-        cmd = cmakeExe.string() + " --install " + buildDir.string() + " --config Debug --prefix " + installDir.string();
+        cmd = "cmake --install " + buildDir.string() + " --config Debug --prefix " + installDir.string();
         result = exec(cmd); // TODO: handle result
     }
 
