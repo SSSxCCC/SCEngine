@@ -85,12 +85,13 @@ public:
 
         vkDeviceWaitIdle(mVulkanManager->mDevice);
 
+        delete mEditorWindow;
+        delete mGameWindow;
+
         ImGui_ImplVulkan_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
 
-        delete mEditorWindow;
-        delete mGameWindow;
         delete mVulkanManager;
         delete mPlatform;
 
