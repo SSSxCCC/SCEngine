@@ -73,10 +73,7 @@ VkCommandBuffer SubWindow::preDrawFrame() {
 }
 
 void SubWindow::postDrawFrame() {
-	std::vector<VkSemaphore> waitSemaphores;
-    std::vector<VkPipelineStageFlags> waitStages;
-    std::vector<VkSemaphore> signalSemaphores;
-    mVulkanManager->endRender(mCommandBuffers[mVulkanManager->mCurrentFrame], waitSemaphores, waitStages, signalSemaphores, VK_NULL_HANDLE);
+    mVulkanManager->endRender(mCommandBuffers[mVulkanManager->mCurrentFrame], {}, {}, {}, VK_NULL_HANDLE);
 	vkDeviceWaitIdle(mVulkanManager->mDevice);  // TODO: remove this line
 
     ImGui::Image((ImTextureID)mResolveDescriptorSet[mVulkanManager->mCurrentFrame], ImVec2(mWidth, mHeight));
