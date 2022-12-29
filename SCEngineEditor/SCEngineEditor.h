@@ -12,7 +12,7 @@
 #include "imgui_backends/imgui_impl_glfw.h"
 #include "imgui_backends/imgui_impl_vulkan.h"
 #include "ImGuiFileDialog/ImGuiFileDialog.h"
-//#include "editor/GameWorldEditor.h"
+#include "editor/GameWorldEditor.h"
 #include "editor/SubWindow.h"
 #include "data/GameWorldData.h"
 #include "graphics/VulkanManager.h"
@@ -155,8 +155,8 @@ public:
             }
 
             if (!mProjectDir.empty()) {
-                /*auto& gameWorldData = mSCEngine.update(mEditorMode);
-                worldEditor.doFrame(gameWorldData);*/
+                auto& gameWorldData = mSCEngine.update(mEditorMode);
+                mWorldEditor.doFrame(gameWorldData);
 
                 VkCommandBuffer commandBuffer = mEditorWindow->preDrawFrame();
                 mSCEngine.draw(mEditorWindow->isFocus(), mEditorWindow->getWidth(), mEditorWindow->getHeight(), mEditorWindow->getCursorScreenPos().x, mEditorWindow->getCursorScreenPos().y, commandBuffer, true);
@@ -212,7 +212,7 @@ private:
     bool mEditorMode = true;
 	SubWindow* mEditorWindow;
     SubWindow* mGameWindow;
-	//GameWorldEditor mWorldEditor;
+	GameWorldEditor mWorldEditor;
 
     std::chrono::steady_clock::time_point mLastTime = std::chrono::steady_clock::now();
     int mFrame = 0;
