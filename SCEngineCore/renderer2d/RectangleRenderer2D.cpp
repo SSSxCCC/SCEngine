@@ -105,6 +105,7 @@ void RectangleRenderer2D::onDraw(const DrawData& drawData) {
 }
 
 void RectangleRenderer2D::onDestroy() {
+    vkDeviceWaitIdle(mVulkanManager->getDevice());
     vkDestroyPipeline(mVulkanManager->getDevice(), mGraphicsPipeline, nullptr);
     vkDestroyPipelineLayout(mVulkanManager->getDevice(), mPipelineLayout, nullptr);
     vkDestroyDescriptorSetLayout(mVulkanManager->getDevice(), mDescriptorSetLayout, nullptr);
