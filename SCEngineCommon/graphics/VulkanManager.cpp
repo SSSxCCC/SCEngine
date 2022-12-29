@@ -1175,6 +1175,7 @@ void VulkanManager::cleanup() {
     }
     vkDestroyCommandPool(mDevice, mCommandPool, nullptr);
     vkDestroyRenderPass(mDevice, mRenderPass, nullptr);
+    vkDestroyRenderPass(mDevice, mSubWindowRenderPass, nullptr);
     vkDestroyDevice(mDevice, nullptr);
     vkDestroySurfaceKHR(mInstance, mSurface, nullptr);
     vkDestroyInstance(mInstance, nullptr);
