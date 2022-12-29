@@ -1,8 +1,26 @@
-#include "Platform.h"
+#include "PlatformImpl.h"
 #include <fstream>
 #include <iostream>
 
-void Platform::createSurface(VkInstance& instance, VkSurfaceKHR& surface) {
+#if defined(WINDOWS)
+Platform* PlatformImpl::build(GLFWwindow* window) {
+    PlatformImpl* impl = new PlatformImpl(window);
+#elif defined(ANDROID)
+Platform* PlatformImpl::build(android_app* app) {
+    PlatformImpl* impl = new PlatformImpl(app);
+#endif
+
+    Platform* platform = new Platform(impl, impl->mOut);
+    platform->createSurface = [=](VkInstance& instance, VkSurfaceKHR& surface) { impl->createSurface(instance, surface); };
+    platform->getSurfaceSize = [=](int& width, int& height) { impl->getSurfaceSize(width, height); };
+    platform->waitSurfaceSize = [=]() { impl->waitSurfaceSize(); };
+    platform->readFile = [=](const fs::path& filePath) { return impl->readFile(filePath); };
+    platform->getExtensions = [=]() { return impl->getExtensions(); };
+    platform->getCompositeAlpha = [=]() { return impl->getCompositeAlpha(); };
+    return platform;
+}
+
+void PlatformImpl::createSurface(VkInstance& instance, VkSurfaceKHR& surface) {
 #if defined(WINDOWS)
     if (glfwCreateWindowSurface(instance, mWindow, nullptr, &surface) != VK_SUCCESS) {
         throw std::runtime_error("failed to create window surface!");
@@ -16,7 +34,7 @@ void Platform::createSurface(VkInstance& instance, VkSurfaceKHR& surface) {
 #endif
 }
 
-void Platform::getSurfaceSize(int& width, int& height) {
+void PlatformImpl::getSurfaceSize(int& width, int& height) {
 #if defined(WINDOWS)
     glfwGetFramebufferSize(mWindow, &width, &height);
 #elif defined(ANDROID)
@@ -25,7 +43,7 @@ void Platform::getSurfaceSize(int& width, int& height) {
 #endif
 }
 
-void Platform::waitSurfaceSize() {
+void PlatformImpl::waitSurfaceSize() {
 #if defined(WINDOWS)
     int width = 0, height = 0;
     getSurfaceSize(width, height);
@@ -37,7 +55,7 @@ void Platform::waitSurfaceSize() {
 #endif
 }
 
-std::vector<char> Platform::readFile(const fs::path& filePath) {
+std::vector<char> PlatformImpl::readFile(const fs::path& filePath) {
 #if defined(WINDOWS)
     std::ifstream file(filePath, std::ios::ate | std::ios::binary);
 
@@ -68,7 +86,7 @@ std::vector<char> Platform::readFile(const fs::path& filePath) {
 #endif
 }
 
-std::vector<const char*> Platform::getExtensions() {
+std::vector<const char*> PlatformImpl::getExtensions() {
 #if defined(WINDOWS)
     uint32_t glfwExtensionCount = 0;
     const char** glfwExtensions;
@@ -86,7 +104,7 @@ std::vector<const char*> Platform::getExtensions() {
 #endif
 }
 
-VkCompositeAlphaFlagBitsKHR Platform::getCompositeAlpha() {
+VkCompositeAlphaFlagBitsKHR PlatformImpl::getCompositeAlpha() {
 #if defined(WINDOWS)
     return VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 #elif defined(ANDROID)

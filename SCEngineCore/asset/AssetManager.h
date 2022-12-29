@@ -8,7 +8,7 @@ namespace fs = std::filesystem;
 class AssetManager {
 public:
     AssetManager(Platform* platform, const fs::path& assetDir) : mPlatform(platform), mAssetDir(assetDir) { }
-    std::vector<char> readFile(const fs::path& filePath) { mPlatform->readFile(mAssetDir / filePath); }
+    std::vector<char> readFile(const fs::path& filePath) { return mPlatform->readFile(mAssetDir / filePath); }
 private:
     Platform* mPlatform;
     fs::path mAssetDir;

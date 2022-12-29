@@ -4,7 +4,7 @@
 cmake_minimum_required (VERSION 3.12)
 
 # Add source to this project's executable.
-add_executable (SCEngineEditor "main.cpp" "imgui_backends/imgui_impl_glfw.cpp" "imgui_backends/imgui_impl_vulkan.cpp" "editor/GameWorldEditor.cpp" "editor/SubWindow.cpp")
+add_executable (SCEngineEditor "main.cpp" "imgui_backends/imgui_impl_glfw.cpp" "imgui_backends/imgui_impl_vulkan.cpp" "editor/GameWorldEditor.cpp" "editor/SubWindow.cpp" "platform/PlatformImpl.cpp")
 target_include_directories (SCEngineEditor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 set_property (TARGET SCEngineEditor PROPERTY CXX_STANDARD 20)

@@ -18,14 +18,14 @@ void SubWindow::createRenderObjects() {
 	mResovleImageSamplers.resize(mVulkanManager->MAX_FRAMES_IN_FLIGHT);
 	mResolveDescriptorSet.resize(mVulkanManager->MAX_FRAMES_IN_FLIGHT);
 	for (size_t i = 0; i < mVulkanManager->MAX_FRAMES_IN_FLIGHT; i++) {
-        mVulkanManager->createImage(mWidth, mHeight, 1, mVulkanManager->mMsaaSamples, mVulkanManager->mSwapChainImageFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mResovleImages[i], mResovleImageMemories[i]);
+        mVulkanManager->createImage(mWidth, mHeight, 1, mVulkanManager->mMsaaSamples, mVulkanManager->mSwapChainImageFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mResovleImages[i], mResovleImageMemories[i]);
         mResovleImageViews[i] = mVulkanManager->createImageView(mResovleImages[i], mVulkanManager->mSwapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
         mResovleImageSamplers[i] = mVulkanManager->createSampler();
         mResolveDescriptorSet[i] = ImGui_ImplVulkan_AddTexture(mResovleImageSamplers[i], mResovleImageViews[i], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     }
     mVulkanManager->createColorResources(mWidth, mHeight, mColorImage, mColorImageMemory, mColorImageView);
     mVulkanManager->createDepthResources(mWidth, mHeight, mDepthImage, mDepthImageMemory, mDepthImageView);
-    mVulkanManager->createFramebuffers(mWidth, mHeight, mColorImageView, mDepthImageView, mResovleImageViews, mFramebuffers);
+    mVulkanManager->createFramebuffers(mWidth, mHeight, mColorImageView, mDepthImageView, mResovleImageViews, mVulkanManager->mSubWindowRenderPass, mFramebuffers);
 }
 
 void SubWindow::cleanupRenderObjects() {
@@ -68,7 +68,7 @@ VkCommandBuffer SubWindow::preDrawFrame() {
 		createRenderObjects();
 	}
 
-	mVulkanManager->beginRender(mCommandBuffers[mVulkanManager->mCurrentFrame], mFramebuffers[mVulkanManager->mCurrentFrame], { mWidth, mHeight });
+	mVulkanManager->beginRender(mCommandBuffers[mVulkanManager->mCurrentFrame], mVulkanManager->mSubWindowRenderPass, mFramebuffers[mVulkanManager->mCurrentFrame], { mWidth, mHeight });
 	return mCommandBuffers[mVulkanManager->mCurrentFrame];
 }
 
@@ -77,6 +77,7 @@ void SubWindow::postDrawFrame() {
     std::vector<VkPipelineStageFlags> waitStages;
     std::vector<VkSemaphore> signalSemaphores;
     mVulkanManager->endRender(mCommandBuffers[mVulkanManager->mCurrentFrame], waitSemaphores, waitStages, signalSemaphores, VK_NULL_HANDLE);
+	vkDeviceWaitIdle(mVulkanManager->mDevice);  // TODO: remove this line
 
     ImGui::Image((ImTextureID)mResolveDescriptorSet[mVulkanManager->mCurrentFrame], ImVec2(mWidth, mHeight));
     ImGui::End();

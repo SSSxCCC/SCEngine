@@ -8,63 +8,27 @@
 #endif
 
 #include <sstream>
-
-#if defined(WINDOWS)
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-#elif defined(ANDROID)
-#define VK_USE_PLATFORM_ANDROID_KHR
-#include <android/log.h>
-#include <game-activity/native_app_glue/android_native_app_glue.h>
-/*!
- * Use this class to create an output stream that writes to logcat.
- */
-class AndroidOut : public std::stringbuf {
-public:
-    /*!
-     * Creates a new output stream for logcat
-     * @param kLogTag the log tag to output
-     */
-    inline AndroidOut(const char* kLogTag) : logTag_(kLogTag) {}
-protected:
-    virtual int sync() override {
-        __android_log_print(ANDROID_LOG_DEBUG, logTag_, "%s", str().c_str());
-        str("");
-        return 0;
-    }
-private:
-    const char* logTag_;
-};
-#endif
-
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <iostream>
+#include <functional>
 #include <filesystem>
 namespace fs = std::filesystem;
 
 class Platform {
 public:
-#if defined(WINDOWS)
-    Platform(GLFWwindow* window) : mWindow(window){};
-    std::ostream& mOut = std::cout;
-#elif defined(ANDROID)
-    Platform(android_app* app) : mApp(app), mAndroidOut("AO"), mOut(&mAndroidOut){};
-    std::ostream mOut;
-#endif
-    void createSurface(VkInstance& instance, VkSurfaceKHR& surface);
-    void getSurfaceSize(int& width, int& height);
-    void waitSurfaceSize();
-    std::vector<char> readFile(const fs::path& filePath);
-    std::vector<const char*> getExtensions();
-    VkCompositeAlphaFlagBitsKHR getCompositeAlpha();
+    Platform(void* impl, std::ostream& out) : mImpl(impl), mOut(out) { };
+    ~Platform() { delete mImpl; }
+    std::ostream& mOut;
+
+    std::function<void(VkInstance& instance, VkSurfaceKHR& surface)> createSurface;
+    std::function<void(int& width, int& height)> getSurfaceSize;
+    std::function<void()> waitSurfaceSize;
+    std::function<std::vector<char>(const fs::path& filePath)> readFile;
+    std::function<std::vector<const char*>()> getExtensions;
+    std::function<VkCompositeAlphaFlagBitsKHR()> getCompositeAlpha;
 private:
-#if defined(WINDOWS)
-    GLFWwindow* mWindow;
-#elif defined(ANDROID)
-    android_app* mApp;
-    AndroidOut mAndroidOut;
-#endif
+    void* mImpl;
 };
 
 #endif // _Platform_H_

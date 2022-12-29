@@ -17,8 +17,6 @@ void GameWorld::update() {
 }
 
 void GameWorld::draw(const DrawData& drawData) {
-	glm::mat4 projection = drawData.forEditor ? mEditorCamera->buildProjectionMatrix() : mMainCamera->buildProjectionMatrix();
-	float* projectionMatrix = glm::value_ptr(projection);
 	for (const auto& [_, gameObject] : mGameObjects) {
 		gameObject->draw(drawData);
 	}
@@ -84,8 +82,8 @@ void GameWorld::setData(const GameWorldData& gameWorldData) {
 	}
 }
 
-std::shared_ptr<GameWorld> GameWorld::create(const GameWorldData& data) {
-	auto gameWorld = std::make_shared<GameWorld>();
+std::shared_ptr<GameWorld> GameWorld::create(const GameWorldData& data, SCEngine* pSCEngine) {
+	auto gameWorld = std::make_shared<GameWorld>(pSCEngine);
 	for (const auto& gameObjectData : data.gameObjectsData) {
 		gameWorld->addGameObject(GameObject::create(gameObjectData));
 	}

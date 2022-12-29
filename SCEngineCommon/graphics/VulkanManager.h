@@ -30,8 +30,8 @@ struct Vertex {
         return bindingDescription;
     }
 
-    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
-        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+    static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions() {
+        std::vector<VkVertexInputAttributeDescription> attributeDescriptions(2);
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
         attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -59,13 +59,30 @@ public:
     VulkanManager(Platform* platform) : mPlatform(platform) { initVulkan(); }
     ~VulkanManager() { cleanup(); }
 
-    VkCommandBuffer preDrawFrame();
-    void postDrawFrame();
+    // Used by Script
+    VkPipeline createGraphicsPipeline(const std::vector<char>& vertShaderSpv, const std::vector<char>& fragShaderSpv, const VkVertexInputBindingDescription& vertexInputBindingDescription, const std::vector<VkVertexInputAttributeDescription>& vertexInputAttributeDescriptions, VkPipelineLayout pipelineLayout, VkRenderPass renderPass);
+    VkShaderModule createShaderModule(const std::vector<char>& code);
+    void createVertexBuffer(void const* vertexData, VkDeviceSize bufferSize, VkBuffer& vertexBuffer, VkDeviceMemory& vertexBufferMemory);
+    void createIndexBuffer(void const* indexData, VkDeviceSize bufferSize, VkBuffer& indexBuffer, VkDeviceMemory& indexBufferMemory);
+    void createUniformBuffers(VkDeviceSize bufferSize, std::vector<VkBuffer>& uniformBuffers, std::vector<VkDeviceMemory>& uniformBuffersMemory, std::vector<void*>& uniformBuffersMapped);
 
-    void framebufferResized() {
-        mFramebufferResized = true;
-    }
+    // Help methods to create vulkan objects for main window or sub window
+    VkRenderPass createRenderPass(VkImageLayout resolveFinalLayout);
+    void createColorResources(uint32_t width, uint32_t height, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView);
+    void createDepthResources(uint32_t width, uint32_t height, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView);
+    void createFramebuffers(uint32_t width, uint32_t height, VkImageView colorImageView, VkImageView depthImageView, const std::vector<VkImageView>& resolveImageViews, VkRenderPass renderPass, std::vector<VkFramebuffer>& framebuffers);
+    void createCommandBuffers(std::vector<VkCommandBuffer>& commandBuffers);
+    void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
+    VkSampler createSampler();
 
+    VkDevice getDevice() { return mDevice; }
+    VkFormat getImageFormat() { return mSwapChainImageFormat; }
+    uint32_t getCurrentFrame() { return mCurrentFrame; }
+    VkDescriptorPool getDescriptorPool() { return mDescriptorPool; }
+    VkRenderPass getRenderPass() { return mSubWindowRenderPass; }  // TODO: delete this
+
+    const int MAX_FRAMES_IN_FLIGHT = 2;
 private:
     const std::vector<const char*> VALIDATION_LAYERS = { "VK_LAYER_KHRONOS_validation" };
 #ifdef NDEBUG
@@ -74,29 +91,24 @@ private:
     const bool ENABLE_VALIDATION_LAYERS = true;
 #endif
     const std::vector<const char*> DEVICE_EXTENSIONS = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-    const int MAX_FRAMES_IN_FLIGHT = 2;
 
     Platform* mPlatform;
 
-    // Common used vulkan objects start
+    // Common used vulkan objects
     VkInstance mInstance;
     VkPhysicalDevice mPhysicalDevice = VK_NULL_HANDLE;
     VkDevice mDevice;
     VkQueue mGraphicsQueue;
     VkFormat mSwapChainImageFormat;
-    VkRenderPass mRenderPass;
-    VkDescriptorSetLayout mDescriptorSetLayout;
-    VkPipelineLayout mPipelineLayout;
-    VkPipeline mGraphicsPipeline;
     VkCommandPool mCommandPool;
     VkDescriptorPool mDescriptorPool;
     VkSampleCountFlagBits mMsaaSamples = VK_SAMPLE_COUNT_1_BIT;
     uint32_t mCurrentFrame = 0;  // sub windows use this property to synchronize with the main window
-    // Common used vulkan objects end
 
-    // Main window used only vulkan objects start
+    // Main window used only vulkan objects
     VkSurfaceKHR mSurface;
     VkQueue mPresentQueue;
+    VkRenderPass mRenderPass;
     VkImage mDepthImage;
     VkDeviceMemory mDepthImageMemory;
     VkImageView mDepthImageView;
@@ -114,7 +126,9 @@ private:
     std::vector<VkFence> mInFlightFences;  // size is MAX_FRAMES_IN_FLIGHT
     uint32_t mImageIndex;
     bool mFramebufferResized = false;
-    // Main window used only vulkan objects end
+
+    // Sub window used only vulkan objects
+    VkRenderPass mSubWindowRenderPass;
 
     struct QueueFamilyIndices {
         std::optional<uint32_t> graphicsFamily;
@@ -142,6 +156,9 @@ private:
         0, 1, 2, 2, 3, 0
     };
 
+    VkDescriptorSetLayout mDescriptorSetLayout;
+    VkPipelineLayout mPipelineLayout;
+    VkPipeline mGraphicsPipeline;
     VkBuffer mVertexBuffer;
     VkDeviceMemory mVertexBufferMemory;
     VkBuffer mIndexBuffer;
@@ -167,6 +184,9 @@ private:
 
     void initVulkan();
     void cleanup();
+    VkCommandBuffer preDrawFrame();
+    void postDrawFrame();
+    void framebufferResized() { mFramebufferResized = true; }
 
     // Create common vulkan objects
     void createInstance();
@@ -177,7 +197,6 @@ private:
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
     VkSampleCountFlagBits getMaxUsableSampleCount();
     void createLogicalDevice();
-    void createRenderPass();
     void createCommandPool();
     void createDescriptorPool();
 
@@ -193,15 +212,6 @@ private:
     void cleanupSwapChain();
     void createSyncObjects();
 
-    // Help methods to create vulkan objects for main window or sub window
-    void createColorResources(uint32_t width, uint32_t height, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView);
-    void createDepthResources(uint32_t width, uint32_t height, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView);
-    void createFramebuffers(uint32_t width, uint32_t height, VkImageView colorImageView, VkImageView depthImageView, const std::vector<VkImageView>& resolveImageViews, std::vector<VkFramebuffer>& framebuffers);
-    void createCommandBuffers(std::vector<VkCommandBuffer>& commandBuffers);
-    void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
-    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
-    VkSampler createSampler();
-
     // Help functions
     VkFormat findDepthFormat();
     VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
@@ -214,16 +224,11 @@ private:
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
     VkCommandBuffer beginSingleTimeCommands();
     void endSingleTimeCommands(VkCommandBuffer commandBuffer);
-    void beginRender(VkCommandBuffer commandBuffer, VkFramebuffer frameBuffer, VkExtent2D extent);
+    void beginRender(VkCommandBuffer commandBuffer, VkRenderPass renderPass, VkFramebuffer frameBuffer, VkExtent2D extent);
     void endRender(VkCommandBuffer commandBuffer, const std::vector<VkSemaphore>& waitSemaphores, const std::vector<VkPipelineStageFlags>& waitStages, const std::vector<VkSemaphore>& signalSemaphores, VkFence fence);
 
-    // To be deleted
+    // Used by Script
     void createDescriptorSetLayout();
-    void createGraphicsPipeline();
-    VkShaderModule createShaderModule(const std::vector<char>& code);
-    void createVertexBuffer();
-    void createIndexBuffer();
-    void createUniformBuffers();
     void createDescriptorSets();
     void updateUniformBuffer(uint32_t currentImage);
 };

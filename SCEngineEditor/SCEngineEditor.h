@@ -17,6 +17,7 @@
 #include "data/GameWorldData.h"
 #include "graphics/VulkanManager.h"
 #include "common/CallbackPointer.h"
+#include "platform/PlatformImpl.h"
 namespace fs = std::filesystem;
 
 // This is the class which stores function pointers of SCEngine.dll
@@ -24,7 +25,7 @@ class SCEnginePointer {
 public:
     using SCEngine_init_fn = void (*)(Platform*, VulkanManager*, CallbackPointer&, const fs::path&);
     using SCEngine_update_fn = GameWorldData& (*)(bool);
-    using SCEngine_draw_fn = void (*)(bool, int, int, float, float, VkCommandBuffer, bool);
+    using SCEngine_draw_fn = void (*)(bool, uint32_t, uint32_t, float, float, VkCommandBuffer, bool);
     using SCEngine_runGame_fn = void (*)();
     using SCEngine_stopGame_fn = void (*)();
     using SCEngine_save_fn = nlohmann::json (*)();
@@ -245,7 +246,7 @@ private:
     }
 
     void initVulkan() {
-        mPlatform = new Platform(mWindow);
+        mPlatform = PlatformImpl::build(mWindow);
         mVulkanManager = new VulkanManager(mPlatform);
         glfwSetFramebufferSizeCallback(mWindow, FramebufferSizeCallback);
         mEditorWindow = new SubWindow("editor", mVulkanManager);

@@ -15,7 +15,7 @@ extern "C" __declspec(dllexport) void init(Platform* platform, VulkanManager* vu
 
 extern "C" __declspec(dllexport) GameWorldData& update(bool editorMode);
 
-extern "C" __declspec(dllexport) void draw(bool focus, int with, int height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer, bool forEditor);
+extern "C" __declspec(dllexport) void draw(bool focus, uint32_t width, uint32_t height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer, bool forEditor);
 
 extern "C" __declspec(dllexport) void runGame();
 
@@ -29,14 +29,14 @@ extern "C" __declspec(dllexport) void close();
 
 class SCEngine {
 public:
-    Platform* mPlatform;
-    VulkanManager* mVulkanManager;
-    AssetManager* mAssetManager;
+    Platform* const mPlatform;
+    VulkanManager* const mVulkanManager;
+    AssetManager* const mAssetManager;
 
     SCEngine(Platform* platform, VulkanManager* vulkanManager, CallbackPointer& callbackPointer, const fs::path& assetDir);
     ~SCEngine();
     GameWorldData& update(bool editorMode);
-    void draw(bool focus, int with, int height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer, bool forEdtor);
+    void draw(bool focus, uint32_t width, uint32_t height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer, bool forEdtor);
     void runGame();
     void stopGame();
     nlohmann::json save();

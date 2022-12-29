@@ -8,9 +8,13 @@
 #include "core/Camera.h"
 #include "data/GameWorldData.h"
 
+// Predefine SCEngine here to solve circular reference problem
+class SCEngine;
+
 // GameWorld stores all GameObject in the game
 class GameWorld : public std::enable_shared_from_this<GameWorld> {
 public:
+	GameWorld(SCEngine* pSCEngine) : mSCEngine(pSCEngine) { };
 	void create();
 	void update();
 	void draw(const DrawData& drawData);
@@ -21,7 +25,9 @@ public:
 	void setData(const GameWorldData& gameWorldData);
 
 	// create a instance of GameWorld based on GameWorldData
-	static std::shared_ptr<GameWorld> create(const GameWorldData& data);
+	static std::shared_ptr<GameWorld> create(const GameWorldData& data, SCEngine* pSCEngine);
+
+	const SCEngine* mSCEngine; // global variables and functions
 
 	float mCurrentTime = 0.0f; // time since game start
 	float mDeltaTime = 0.0f;   // time spent in last frame

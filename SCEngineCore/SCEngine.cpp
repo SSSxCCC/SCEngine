@@ -25,8 +25,8 @@ GameWorldData& update(bool editorMode) {
 	return gSCEngine->update(editorMode);
 }
 
-void draw(bool focus, int with, int height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer, bool forEditor) {
-    gSCEngine->draw(focus, with, height, cursorOffsetX, cursorOffsetY, commandBuffer, forEditor);
+void draw(bool focus, uint32_t width, uint32_t height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer, bool forEditor) {
+    gSCEngine->draw(focus, width, height, cursorOffsetX, cursorOffsetY, commandBuffer, forEditor);
 }
 
 void runGame() {
@@ -50,8 +50,7 @@ void close() {
 }
 
 SCEngine::SCEngine(Platform* platform, VulkanManager* vulkanManager, CallbackPointer& callbackPointer, const fs::path& assetDir) :
-        mPlatform(platform), mVulkanManager(vulkanManager), mCallbackPointer(callbackPointer) {
-    mAssetManager = new AssetManager(mPlatform, assetDir);
+        mPlatform(platform), mVulkanManager(vulkanManager), mCallbackPointer(callbackPointer), mAssetManager(new AssetManager(mPlatform, assetDir)) {
     mCallbackPointer.mScrollCallback = [](double dx, double dy) {
         gEditorInput.setScroll((float)dx, (float)dy);
         gInput.setScroll((float)dx, (float)dy);
@@ -75,7 +74,7 @@ void SCEngine::createEmptyGame() {
     }
 
     // Add some GameObject to game world
-    mGameWorld = std::make_shared<GameWorld>();
+    mGameWorld = std::make_shared<GameWorld>(this);
 
     auto physicsObject = std::make_shared<GameObject>("PhysicsWorld2D");
     physicsObject->addScript(std::make_shared<PhysicsWorld2D>());
@@ -132,7 +131,7 @@ void SCEngine::reloadGame() {
     if (mGameWorld) {
         mGameWorld->destroy();
     }
-    mGameWorld = GameWorld::create(mGameWorldData);
+    mGameWorld = GameWorld::create(mGameWorldData, this);
     mGameWorld->create();
     mStartTime = std::chrono::steady_clock::now();
 }
@@ -170,18 +169,20 @@ GameWorldData& SCEngine::update(bool editorMode) {
     }
 }
 
-void SCEngine::draw(bool focus, int with, int height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer, bool forEditor) {
+void SCEngine::draw(bool focus, uint32_t width, uint32_t height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer, bool forEditor) {
     if (forEditor) {
         gEditorInput.setFocus(focus);
         gEditorInput.setCursorOffset(cursorOffsetX, cursorOffsetY);
-        mGameWorld->mEditorCamera->setSize(with, height);
-        mGameWorld->draw({ true, commandBuffer });
+        mGameWorld->mEditorCamera->setSize(width, height);
+        glm::mat4 projectionView = mGameWorld->mEditorCamera->buildProjectionMatrix();
+        mGameWorld->draw({ true, commandBuffer, projectionView, { width, height} });
         gEditorInput.reset();
     } else {
         gInput.setFocus(focus);
         gInput.setCursorOffset(cursorOffsetX, cursorOffsetY);
-        mGameWorld->mMainCamera->setSize(with, height);
-        mGameWorld->draw({ false, commandBuffer });
+        mGameWorld->mMainCamera->setSize(width, height);
+        glm::mat4 projectionView = mGameWorld->mMainCamera->buildProjectionMatrix();
+        mGameWorld->draw({ false, commandBuffer, projectionView, { width, height} });
         gInput.reset();
     }
 }
