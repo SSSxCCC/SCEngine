@@ -25,34 +25,7 @@ VkCommandBuffer VulkanManager::preDrawFrame() {
     // Only reset the fence if we are submitting work
     vkResetFences(mDevice, 1, &mInFlightFences[mCurrentFrame]);
 
-    updateUniformBuffer(mCurrentFrame);
-
     beginRender(mCommandBuffers[mCurrentFrame], mRenderPass, mSwapChainFramebuffers[mImageIndex], mSwapChainExtent);
-
-    vkCmdBindPipeline(mCommandBuffers[mCurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, mGraphicsPipeline);
-
-    VkViewport viewport{};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = static_cast<float>(mSwapChainExtent.width);
-    viewport.height = static_cast<float>(mSwapChainExtent.height);
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-    vkCmdSetViewport(mCommandBuffers[mCurrentFrame], 0, 1, &viewport);
-
-    VkRect2D scissor{};
-    scissor.offset = { 0, 0 };
-    scissor.extent = mSwapChainExtent;
-    vkCmdSetScissor(mCommandBuffers[mCurrentFrame], 0, 1, &scissor);
-
-    VkBuffer vertexBuffers[] = { mVertexBuffer };
-    VkDeviceSize offsets[] = { 0 };
-    vkCmdBindVertexBuffers(mCommandBuffers[mCurrentFrame], 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(mCommandBuffers[mCurrentFrame], mIndexBuffer, 0, VK_INDEX_TYPE_UINT32);
-    vkCmdBindDescriptorSets(mCommandBuffers[mCurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, mPipelineLayout, 0, 1, &mDescriptorSets[mCurrentFrame], 0, nullptr);
-
-    // vkCmdDraw(commandBuffer, static_cast<uint32_t>(mVertices.size()), 1, 0, 0);
-    vkCmdDrawIndexed(mCommandBuffers[mCurrentFrame], static_cast<uint32_t>(mIndices.size()), 1, 0, 0, 0);
 
     return mCommandBuffers[mCurrentFrame];
 }
@@ -134,28 +107,11 @@ void VulkanManager::initVulkan() {
     createSwapChainImageViews();
     mRenderPass = createRenderPass(VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
     mSubWindowRenderPass = createRenderPass(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    createDescriptorSetLayout();
-
-    VkPipelineLayoutCreateInfo pipelineLayoutInfo{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
-    pipelineLayoutInfo.setLayoutCount = 1;
-    pipelineLayoutInfo.pSetLayouts = &mDescriptorSetLayout;
-    pipelineLayoutInfo.pushConstantRangeCount = 0;     // Optional
-    pipelineLayoutInfo.pPushConstantRanges = nullptr;  // Optional
-    if (vkCreatePipelineLayout(mDevice, &pipelineLayoutInfo, nullptr, &mPipelineLayout) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create pipeline layout!");
-    }
-
-    mGraphicsPipeline = createGraphicsPipeline(mPlatform->readFile("D:/work/vert.spv"), mPlatform->readFile("D:/work/frag.spv"), Vertex::getBindingDescription(), Vertex::getAttributeDescriptions(), mPipelineLayout, mRenderPass);
     createCommandPool();
     createColorResources(mSwapChainExtent.width, mSwapChainExtent.height, mColorImage, mColorImageMemory, mColorImageView);
     createDepthResources(mSwapChainExtent.width, mSwapChainExtent.height, mDepthImage, mDepthImageMemory, mDepthImageView);
     createFramebuffers(mSwapChainExtent.width, mSwapChainExtent.height, mColorImageView, mDepthImageView, mSwapChainImageViews, mRenderPass, mSwapChainFramebuffers);
-    
-    createVertexBuffer(mVertices.data(), sizeof(mVertices[0]) * mVertices.size(), mVertexBuffer, mVertexBufferMemory);
-    createIndexBuffer(mIndices.data(), sizeof(mIndices[0]) * mIndices.size(), mIndexBuffer, mIndexBufferMemory);
-    createUniformBuffers(sizeof(UniformBufferObject), mUniformBuffers, mUniformBuffersMemory, mUniformBuffersMapped);
     createDescriptorPool();
-    createDescriptorSets();
     createCommandBuffers(mCommandBuffers);
     createSyncObjects();
 }
@@ -568,30 +524,6 @@ VkRenderPass VulkanManager::createRenderPass(VkImageLayout resolveFinalLayout) {
         throw std::runtime_error("failed to create render pass!");
     }
     return renderPass;
-}
-
-void VulkanManager::createDescriptorSetLayout() {
-    VkDescriptorSetLayoutBinding uboLayoutBinding{};
-    uboLayoutBinding.binding = 0;
-    uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    uboLayoutBinding.descriptorCount = 1;
-    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    uboLayoutBinding.pImmutableSamplers = nullptr;  // Optional
-
-    VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-    samplerLayoutBinding.binding = 1;
-    samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    samplerLayoutBinding.descriptorCount = 1;
-    samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-    samplerLayoutBinding.pImmutableSamplers = nullptr;
-
-    std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
-    VkDescriptorSetLayoutCreateInfo layoutInfo { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
-    layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-    layoutInfo.pBindings = bindings.data();
-    if (vkCreateDescriptorSetLayout(mDevice, &layoutInfo, nullptr, &mDescriptorSetLayout) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create descriptor set layout!");
-    }
 }
 
 VkPipeline VulkanManager::createGraphicsPipeline(const std::vector<char>& vertShaderSpv, const std::vector<char>& fragShaderSpv, const VkVertexInputBindingDescription& vertexInputBindingDescription, const std::vector<VkVertexInputAttributeDescription>& vertexInputAttributeDescriptions, VkPipelineLayout pipelineLayout, VkRenderPass renderPass) {
@@ -1167,36 +1099,6 @@ void VulkanManager::createDescriptorPool() {
     }
 }
 
-void VulkanManager::createDescriptorSets() {
-    std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, mDescriptorSetLayout);
-    VkDescriptorSetAllocateInfo allocInfo { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
-    allocInfo.descriptorPool = mDescriptorPool;
-    allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-    allocInfo.pSetLayouts = layouts.data();
-    mDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-    if (vkAllocateDescriptorSets(mDevice, &allocInfo, mDescriptorSets.data()) != VK_SUCCESS) {
-        throw std::runtime_error("failed to allocate descriptor sets!");
-    }
-
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        VkDescriptorBufferInfo bufferInfo{};
-        bufferInfo.buffer = mUniformBuffers[i];
-        bufferInfo.offset = 0;
-        bufferInfo.range = sizeof(UniformBufferObject);
-
-        std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
-        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrites[0].dstSet = mDescriptorSets[i];
-        descriptorWrites[0].dstBinding = 0;
-        descriptorWrites[0].dstArrayElement = 0;
-        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptorWrites[0].descriptorCount = 1;
-        descriptorWrites[0].pBufferInfo = &bufferInfo;
-
-        vkUpdateDescriptorSets(mDevice, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-    }
-}
-
 void VulkanManager::createCommandBuffers(std::vector<VkCommandBuffer>& commandBuffers) {
     commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     VkCommandBufferAllocateInfo allocInfo { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
@@ -1263,41 +1165,15 @@ void VulkanManager::cleanupSwapChain() {
     vkDestroySwapchainKHR(mDevice, mSwapChain, nullptr);
 }
 
-void VulkanManager::updateUniformBuffer(uint32_t currentImage) {
-    static auto startTime = std::chrono::high_resolution_clock::now();
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
-    UniformBufferObject ubo{};
-    ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    ubo.proj = glm::perspective(glm::radians(45.0f), mSwapChainExtent.width / (float)mSwapChainExtent.height, 0.1f, 10.0f);
-    ubo.proj[1][1] *= -1;  // GLM was originally designed for OpenGL, where the Y coordinate of the clip coordinates is inverted. The easiest way to compensate for that is to flip the sign on the scaling factor of the Y axis in the projection matrix.
-    memcpy(mUniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
-}
-
 void VulkanManager::cleanup() {
     cleanupSwapChain();
-    //vkDestroySampler(mDevice, mTextureSampler, nullptr);
-    //vkDestroyImageView(mDevice, mTextureImageView, nullptr);
-    //vkDestroyImage(mDevice, mTextureImage, nullptr);
-    //vkFreeMemory(mDevice, mTextureImageMemory, nullptr);
     vkDestroyDescriptorPool(mDevice, mDescriptorPool, nullptr);
-    vkDestroyDescriptorSetLayout(mDevice, mDescriptorSetLayout, nullptr);
-    vkDestroyBuffer(mDevice, mIndexBuffer, nullptr);
-    vkFreeMemory(mDevice, mIndexBufferMemory, nullptr);
-    vkDestroyBuffer(mDevice, mVertexBuffer, nullptr);
-    vkFreeMemory(mDevice, mVertexBufferMemory, nullptr);
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroySemaphore(mDevice, mRenderFinishedSemaphores[i], nullptr);
         vkDestroySemaphore(mDevice, mImageAvailableSemaphores[i], nullptr);
         vkDestroyFence(mDevice, mInFlightFences[i], nullptr);
-        vkDestroyBuffer(mDevice, mUniformBuffers[i], nullptr);
-        vkFreeMemory(mDevice, mUniformBuffersMemory[i], nullptr);
     }
     vkDestroyCommandPool(mDevice, mCommandPool, nullptr);
-    vkDestroyPipeline(mDevice, mGraphicsPipeline, nullptr);
-    vkDestroyPipelineLayout(mDevice, mPipelineLayout, nullptr);
     vkDestroyRenderPass(mDevice, mRenderPass, nullptr);
     vkDestroyDevice(mDevice, nullptr);
     vkDestroySurfaceKHR(mInstance, mSurface, nullptr);

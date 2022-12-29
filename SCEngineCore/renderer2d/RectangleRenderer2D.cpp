@@ -105,5 +105,15 @@ void RectangleRenderer2D::onDraw(const DrawData& drawData) {
 }
 
 void RectangleRenderer2D::onDestroy() {
-	
+    vkDestroyPipeline(mVulkanManager->getDevice(), mGraphicsPipeline, nullptr);
+    vkDestroyPipelineLayout(mVulkanManager->getDevice(), mPipelineLayout, nullptr);
+    vkDestroyDescriptorSetLayout(mVulkanManager->getDevice(), mDescriptorSetLayout, nullptr);
+    vkDestroyBuffer(mVulkanManager->getDevice(), mIndexBuffer, nullptr);
+    vkFreeMemory(mVulkanManager->getDevice(), mIndexBufferMemory, nullptr);
+    vkDestroyBuffer(mVulkanManager->getDevice(), mVertexBuffer, nullptr);
+    vkFreeMemory(mVulkanManager->getDevice(), mVertexBufferMemory, nullptr);
+    for (size_t i = 0; i < mVulkanManager->MAX_FRAMES_IN_FLIGHT; i++) {
+        vkDestroyBuffer(mVulkanManager->getDevice(), mUniformBuffers[i], nullptr);
+        vkFreeMemory(mVulkanManager->getDevice(), mUniformBuffersMemory[i], nullptr);
+    }
 }

@@ -14,44 +14,6 @@
 #include <glm/gtx/hash.hpp>
 #include <array>
 
-struct Vertex {
-    glm::vec3 pos;
-    glm::vec3 color;
-
-    bool operator==(const Vertex& other) const {
-        return pos == other.pos && color == other.color;
-    }
-
-    static VkVertexInputBindingDescription getBindingDescription() {
-        VkVertexInputBindingDescription bindingDescription{};
-        bindingDescription.binding = 0;
-        bindingDescription.stride = sizeof(Vertex);
-        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-        return bindingDescription;
-    }
-
-    static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions() {
-        std::vector<VkVertexInputAttributeDescription> attributeDescriptions(2);
-        attributeDescriptions[0].binding = 0;
-        attributeDescriptions[0].location = 0;
-        attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[0].offset = offsetof(Vertex, pos);
-        attributeDescriptions[1].binding = 0;
-        attributeDescriptions[1].location = 1;
-        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[1].offset = offsetof(Vertex, color);
-        return attributeDescriptions;
-    }
-};
-
-template <>
-struct std::hash<Vertex> {
-    size_t operator()(Vertex const& vertex) const {
-        return ((std::hash<glm::vec3>()(vertex.pos) ^
-                (std::hash<glm::vec3>()(vertex.color) << 1)) >> 1);
-    }
-};
-
 class VulkanManager {
 friend class SCEngineEditor;
 friend class SubWindow;
@@ -145,43 +107,6 @@ private:
         std::vector<VkPresentModeKHR> presentModes;
     };
 
-    const std::vector<Vertex> mVertices = {
-        {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-        {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-        {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-        {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}}
-    };
-
-    const std::vector<uint32_t> mIndices = {
-        0, 1, 2, 2, 3, 0
-    };
-
-    VkDescriptorSetLayout mDescriptorSetLayout;
-    VkPipelineLayout mPipelineLayout;
-    VkPipeline mGraphicsPipeline;
-    VkBuffer mVertexBuffer;
-    VkDeviceMemory mVertexBufferMemory;
-    VkBuffer mIndexBuffer;
-    VkDeviceMemory mIndexBufferMemory;
-
-    struct UniformBufferObject {
-        glm::mat4 model;
-        glm::mat4 view;
-        glm::mat4 proj;
-    };
-
-    std::vector<VkBuffer> mUniformBuffers;
-    std::vector<VkDeviceMemory> mUniformBuffersMemory;
-    std::vector<void*> mUniformBuffersMapped;
-
-    std::vector<VkDescriptorSet> mDescriptorSets;
-
-    //uint32_t mMipLevels;
-    //VkImage mTextureImage;
-    //VkDeviceMemory mTextureImageMemory;
-    //VkImageView mTextureImageView;
-    //VkSampler mTextureSampler;
-
     void initVulkan();
     void cleanup();
     VkCommandBuffer preDrawFrame();
@@ -226,11 +151,6 @@ private:
     void endSingleTimeCommands(VkCommandBuffer commandBuffer);
     void beginRender(VkCommandBuffer commandBuffer, VkRenderPass renderPass, VkFramebuffer frameBuffer, VkExtent2D extent);
     void endRender(VkCommandBuffer commandBuffer, const std::vector<VkSemaphore>& waitSemaphores, const std::vector<VkPipelineStageFlags>& waitStages, const std::vector<VkSemaphore>& signalSemaphores, VkFence fence);
-
-    // Used by Script
-    void createDescriptorSetLayout();
-    void createDescriptorSets();
-    void updateUniformBuffer(uint32_t currentImage);
 };
 
 #endif // _VulkanManager_H_
