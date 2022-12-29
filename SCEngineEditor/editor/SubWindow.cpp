@@ -18,7 +18,7 @@ void SubWindow::createRenderObjects() {
 	mResovleImageSamplers.resize(mVulkanManager->MAX_FRAMES_IN_FLIGHT);
 	mResolveDescriptorSet.resize(mVulkanManager->MAX_FRAMES_IN_FLIGHT);
 	for (size_t i = 0; i < mVulkanManager->MAX_FRAMES_IN_FLIGHT; i++) {
-        mVulkanManager->createImage(mWidth, mHeight, 1, mVulkanManager->mMsaaSamples, mVulkanManager->mSwapChainImageFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mResovleImages[i], mResovleImageMemories[i]);
+        mVulkanManager->createImage(mWidth, mHeight, 1, VK_SAMPLE_COUNT_1_BIT, mVulkanManager->mSwapChainImageFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mResovleImages[i], mResovleImageMemories[i]);
         mResovleImageViews[i] = mVulkanManager->createImageView(mResovleImages[i], mVulkanManager->mSwapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
         mResovleImageSamplers[i] = mVulkanManager->createSampler();
         mResolveDescriptorSet[i] = ImGui_ImplVulkan_AddTexture(mResovleImageSamplers[i], mResovleImageViews[i], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
