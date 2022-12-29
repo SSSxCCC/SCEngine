@@ -36,9 +36,7 @@ private:
     std::vector<VkDescriptorSet> mResolveDescriptorSet;  // size is MAX_FRAMES_IN_FLIGHT
     std::vector<VkFramebuffer> mFramebuffers;  // size is MAX_FRAMES_IN_FLIGHT
     std::vector<VkCommandBuffer> mCommandBuffers;  // size is MAX_FRAMES_IN_FLIGHT
-    //std::vector<VkSemaphore> mImageAvailableSemaphores;  // size is MAX_FRAMES_IN_FLIGHT
-    //std::vector<VkSemaphore> mRenderFinishedSemaphores;  // size is MAX_FRAMES_IN_FLIGHT
-    //std::vector<VkFence> mInFlightFences;  // size is MAX_FRAMES_IN_FLIGHT
+    std::vector<VkFence> mInFlightFences;  // size is MAX_FRAMES_IN_FLIGHT
 
     void createRenderObjects();
     void cleanupRenderObjects();

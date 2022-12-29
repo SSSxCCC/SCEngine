@@ -5,10 +5,22 @@ SubWindow::SubWindow(const std::string& title, VulkanManager* vulkanManager) :
 		mTitle(title), mVulkanManager(vulkanManager), mFocus(false),
 		mWidth(0), mHeight(0) {  // mWidth and mHeight will be set to ImGui window size
 	mVulkanManager->createCommandBuffers(mCommandBuffers);
+
+    mInFlightFences.resize(mVulkanManager->MAX_FRAMES_IN_FLIGHT);
+    VkFenceCreateInfo fenceInfo { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
+    fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+    for (size_t i = 0; i < mVulkanManager->MAX_FRAMES_IN_FLIGHT; i++) {
+        if (vkCreateFence(mVulkanManager->mDevice, &fenceInfo, nullptr, &mInFlightFences[i]) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create synchronization objects for a frame!");
+        }
+    }
 }
 
 SubWindow::~SubWindow() {
 	cleanupRenderObjects();
+    for (size_t i = 0; i < mVulkanManager->MAX_FRAMES_IN_FLIGHT; i++) {
+        vkDestroyFence(mVulkanManager->mDevice, mInFlightFences[i], nullptr);
+    }
 }
 
 void SubWindow::createRenderObjects() {
@@ -55,17 +67,21 @@ void SubWindow::cleanupRenderObjects() {
 }
 
 VkCommandBuffer SubWindow::preDrawFrame() {
-	ImGui::Begin(mTitle.c_str());
-	mFocus = ImGui::IsWindowFocused();
-	mCursorScreenPos = ImGui::GetCursorScreenPos();
-	ImVec2 windowSize = ImGui::GetWindowSize();
-	windowSize.x = std::max(windowSize.x, 1.0f);
-	windowSize.y = std::max(windowSize.y - 50.0f, 1.0f);
-	if (mWidth != windowSize.x || mHeight != windowSize.y) {
-		mWidth = windowSize.x;
-		mHeight = windowSize.y;
-		cleanupRenderObjects();
-		createRenderObjects();
+    vkWaitForFences(mVulkanManager->mDevice, 1, &mInFlightFences[mVulkanManager->mCurrentFrame], VK_TRUE, UINT64_MAX);
+    vkResetFences(mVulkanManager->mDevice, 1, &mInFlightFences[mVulkanManager->mCurrentFrame]);
+
+    ImGui::Begin(mTitle.c_str());
+    mFocus = ImGui::IsWindowFocused();
+    mCursorScreenPos = ImGui::GetCursorScreenPos();
+    ImVec2 windowSize = ImGui::GetWindowSize();
+    windowSize.x = std::max(windowSize.x, 1.0f);
+    windowSize.y = std::max(windowSize.y - 50.0f, 1.0f);
+    if (mWidth != windowSize.x || mHeight != windowSize.y) {
+        mWidth = windowSize.x;
+        mHeight = windowSize.y;
+        vkDeviceWaitIdle(mVulkanManager->mDevice);
+        cleanupRenderObjects();
+        createRenderObjects();
 	}
 
 	mVulkanManager->beginRender(mCommandBuffers[mVulkanManager->mCurrentFrame], mVulkanManager->mSubWindowRenderPass, mFramebuffers[mVulkanManager->mCurrentFrame], { mWidth, mHeight });
@@ -73,8 +89,7 @@ VkCommandBuffer SubWindow::preDrawFrame() {
 }
 
 void SubWindow::postDrawFrame() {
-    mVulkanManager->endRender(mCommandBuffers[mVulkanManager->mCurrentFrame], {}, {}, {}, VK_NULL_HANDLE);
-	vkDeviceWaitIdle(mVulkanManager->mDevice);  // TODO: remove this line
+    mVulkanManager->endRender(mCommandBuffers[mVulkanManager->mCurrentFrame], {}, {}, {}, mInFlightFences[mVulkanManager->mCurrentFrame]);
 
     ImGui::Image((ImTextureID)mResolveDescriptorSet[mVulkanManager->mCurrentFrame], ImVec2(mWidth, mHeight));
     ImGui::End();
