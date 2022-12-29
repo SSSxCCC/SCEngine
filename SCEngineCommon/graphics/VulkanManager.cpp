@@ -106,7 +106,9 @@ void VulkanManager::initVulkan() {
     createSwapChain();
     createSwapChainImageViews();
     mRenderPass = createRenderPass(VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
-    mSubWindowRenderPass = createRenderPass(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    if (mHasSubWindow) {
+        mSubWindowRenderPass = createRenderPass(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    }
     createCommandPool();
     createColorResources(mSwapChainExtent.width, mSwapChainExtent.height, mColorImage, mColorImageMemory, mColorImageView);
     createDepthResources(mSwapChainExtent.width, mSwapChainExtent.height, mDepthImage, mDepthImageMemory, mDepthImageView);
@@ -1068,10 +1070,10 @@ void VulkanManager::createIndexBuffer(void const* indexData, VkDeviceSize buffer
 }
 
 void VulkanManager::createUniformBuffers(VkDeviceSize bufferSize, std::vector<VkBuffer>& uniformBuffers, std::vector<VkDeviceMemory>& uniformBuffersMemory, std::vector<void*>& uniformBuffersMapped) {
-    uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-    uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
-    uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+    uniformBuffers.resize(getMaxFrames());
+    uniformBuffersMemory.resize(getMaxFrames());
+    uniformBuffersMapped.resize(getMaxFrames());
+    for (size_t i = 0; i < getMaxFrames(); i++) {
         createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
         vkMapMemory(mDevice, uniformBuffersMemory[i], 0, bufferSize, 0, &uniformBuffersMapped[i]);
     }
@@ -1176,7 +1178,9 @@ void VulkanManager::cleanup() {
     }
     vkDestroyCommandPool(mDevice, mCommandPool, nullptr);
     vkDestroyRenderPass(mDevice, mRenderPass, nullptr);
-    vkDestroyRenderPass(mDevice, mSubWindowRenderPass, nullptr);
+    if (mHasSubWindow) {
+        vkDestroyRenderPass(mDevice, mSubWindowRenderPass, nullptr);
+    }
     vkDestroyDevice(mDevice, nullptr);
     vkDestroySurfaceKHR(mInstance, mSurface, nullptr);
     vkDestroyInstance(mInstance, nullptr);

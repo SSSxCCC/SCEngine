@@ -44,17 +44,17 @@ void RectangleRenderer2D::onCreate() {
     mVulkanManager->createUniformBuffers(sizeof(glm::mat4), mUniformBuffers, mUniformBuffersMemory, mUniformBuffersMapped);
 
     // Create mDescriptorSets
-    std::vector<VkDescriptorSetLayout> layouts(mVulkanManager->MAX_FRAMES_IN_FLIGHT, mDescriptorSetLayout);
+    std::vector<VkDescriptorSetLayout> layouts(mVulkanManager->getMaxFrames(), mDescriptorSetLayout);
     VkDescriptorSetAllocateInfo allocInfo { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
     allocInfo.descriptorPool = mVulkanManager->getDescriptorPool();
-    allocInfo.descriptorSetCount = static_cast<uint32_t>(mVulkanManager->MAX_FRAMES_IN_FLIGHT);
+    allocInfo.descriptorSetCount = static_cast<uint32_t>(mVulkanManager->getMaxFrames());
     allocInfo.pSetLayouts = layouts.data();
-    mDescriptorSets.resize(mVulkanManager->MAX_FRAMES_IN_FLIGHT);
+    mDescriptorSets.resize(mVulkanManager->getMaxFrames());
     if (vkAllocateDescriptorSets(mVulkanManager->getDevice(), &allocInfo, mDescriptorSets.data()) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate descriptor sets!");
     }
 
-    for (size_t i = 0; i < mVulkanManager->MAX_FRAMES_IN_FLIGHT; i++) {
+    for (size_t i = 0; i < mVulkanManager->getMaxFrames(); i++) {
         VkDescriptorBufferInfo bufferInfo{};
         bufferInfo.buffer = mUniformBuffers[i];
         bufferInfo.offset = 0;
@@ -77,7 +77,7 @@ void RectangleRenderer2D::onDraw(const DrawData& drawData) {
     auto transform2D = mGameObject->getScript<Transform2D>();
     glm::mat4 model = transform2D ? transform2D->buildModelMatrix() : glm::mat4(1.0f);
     glm::mat4 pvm = drawData.projectionViewMatrix * model;
-    memcpy(mUniformBuffersMapped[mVulkanManager->getCurrentFrame()], &pvm, sizeof(pvm));
+    memcpy(mUniformBuffersMapped[mVulkanManager->getCurrentFrame(drawData.forEditor)], &pvm, sizeof(pvm));
 
     vkCmdBindPipeline(drawData.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mGraphicsPipeline);
 
@@ -99,7 +99,7 @@ void RectangleRenderer2D::onDraw(const DrawData& drawData) {
     VkDeviceSize offsets[] = { 0 };
     vkCmdBindVertexBuffers(drawData.commandBuffer, 0, 1, vertexBuffers, offsets);
     vkCmdBindIndexBuffer(drawData.commandBuffer, mIndexBuffer, 0, VK_INDEX_TYPE_UINT32);
-    vkCmdBindDescriptorSets(drawData.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mPipelineLayout, 0, 1, &mDescriptorSets[mVulkanManager->getCurrentFrame()], 0, nullptr);
+    vkCmdBindDescriptorSets(drawData.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mPipelineLayout, 0, 1, &mDescriptorSets[mVulkanManager->getCurrentFrame(drawData.forEditor)], 0, nullptr);
 
     vkCmdDrawIndexed(drawData.commandBuffer, static_cast<uint32_t>(mIndices.size()), 1, 0, 0, 0);
 }
@@ -113,7 +113,7 @@ void RectangleRenderer2D::onDestroy() {
     vkFreeMemory(mVulkanManager->getDevice(), mIndexBufferMemory, nullptr);
     vkDestroyBuffer(mVulkanManager->getDevice(), mVertexBuffer, nullptr);
     vkFreeMemory(mVulkanManager->getDevice(), mVertexBufferMemory, nullptr);
-    for (size_t i = 0; i < mVulkanManager->MAX_FRAMES_IN_FLIGHT; i++) {
+    for (size_t i = 0; i < mVulkanManager->getMaxFrames(); i++) {
         vkDestroyBuffer(mVulkanManager->getDevice(), mUniformBuffers[i], nullptr);
         vkFreeMemory(mVulkanManager->getDevice(), mUniformBuffersMemory[i], nullptr);
     }

@@ -18,7 +18,7 @@ class VulkanManager {
 friend class SCEngineEditor;
 friend class SubWindow;
 public:
-    VulkanManager(Platform* platform) : mPlatform(platform) { initVulkan(); }
+    VulkanManager(Platform* platform, bool hasSubWindow) : mPlatform(platform), mHasSubWindow(hasSubWindow) { initVulkan(); }
     ~VulkanManager() { cleanup(); }
 
     // Used by Script
@@ -28,24 +28,15 @@ public:
     void createIndexBuffer(void const* indexData, VkDeviceSize bufferSize, VkBuffer& indexBuffer, VkDeviceMemory& indexBufferMemory);
     void createUniformBuffers(VkDeviceSize bufferSize, std::vector<VkBuffer>& uniformBuffers, std::vector<VkDeviceMemory>& uniformBuffersMemory, std::vector<void*>& uniformBuffersMapped);
 
-    // Help methods to create vulkan objects for main window or sub window
-    VkRenderPass createRenderPass(VkImageLayout resolveFinalLayout);
-    void createColorResources(uint32_t width, uint32_t height, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView);
-    void createDepthResources(uint32_t width, uint32_t height, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView);
-    void createFramebuffers(uint32_t width, uint32_t height, VkImageView colorImageView, VkImageView depthImageView, const std::vector<VkImageView>& resolveImageViews, VkRenderPass renderPass, std::vector<VkFramebuffer>& framebuffers);
-    void createCommandBuffers(std::vector<VkCommandBuffer>& commandBuffers);
-    void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
-    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
-    VkSampler createSampler();
-
     VkDevice getDevice() { return mDevice; }
     VkFormat getImageFormat() { return mSwapChainImageFormat; }
-    uint32_t getCurrentFrame() { return mCurrentFrame; }
+    uint32_t getCurrentFrame(bool forEditor) { return mCurrentFrame + (forEditor ? MAX_FRAMES_IN_FLIGHT : 0); }
+    uint32_t getMaxFrames() { return MAX_FRAMES_IN_FLIGHT * (mHasSubWindow ? 2 : 1); }
     VkDescriptorPool getDescriptorPool() { return mDescriptorPool; }
-    VkRenderPass getRenderPass() { return mSubWindowRenderPass; }  // TODO: delete this
+    VkRenderPass getRenderPass() { return mHasSubWindow ? mSubWindowRenderPass : mRenderPass; }
 
-    const int MAX_FRAMES_IN_FLIGHT = 2;
 private:
+    const int MAX_FRAMES_IN_FLIGHT = 2;
     const std::vector<const char*> VALIDATION_LAYERS = { "VK_LAYER_KHRONOS_validation" };
 #ifdef NDEBUG
     const bool ENABLE_VALIDATION_LAYERS = false;
@@ -55,6 +46,7 @@ private:
     const std::vector<const char*> DEVICE_EXTENSIONS = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
     Platform* mPlatform;
+    bool mHasSubWindow;
 
     // Common used vulkan objects
     VkInstance mInstance;
@@ -136,6 +128,16 @@ private:
     void recreateSwapChain();
     void cleanupSwapChain();
     void createSyncObjects();
+
+    // Help methods to create vulkan objects for main window or sub window
+    VkRenderPass createRenderPass(VkImageLayout resolveFinalLayout);
+    void createColorResources(uint32_t width, uint32_t height, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView);
+    void createDepthResources(uint32_t width, uint32_t height, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView);
+    void createFramebuffers(uint32_t width, uint32_t height, VkImageView colorImageView, VkImageView depthImageView, const std::vector<VkImageView>& resolveImageViews, VkRenderPass renderPass, std::vector<VkFramebuffer>& framebuffers);
+    void createCommandBuffers(std::vector<VkCommandBuffer>& commandBuffers);
+    void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
+    VkSampler createSampler();
 
     // Help functions
     VkFormat findDepthFormat();

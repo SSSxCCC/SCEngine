@@ -248,7 +248,7 @@ private:
 
     void initVulkan() {
         mPlatform = PlatformImpl::build(mWindow);
-        mVulkanManager = new VulkanManager(mPlatform);
+        mVulkanManager = new VulkanManager(mPlatform, true);
         glfwSetFramebufferSizeCallback(mWindow, FramebufferSizeCallback);
         mEditorWindow = new SubWindow("editor", mVulkanManager);
         mGameWindow = new SubWindow("game", mVulkanManager);
