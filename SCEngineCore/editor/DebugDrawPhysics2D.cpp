@@ -2,7 +2,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
-#include "core/GameWorld.h"
+#include "core/Scene.h"
 #include "imgui/imgui.h"
 
 struct GLRenderPoints {
@@ -355,7 +355,7 @@ public:
 	void DrawString(const b2Vec2& pw, const char* string, ...) {
 		float screenX, screenY;
 		// TODO: worldToScreen implement here
-		//mGameWorld->mMainCamera->worldToScreen(pw.x, pw.y, screenX, screenY);
+		//mScene->mMainCamera->worldToScreen(pw.x, pw.y, screenX, screenY);
 		b2Vec2 ps(screenX, screenY);
 
 		va_list arg;

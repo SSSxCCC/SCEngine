@@ -12,9 +12,9 @@
 #include "imgui_backends/imgui_impl_glfw.h"
 #include "imgui_backends/imgui_impl_vulkan.h"
 #include "ImGuiFileDialog/ImGuiFileDialog.h"
-#include "editor/GameWorldEditor.h"
+#include "editor/SceneEditor.h"
 #include "editor/SubWindow.h"
-#include "data/GameWorldData.h"
+#include "data/SceneData.h"
 #include "graphics/VulkanManager.h"
 #include "common/CallbackPointer.h"
 #include "platform/PlatformImpl.h"
@@ -24,7 +24,7 @@ namespace fs = std::filesystem;
 class SCEnginePointer {
 public:
     using SCEngine_init_fn = void (*)(Platform*, VulkanManager*, CallbackPointer&, const fs::path&);
-    using SCEngine_update_fn = GameWorldData& (*)(bool);
+    using SCEngine_update_fn = SceneData& (*)(bool);
     using SCEngine_draw_fn = void (*)(bool, uint32_t, uint32_t, float, float, VkCommandBuffer, bool);
     using SCEngine_runGame_fn = void (*)();
     using SCEngine_stopGame_fn = void (*)();
@@ -155,8 +155,8 @@ public:
             }
 
             if (!mProjectDir.empty()) {
-                auto& gameWorldData = mSCEngine.update(mEditorMode);
-                mWorldEditor.doFrame(gameWorldData);
+                auto& sceneData = mSCEngine.update(mEditorMode);
+                mSceneEditor.doFrame(sceneData);
 
                 VkCommandBuffer commandBuffer = mEditorWindow->preDrawFrame();
                 mSCEngine.draw(mEditorWindow->isFocus(), mEditorWindow->getWidth(), mEditorWindow->getHeight(), mEditorWindow->getCursorScreenPos().x, mEditorWindow->getCursorScreenPos().y, commandBuffer, true);
@@ -212,7 +212,7 @@ private:
     bool mEditorMode = true;
 	SubWindow* mEditorWindow;
     SubWindow* mGameWindow;
-	GameWorldEditor mWorldEditor;
+    SceneEditor mSceneEditor;
 
     std::chrono::steady_clock::time_point mLastTime = std::chrono::steady_clock::now();
     int mFrame = 0;
@@ -392,22 +392,22 @@ private:
         };
     }
 
-    // Load game from GameWorldData.json
+    // Load game from SceneData.json
     void loadGame() {
-        std::ifstream i(mProjectDir / "GameWorldData.json");
+        std::ifstream i(mProjectDir / "SceneData.json");
         nlohmann::json j;
         if (i.good()) {
             i >> j;
         } else {
-            std::cout << "No GameWorldData.json" << std::endl;
+            std::cout << "No SceneData.json" << std::endl;
         }
         mSCEngine.load(j);
     }
 
-    // Save game to GameWorldData.json
+    // Save game to SceneData.json
     void saveGame() {
         nlohmann::json j = mSCEngine.save();
-        std::ofstream o(mProjectDir / "GameWorldData.json");
+        std::ofstream o(mProjectDir / "SceneData.json");
         o << std::setw(4) << j << std::endl;
     }
 

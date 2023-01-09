@@ -6,10 +6,10 @@
 #include "core/Script.h"
 #include "data/GameObjectData.h"
 
-// Predefine GameWorld here to solve circular reference problem
-class GameWorld;
+// Predefine Scene here to solve circular reference problem
+class Scene;
 
-// GameObject is a object in the game world. Attach GameObjectScript to this GameObject to implement game logic
+// GameObject is a object in the Scene. Attach Script to this GameObject to implement game logic
 class GameObject : public std::enable_shared_from_this<GameObject> {
 public:
 	GameObject(const std::string& name) : mName(name) { }
@@ -58,9 +58,9 @@ public:
 	// create a instance of GameObject based on GameObjectData
 	static std::shared_ptr<GameObject> create(const GameObjectData& data);
 
-	// The GameWorld this GameObject is in.
-	// Note: there is circular reference between GameObject and GameWorld!
-	std::shared_ptr<GameWorld> mGameWorld;
+	// The Scene this GameObject is in.
+	// Note: there is circular reference between GameObject and Scene!
+	std::shared_ptr<Scene> mScene;
 
 	std::string mName;    // the name of this GameObject
 	int mId = -1;         // the unique id of this GameObject, -1 means there is no id yet
@@ -72,7 +72,7 @@ private:
 	// have onCreate called?
 	bool mCreated = false;
 
-friend class GameWorldEditor;
+friend class SceneEditor;
 };
 
 #endif // _GameObject_H_

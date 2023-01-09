@@ -1,7 +1,7 @@
 #include "editor/EditorCameraController.h"
 #include "input/Input.h"
 #include "core/GameObject.h"
-#include "core/GameWorld.h"
+#include "core/Scene.h"
 #include "core/Transform2D.h"
 #include <iostream>
 
@@ -78,8 +78,8 @@ void EditorCameraController::onUpdate() {
 		if (gEditorInput.getKey(KEY_DOWN) == PRESS || gEditorInput.getKey(KEY_S) == PRESS) {
 			moveY -= 1.0f;
 		}
-        transform2D->mPosition.x += moveX * mMoveSpeed * mGameObject->mGameWorld->mDeltaTime;
-        transform2D->mPosition.y += moveY * mMoveSpeed * mGameObject->mGameWorld->mDeltaTime;
+        transform2D->mPosition.x += moveX * mMoveSpeed * mGameObject->mScene->mDeltaTime;
+        transform2D->mPosition.y += moveY * mMoveSpeed * mGameObject->mScene->mDeltaTime;
 	}
 }
 

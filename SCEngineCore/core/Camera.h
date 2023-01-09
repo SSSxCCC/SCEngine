@@ -6,8 +6,8 @@
 #include "core/Script.h"
 #include "utility/Window.h"
 
-// Predefine GameWorld here to solve circular reference problem
-class GameWorld;
+// Predefine Scene here to solve circular reference problem
+class Scene;
 
 class Camera : public Script {
 public:

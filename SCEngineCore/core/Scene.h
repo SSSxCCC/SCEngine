@@ -1,35 +1,35 @@
-#ifndef _GameWorld_H_
-#define _GameWorld_H_
+#ifndef _Scene_H_
+#define _Scene_H_
 
 #include <memory>
 
 #include "physics2d/PhysicsWorld2D.h"
 #include "core/GameObject.h"
 #include "core/Camera.h"
-#include "data/GameWorldData.h"
+#include "data/SceneData.h"
 
 // Predefine SCEngine here to solve circular reference problem
 class SCEngine;
 
-// GameWorld stores all GameObject in the game
-class GameWorld : public std::enable_shared_from_this<GameWorld> {
+// Scene includes many GameObjects
+class Scene : public std::enable_shared_from_this<Scene> {
 public:
-	GameWorld(SCEngine* pSCEngine) : mSCEngine(pSCEngine) { };
+	Scene(SCEngine* pSCEngine) : mSCEngine(pSCEngine) { };
 	void create();
 	void update();
 	void draw(const DrawData& drawData);
 	void destroy();
 	void addGameObject(const std::shared_ptr<GameObject>& gameObject);
 	void removeGameObject(int GameObjectId);
-	GameWorldData getData();
-	void setData(const GameWorldData& gameWorldData);
+	SceneData getData();
+	void setData(const SceneData& sceneData);
 
-	// create a instance of GameWorld based on GameWorldData
-	static std::shared_ptr<GameWorld> create(const GameWorldData& data, SCEngine* pSCEngine);
+	// create a instance of Scene based on SceneData
+	static std::shared_ptr<Scene> create(const SceneData& data, SCEngine* pSCEngine);
 
 	const SCEngine* mSCEngine; // global variables and functions
 
-	float mCurrentTime = 0.0f; // time since game start
+	float mCurrentTime = 0.0f; // time since scene start
 	float mDeltaTime = 0.0f;   // time spent in last frame
 
 	std::shared_ptr<PhysicsWorld2D> mPhysicsWorld2D; // the box2d physics world wrapper
@@ -44,7 +44,7 @@ private:
 	std::unordered_map<int, std::shared_ptr<GameObject>> mGameObjects; // all GameObject in the world, key is the id of GameObject
 	bool mCreated = false; // have create called?
 
-friend class GameWorldEditor;
+friend class SceneEditor;
 };
 
-#endif // _GameWorld_H_
+#endif // _Scene_H_

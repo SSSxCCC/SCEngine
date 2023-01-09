@@ -1,22 +1,22 @@
-#include "editor/GameWorldEditor.h"
+#include "editor/SceneEditor.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_stdlib.h"
 #include <string>
 
-void GameWorldEditor::doFrame(GameWorldData& gameWorldData) {
+void SceneEditor::doFrame(SceneData& sceneData) {
 	auto itemsGetter = [](void* data, int idx, const char** out_text) {
 		auto worldData = (std::vector<GameObjectData>*) data;
 		auto& gameObject = (*worldData)[idx];
 		*out_text = gameObject.name.c_str();
 		return true;
 	};
-	ImGui::Begin("GameWorld");
+	ImGui::Begin("Scene");
 	static int current = 0;
-	ImGui::ListBox("GameObjects", &current, itemsGetter, (void*)&gameWorldData.gameObjectsData, gameWorldData.gameObjectsData.size());
+	ImGui::ListBox("GameObjects", &current, itemsGetter, (void*)&sceneData.gameObjectsData, sceneData.gameObjectsData.size());
 	ImGui::End();
 
 	if (current >= 0) {
-		auto& gameObjectData = gameWorldData.gameObjectsData[current];
+		auto& gameObjectData = sceneData.gameObjectsData[current];
 		ImGui::Begin("GameObject");
         #ifdef SANITIZE
         char str[512];
@@ -33,7 +33,7 @@ void GameWorldEditor::doFrame(GameWorldData& gameWorldData) {
 		if (gameObjectData.name != name) {
 			gameObjectData.name = name;
 			gameObjectData.editType = EditType::Modify;
-			gameWorldData.editType = EditType::Modify;
+			sceneData.editType = EditType::Modify;
 		}
 
 		ImGui::Text(("Id: " + std::to_string(gameObjectData.id)).c_str());
@@ -101,7 +101,7 @@ void GameWorldEditor::doFrame(GameWorldData& gameWorldData) {
 			if (modify) {
 				scriptData.editType = EditType::Modify;
 				gameObjectData.editType = EditType::Modify;
-				gameWorldData.editType = EditType::Modify;
+				sceneData.editType = EditType::Modify;
 			}
 		}
 

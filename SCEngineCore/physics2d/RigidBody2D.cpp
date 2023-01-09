@@ -1,7 +1,7 @@
 #include "physics2d/RigidBody2D.h"
 #include "physics2d/Collider2D.h"
 #include "core/GameObject.h"
-#include "core/GameWorld.h"
+#include "core/Scene.h"
 #include "core/Transform2D.h"
 
 void RigidBody2D::onCreate() {
@@ -10,7 +10,7 @@ void RigidBody2D::onCreate() {
 		mBodyDef.position.Set(transform2D->mPosition.x, transform2D->mPosition.y);
 		mBodyDef.angle = transform2D->mRotation;
 	}
-	mBody = mGameObject->mGameWorld->mPhysicsWorld2D->mWorld->CreateBody(&mBodyDef);
+	mBody = mGameObject->mScene->mPhysicsWorld2D->mWorld->CreateBody(&mBodyDef);
 }
 
 void RigidBody2D::onStart() {
@@ -31,7 +31,7 @@ void RigidBody2D::onUpdate() {
 }
 
 void RigidBody2D::onDestroy() {
-	mGameObject->mGameWorld->mPhysicsWorld2D->mWorld->DestroyBody(mBody);
+	mGameObject->mScene->mPhysicsWorld2D->mWorld->DestroyBody(mBody);
 	mBody = nullptr;
 }
 

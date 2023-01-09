@@ -18,7 +18,7 @@ namespace glm {
 // If you need add new types, you should update:
 // 1. type of ScriptVar::value
 // 2. to_json and from_json of ScriptVar in ScriptData.h
-// 3. GameWorldEditor.cpp
+// 3. SceneEditor.cpp
 static const int TYPE_INT = 0; // int
 static const int TYPE_FLOAT = 1; // float
 static const int TYPE_STRING = 2; // std::string
@@ -69,7 +69,7 @@ inline void from_json(const nlohmann::json& json, ScriptVar& scriptVar) {
     } else assert(false);
 }
 
-// Define how ScriptData/GameObjectData/GameWorldData was edited
+// Define how ScriptData/GameObjectData/SceneData was edited
 enum class EditType {
 	None,
 	Modify,
@@ -130,7 +130,7 @@ private:
         return dataMap.at(name).limit;
     }
 
-	friend class GameWorldEditor;
+friend class SceneEditor;
 };
 
 #endif // _ScriptData_H_

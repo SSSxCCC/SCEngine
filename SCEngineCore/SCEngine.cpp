@@ -7,7 +7,7 @@
 #include "utility/Window.h"
 #include "utility/Asset.h"
 #include "input/Input.h"
-#include "core/GameWorld.h"
+#include "core/Scene.h"
 #include "core/Transform2D.h"
 #include "renderer2d/RectangleRenderer2D.h"
 #include "physics2d/RigidBody2D.h"
@@ -21,8 +21,8 @@ void init(Platform* platform, VulkanManager* vulkanManager, CallbackPointer& cal
     gSCEngine = new SCEngine(platform, vulkanManager, callbackPointer, assetDir);
 }
 
-GameWorldData& update(bool editorMode) {
-	return gSCEngine->update(editorMode);
+SceneData& update(bool editorMode) {
+    return gSCEngine->update(editorMode);
 }
 
 void draw(bool focus, uint32_t width, uint32_t height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer, bool forEditor) {
@@ -63,34 +63,34 @@ SCEngine::SCEngine(Platform* platform, VulkanManager* vulkanManager, CallbackPoi
 
 SCEngine::~SCEngine() {
     mCallbackPointer.reset();
-    mGameWorld->destroy();
-    mGameWorld = nullptr;
+    mScene->destroy();
+    mScene = nullptr;
     delete mAssetManager;
 }
 
 void SCEngine::createEmptyGame() {
-    if (mGameWorld) {
-        mGameWorld->destroy();
+    if (mScene) {
+        mScene->destroy();
     }
 
-    // Add some GameObject to game world
-    mGameWorld = std::make_shared<GameWorld>(this);
+    // Add some GameObject to Scene
+    mScene = std::make_shared<Scene>(this);
 
     auto physicsObject = std::make_shared<GameObject>("PhysicsWorld2D");
     physicsObject->addScript(std::make_shared<PhysicsWorld2D>());
     physicsObject->addScript(std::make_shared<DebugDrawPhysics2D>());
-    mGameWorld->addGameObject(physicsObject);
+    mScene->addGameObject(physicsObject);
 
     auto cameraObject = std::make_shared<GameObject>("EditorCamera");
     cameraObject->addScript(std::make_shared<Transform2D>());
     cameraObject->addScript(std::make_shared<Camera>());
     cameraObject->addScript(std::make_shared<EditorCameraController>());
-    mGameWorld->addGameObject(cameraObject);
+    mScene->addGameObject(cameraObject);
 
     auto camera2Object = std::make_shared<GameObject>("GameCamera");
     camera2Object->addScript(std::make_shared<Transform2D>());
     camera2Object->addScript(std::make_shared<Camera>());
-    mGameWorld->addGameObject(camera2Object);
+    mScene->addGameObject(camera2Object);
 
     auto gameObject = std::make_shared<GameObject>("Box1");
     gameObject->addScript(std::make_shared<Transform2D>());
@@ -103,14 +103,14 @@ void SCEngine::createEmptyGame() {
     gameObject->addScript(std::make_shared<RigidBody2D>());
     gameObject->getScript<RigidBody2D>()->mBodyDef.type = b2_dynamicBody;
     gameObject->addScript(std::make_shared<RectangleCollider2D>());
-    mGameWorld->addGameObject(gameObject);
+    mScene->addGameObject(gameObject);
 
     auto gameObject2 = gameObject->clone();
     gameObject2->mName = "Box2";
     transform2D = gameObject2->getScript<Transform2D>();
     transform2D->mPosition.x = 5.0f;
     transform2D->mPosition.y = 120.0f;
-    mGameWorld->addGameObject(gameObject2);
+    mScene->addGameObject(gameObject2);
 
     auto groundObject = gameObject->clone();
     groundObject->mName = "Ground";
@@ -120,52 +120,52 @@ void SCEngine::createEmptyGame() {
     transform2D->mPosition.y = -100.0f;
     transform2D->mScale.x = 400.0f;
     transform2D->mScale.y = 80.f;
-    mGameWorld->addGameObject(groundObject);
+    mScene->addGameObject(groundObject);
 
-    mGameWorld->create();
+    mScene->create();
     mStartTime = std::chrono::steady_clock::now();
-    mGameWorldData = mGameWorld->getData();
+    mSceneData = mScene->getData();
 }
 
 void SCEngine::reloadGame() {
-    if (mGameWorld) {
-        mGameWorld->destroy();
+    if (mScene) {
+        mScene->destroy();
     }
-    mGameWorld = GameWorld::create(mGameWorldData, this);
-    mGameWorld->create();
+    mScene = Scene::create(mSceneData, this);
+    mScene->create();
     mStartTime = std::chrono::steady_clock::now();
 }
 
-GameWorldData& SCEngine::update(bool editorMode) {
+SceneData& SCEngine::update(bool editorMode) {
     if (editorMode) {
         // reloadGame();
-        // std::cout << "editType=" << static_cast<typename std::underlying_type<EditType>::type>(gameWorldData.editType) << std::endl;
-        if (mGameWorldData.editType == EditType::Modify) {
-            mGameWorld->setData(mGameWorldData);
+        // std::cout << "editType=" << static_cast<typename std::underlying_type<EditType>::type>(sceneData.editType) << std::endl;
+        if (mSceneData.editType == EditType::Modify) {
+            mScene->setData(mSceneData);
         }  // TODO: hanle other edit type
     } else {
-        if (mTempGameWorldData.editType == EditType::Modify) {
-            mGameWorld->setData(mTempGameWorldData);
+        if (mTempSceneData.editType == EditType::Modify) {
+            mScene->setData(mTempSceneData);
         }  // TODO: hanle other edit type
     }
 
     float currentTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - mStartTime).count() / 1000000000.0f;
-    mGameWorld->mDeltaTime = currentTime - mGameWorld->mCurrentTime;
-    mGameWorld->mCurrentTime = currentTime;
-    // std::cout << "editorMode=" << editorMode << ", currentTime=" << gameWorld->mCurrentTime << ", deltaTime=" << gameWorld->mDeltaTime << std::endl;
+    mScene->mDeltaTime = currentTime - mScene->mCurrentTime;
+    mScene->mCurrentTime = currentTime;
+    // std::cout << "editorMode=" << editorMode << ", currentTime=" << scene->mCurrentTime << ", deltaTime=" << scene->mDeltaTime << std::endl;
 
     if (editorMode) {
-        mGameWorld->mEditorCamera->mGameObject->update();  // only update EditorCamera in editor mode
+        mScene->mEditorCamera->mGameObject->update();  // only update EditorCamera in editor mode
     } else {
-        mGameWorld->update();
+        mScene->update();
     }
 
     if (editorMode) {
-        mGameWorldData = mGameWorld->getData();
-        return mGameWorldData;
+        mSceneData = mScene->getData();
+        return mSceneData;
     } else {
-        mTempGameWorldData = mGameWorld->getData();
-        return mTempGameWorldData;
+        mTempSceneData = mScene->getData();
+        return mTempSceneData;
     }
 }
 
@@ -173,22 +173,22 @@ void SCEngine::draw(bool focus, uint32_t width, uint32_t height, float cursorOff
     if (forEditor) {
         gEditorInput.setFocus(focus);
         gEditorInput.setCursorOffset(cursorOffsetX, cursorOffsetY);
-        mGameWorld->mEditorCamera->setSize(width, height);
-        glm::mat4 projectionView = mGameWorld->mEditorCamera->buildProjectionMatrix();
-        mGameWorld->draw({ true, commandBuffer, projectionView, { width, height} });
+        mScene->mEditorCamera->setSize(width, height);
+        glm::mat4 projectionView = mScene->mEditorCamera->buildProjectionMatrix();
+        mScene->draw({true, commandBuffer, projectionView, {width, height}});
         gEditorInput.reset();
     } else {
         gInput.setFocus(focus);
         gInput.setCursorOffset(cursorOffsetX, cursorOffsetY);
-        mGameWorld->mMainCamera->setSize(width, height);
-        glm::mat4 projectionView = mGameWorld->mMainCamera->buildProjectionMatrix();
-        mGameWorld->draw({ false, commandBuffer, projectionView, { width, height} });
+        mScene->mMainCamera->setSize(width, height);
+        glm::mat4 projectionView = mScene->mMainCamera->buildProjectionMatrix();
+        mScene->draw({false, commandBuffer, projectionView, {width, height}});
         gInput.reset();
     }
 }
 
 void SCEngine::runGame() {
-    mGameWorldData = mGameWorld->getData();
+    mSceneData = mScene->getData();
     reloadGame();
 }
 
@@ -197,14 +197,14 @@ void SCEngine::stopGame() {
 }
 
 nlohmann::json SCEngine::save() {
-    return mGameWorld->getData();
+    return mScene->getData();
 }
 
 void SCEngine::load(const nlohmann::json& j) {
     if (j.empty()) {
         createEmptyGame();
     } else {
-        mGameWorldData = j;
+        mSceneData = j;
         reloadGame();
     }
 }
