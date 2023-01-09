@@ -5,8 +5,8 @@
 
 class RectangleCollider2D : public Collider2D {
 public:
+	SCRIPT_BODY(RectangleCollider2D)
 	void onCreate() override;
-	std::string getName() override { return "RectangleCollider2D"; }
 private:
 	b2PolygonShape mRectangleShape;
 };

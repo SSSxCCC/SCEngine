@@ -6,11 +6,11 @@
 
 class RigidBody2D : public Script {
 public:
+	SCRIPT_BODY(RigidBody2D)
 	void onCreate() override;
 	void onStart() override;
 	void onUpdate() override;
 	void onDestroy() override;
-	std::string getName() override { return "RigidBody2D"; }
 	void setData(const ScriptData& data) override;
 	ScriptData getData() override;
 

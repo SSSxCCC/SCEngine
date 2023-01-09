@@ -17,7 +17,7 @@ Example:
 #include "core/Script.h"
 class MyScript : public Script {
 public:
-	std::string getName() override { return "MyScript"; } // return the className
+    SCRIPT_BODY(MyScript)
 };
 REGISTER_SCRIPT(MyScript)
 
@@ -56,13 +56,19 @@ public:
 	static std::shared_ptr<Script> create(const ScriptData& data);
 };
 
+// A macro to define ScriptClass::getName method and ScriptClass::name static method.
+// Any non-abstract Script must call this macro in the public area of the class.
+#define SCRIPT_BODY(ScriptClass) \
+    std::string getName() override { return #ScriptClass; } \
+    static std::string name() { return #ScriptClass; }
+
 // A macro to register a Script in Script::sCreater.
-// Any non-abstract Script must call this macro.
+// Any non-abstract Script must call this macro after the class definition.
 #define REGISTER_SCRIPT(ScriptClass) STATIC_BLOCK_(ScriptClass##Register) { \
 	if (Script::sCreater == nullptr) { \
 		Script::sCreater = new std::unordered_map<std::string, std::function<std::shared_ptr<Script>()>>; \
 	} \
-	(*Script::sCreater)[ScriptClass().getName()] = []() { return std::make_shared<ScriptClass>(); }; \
+	(*Script::sCreater)[ScriptClass::name()] = []() { return std::make_shared<ScriptClass>(); }; \
 	return 0; \
 }();
 

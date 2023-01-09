@@ -6,10 +6,10 @@
 
 class RectangleRenderer2D : public Script {
 public:
+	SCRIPT_BODY(RectangleRenderer2D)
 	void onCreate() override;
 	void onDraw(const DrawData& drawData) override;
 	void onDestroy() override;
-	std::string getName() override { return "RectangleRenderer2D"; }
 private:
 	VulkanManager* mVulkanManager;
 

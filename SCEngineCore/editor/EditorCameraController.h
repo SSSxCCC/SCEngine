@@ -8,6 +8,8 @@
 
 class EditorCameraController : public Script {
 public:
+	SCRIPT_BODY(EditorCameraController)
+
 	void onCreate() override;
 
 	void zoomIn();
@@ -16,8 +18,6 @@ public:
 
 	void onUpdate() override;
 	void onDestroy() override;
-
-	std::string getName() override { return "EditorCameraController"; }
 
 	void setData(const ScriptData& data) override;
 	ScriptData getData() override;
