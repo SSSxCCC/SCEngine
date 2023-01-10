@@ -4,6 +4,8 @@
 #include <functional>
 #include "input/InputConstants.h"
 
+namespace sc {
+
 // handle input in game
 class Input {
 public:
@@ -55,5 +57,7 @@ private:
 };
 
 extern Input gInput, gEditorInput;
+
+} // namespace sc
 
 #endif // _Input_H_

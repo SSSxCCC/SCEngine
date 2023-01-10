@@ -3,6 +3,8 @@
 
 #include "data/ScriptData.h"
 
+namespace sc {
+
 // Store all the data in a GameObject
 struct GameObjectData {
 	int id;
@@ -13,5 +15,7 @@ struct GameObjectData {
 	EditType editType = EditType::None;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(GameObjectData, id, name, scriptsData)
+
+} // namespace sc
 
 #endif // _GameObjectData_H_

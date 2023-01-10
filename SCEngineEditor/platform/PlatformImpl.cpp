@@ -2,6 +2,8 @@
 #include <fstream>
 #include <iostream>
 
+namespace sc {
+
 #if defined(WINDOWS)
 Platform* PlatformImpl::build(GLFWwindow* window) {
     PlatformImpl* impl = new PlatformImpl(window);
@@ -111,3 +113,5 @@ VkCompositeAlphaFlagBitsKHR PlatformImpl::getCompositeAlpha() {
     return VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR;
 #endif
 }
+
+} // namespace sc

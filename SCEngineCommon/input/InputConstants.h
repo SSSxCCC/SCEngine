@@ -1,6 +1,8 @@
 #ifndef _InputConstants_H_
 #define _InputConstants_H_
 
+namespace sc {
+
 static const int RELEASE = 0; // if key or mouse button is released
 static const int PRESS = 1; // if key or mouse button is pressed
 
@@ -149,5 +151,7 @@ static const int KEY_RIGHT_SUPER   =    347;
 static const int KEY_MENU          =    348;
 
 static const int KEY_LAST          =    KEY_MENU;
+
+} // namespace sc
 
 #endif // _InputConstants_H_

@@ -1,6 +1,8 @@
 #include "editor/SubWindow.h"
 #include "imgui_backends/imgui_impl_vulkan.h"
 
+namespace sc {
+
 SubWindow::SubWindow(const std::string& title, VulkanManager* vulkanManager) :
 		mTitle(title), mVulkanManager(vulkanManager), mFocus(false),
 		mWidth(0), mHeight(0) {  // mWidth and mHeight will be set to ImGui window size
@@ -94,3 +96,5 @@ void SubWindow::postDrawFrame() {
     ImGui::Image((ImTextureID)mResolveDescriptorSet[mVulkanManager->mCurrentFrame], ImVec2(mWidth, mHeight));
     ImGui::End();
 }
+
+} // namespace sc

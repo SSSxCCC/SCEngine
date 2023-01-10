@@ -15,6 +15,8 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
+namespace sc {
+
 class Platform {
 public:
     Platform(void* impl, std::ostream& out) : mImpl(impl), mOut(out) { };
@@ -30,5 +32,7 @@ public:
 private:
     void* mImpl;
 };
+
+} // namespace sc
 
 #endif // _Platform_H_

@@ -3,6 +3,8 @@
 #include "imgui/imgui_stdlib.h"
 #include <string>
 
+namespace sc {
+
 void SceneEditor::doFrame(SceneData& sceneData) {
 	auto itemsGetter = [](void* data, int idx, const char** out_text) {
 		auto worldData = (std::vector<GameObjectData>*) data;
@@ -108,3 +110,5 @@ void SceneEditor::doFrame(SceneData& sceneData) {
 		ImGui::End();
 	}
 }
+
+} // namespace sc

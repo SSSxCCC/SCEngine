@@ -2,6 +2,8 @@
 #include "core/GameObject.h"
 #include "core/Transform2D.h"
 
+namespace sc {
+
 void RectangleCollider2D::onCreate() {
 	auto transform2D = mGameObject->getScript<Transform2D>();
 	mRectangleShape.SetAsBox((transform2D ? transform2D->mScale.x : 1.0f) * 0.5f, (transform2D ? transform2D->mScale.y : 1.0f) * 0.5f);
@@ -11,3 +13,5 @@ void RectangleCollider2D::onCreate() {
 	mFixtureDef.friction = 0.3f;
 	mFixtureDef.restitution = 1.0f;
 }
+
+} // namespace sc

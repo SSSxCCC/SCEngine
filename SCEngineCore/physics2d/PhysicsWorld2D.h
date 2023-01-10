@@ -4,6 +4,8 @@
 #include "box2d/box2d.h"
 #include "core/Script.h"
 
+namespace sc {
+
 class PhysicsWorld2D : public Script {
 public:
 	SCRIPT_BODY(PhysicsWorld2D)
@@ -16,5 +18,7 @@ private:
 	float mLastStepTime = 0.0f;
 };
 REGISTER_SCRIPT(PhysicsWorld2D)
+
+} // namespace sc
 
 #endif // _PhysicsWorld2D_H_

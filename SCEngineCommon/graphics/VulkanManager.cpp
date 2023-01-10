@@ -11,6 +11,8 @@
 #include <tiny_obj_loader.h>
 #include <unordered_map>
 
+namespace sc {
+
 VkCommandBuffer VulkanManager::preDrawFrame() {
     vkWaitForFences(mDevice, 1, &mInFlightFences[mCurrentFrame], VK_TRUE, UINT64_MAX);
 
@@ -1185,3 +1187,5 @@ void VulkanManager::cleanup() {
     vkDestroySurfaceKHR(mInstance, mSurface, nullptr);
     vkDestroyInstance(mInstance, nullptr);
 }
+
+} // namespace sc

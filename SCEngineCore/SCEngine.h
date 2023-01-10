@@ -11,6 +11,8 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
+namespace sc {
+
 extern "C" __declspec(dllexport) void init(Platform* platform, VulkanManager* vulkanManager, CallbackPointer& callbackPointer, const fs::path& assetDir);
 
 extern "C" __declspec(dllexport) SceneData& update(bool editorMode);
@@ -51,5 +53,7 @@ private:
     void createEmptyGame();
     void reloadGame();
 };
+
+} // namespace sc
 
 #endif // _SCEngine_H_

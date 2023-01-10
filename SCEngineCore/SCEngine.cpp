@@ -15,6 +15,8 @@
 #include "editor/EditorCameraController.h"
 #include "editor/DebugDrawPhysics2D.h"
 
+namespace sc {
+
 SCEngine* gSCEngine;
 
 void init(Platform* platform, VulkanManager* vulkanManager, CallbackPointer& callbackPointer, const fs::path& assetDir) {
@@ -208,3 +210,5 @@ void SCEngine::load(const nlohmann::json& j) {
         reloadGame();
     }
 }
+
+} // namespace sc

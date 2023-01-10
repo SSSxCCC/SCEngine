@@ -3,6 +3,8 @@
 
 #include <cstring>
 
+namespace sc {
+
 #define M_CON(A, B) M_CON_(A, B)
 #define M_CON_(A, B) A##B
 
@@ -38,5 +40,7 @@ STATIC_BLOCK_ is the same as STATIC_BLOCK except that only STATIC_BLOCK_ need a 
 The name parameter is to solve redefinition problem of STATIC_BLOCK.
 */
 #define STATIC_BLOCK_(name) [[maybe_unused]] static const auto _static_block_##name = []()
+
+} // namespace sc
 
 #endif // _StaticBlock_H_

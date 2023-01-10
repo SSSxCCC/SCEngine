@@ -8,6 +8,8 @@
 #include "core/Camera.h"
 #include "data/SceneData.h"
 
+namespace sc {
+
 // Predefine SCEngine here to solve circular reference problem
 class SCEngine;
 
@@ -46,5 +48,7 @@ private:
 
 friend class SceneEditor;
 };
+
+} // namespace sc
 
 #endif // _Scene_H_

@@ -5,6 +5,8 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
+namespace sc {
+
 class AssetManager {
 public:
     AssetManager(Platform* platform, const fs::path& assetDir) : mPlatform(platform), mAssetDir(assetDir) { }
@@ -13,5 +15,7 @@ private:
     Platform* mPlatform;
     fs::path mAssetDir;
 };
+
+} // namespace sc
 
 #endif // _AssetManager_H_

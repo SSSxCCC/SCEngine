@@ -4,6 +4,8 @@
 #include "core/Script.h"
 #include "graphics/VulkanManager.h"
 
+namespace sc {
+
 class RectangleRenderer2D : public Script {
 public:
 	SCRIPT_BODY(RectangleRenderer2D)
@@ -64,7 +66,8 @@ private:
 
     std::vector<VkDescriptorSet> mDescriptorSets;
 };
-
 REGISTER_SCRIPT(RectangleRenderer2D)
+
+} // namespace sc
 
 #endif // _RectangleRenderer2D_H_

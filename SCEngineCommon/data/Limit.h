@@ -5,6 +5,8 @@
 #include <vector>
 #include <algorithm>
 
+namespace sc {
+
 // The polymorphic base class of Limit
 class LimitBase {
 public:
@@ -54,5 +56,7 @@ public:
         return std::min(std::max(newVal, mMin), mMax);
     }
 };
+
+} // namespace sc
 
 #endif // _Limit_H_

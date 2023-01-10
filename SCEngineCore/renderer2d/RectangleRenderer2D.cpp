@@ -5,6 +5,8 @@
 #include "asset/AssetManager.h"
 #include "SCEngine.h"
 
+namespace sc {
+
 void RectangleRenderer2D::onCreate() {
     mVulkanManager = mGameObject->mScene->mSCEngine->mVulkanManager;
 
@@ -118,3 +120,5 @@ void RectangleRenderer2D::onDestroy() {
         vkFreeMemory(mVulkanManager->getDevice(), mUniformBuffersMemory[i], nullptr);
     }
 }
+
+} // namespace sc

@@ -1,5 +1,7 @@
 #include "core/Transform2D.h"
 
+namespace sc {
+
 ScriptData Transform2D::getData() {
 	auto data = Script::getData();
 	data.add("mPosition", mPosition);
@@ -21,3 +23,5 @@ glm::mat4 Transform2D::buildModelMatrix() {
 	model = glm::scale(model, glm::vec3(mScale, 1.0f));
 	return model;
 }
+
+} // namespace sc

@@ -20,6 +20,8 @@
 #include "platform/PlatformImpl.h"
 namespace fs = std::filesystem;
 
+namespace sc {
+
 // This is the class which stores function pointers of SCEngine.dll
 class SCEnginePointer {
 public:
@@ -497,5 +499,7 @@ private:
         return std::move(cmakePath);
     }
 };
+
+} // namespace sc
 
 #endif // _SCEngineEditor_H_

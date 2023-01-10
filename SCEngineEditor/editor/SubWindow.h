@@ -5,6 +5,8 @@
 #include "imgui/imgui.h"
 #include "graphics/VulkanManager.h"
 
+namespace sc {
+
 class SubWindow {
 public:
 	SubWindow(const std::string& title, VulkanManager* vulkanManager);
@@ -41,5 +43,7 @@ private:
     void createRenderObjects();
     void cleanupRenderObjects();
 };
+
+} // namespace sc
 
 #endif // _SubWindow_H_

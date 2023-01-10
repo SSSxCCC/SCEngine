@@ -5,6 +5,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "core/Script.h"
 
+namespace sc {
+
 // Keep a GameObject's position, rotation and scale. Every GameObject must have a Transform
 class Transform2D : public Script {
 public:
@@ -19,3 +21,5 @@ public:
 REGISTER_SCRIPT(Transform2D)
 
 #endif // _Transform2D_H_
+
+} // namespace sc

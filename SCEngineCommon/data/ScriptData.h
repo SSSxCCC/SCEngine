@@ -14,6 +14,8 @@ namespace glm {
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(glm::vec4, x, y, z, w)
 }
 
+namespace sc {
+
 // The type index of ScriptVar::value
 // If you need add new types, you should update:
 // 1. type of ScriptVar::value
@@ -132,5 +134,7 @@ private:
 
 friend class SceneEditor;
 };
+
+} // namespace sc
 
 #endif // _ScriptData_H_

@@ -3,9 +3,13 @@
 
 #include "data/SceneData.h"
 
+namespace sc {
+
 class SceneEditor {
 public:
 	void doFrame(SceneData& sceneData);
 };
+
+} // namespace sc
 
 #endif // _SceneEditor_H_

@@ -1,5 +1,7 @@
 #include "core/GameObject.h"
 
+namespace sc {
+
 void GameObject::create() {
 	for (const auto& script : mScripts) {
 		script->onCreate();
@@ -82,3 +84,5 @@ std::shared_ptr<GameObject> GameObject::create(const GameObjectData& data) {
 	}
 	return gameObject;
 }
+
+} // namespace sc

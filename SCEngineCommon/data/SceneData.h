@@ -3,6 +3,8 @@
 
 #include "data/GameObjectData.h"
 
+namespace sc {
+
 // Store all the data in a Scene
 struct SceneData {
     std::vector<GameObjectData> gameObjectsData;
@@ -11,5 +13,7 @@ struct SceneData {
     EditType editType = EditType::None;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SceneData, gameObjectsData)
+
+} // namespace sc
 
 #endif // _SceneData_H_

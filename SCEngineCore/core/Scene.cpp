@@ -3,6 +3,8 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
+namespace sc {
+
 void Scene::create() {
     for (const auto& [_, gameObject] : mGameObjects) {
         gameObject->create();
@@ -89,3 +91,5 @@ std::shared_ptr<Scene> Scene::create(const SceneData& data, SCEngine* pSCEngine)
 	}
 	return scene;
 }
+
+} // namespace sc

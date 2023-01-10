@@ -5,6 +5,8 @@
 #include "core/Scene.h"
 #include "imgui/imgui.h"
 
+namespace sc {
+
 struct GLRenderPoints {
 	void Create() {
 		m_count = 0;
@@ -430,3 +432,5 @@ void DebugDrawPhysics2D::onDestroy() {
     delete mDebugDraw;
     mDebugDraw = nullptr;
 }
+
+} // namespace sc

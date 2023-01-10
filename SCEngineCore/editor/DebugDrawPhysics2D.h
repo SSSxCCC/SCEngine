@@ -3,6 +3,8 @@
 
 #include "physics2d/PhysicsWorld2D.h"
 
+namespace sc {
+
 class DebugDraw;
 
 class DebugDrawPhysics2D : public Script {
@@ -16,5 +18,7 @@ private:
 	std::shared_ptr<PhysicsWorld2D> mPhysicsWorld2D;
 };
 REGISTER_SCRIPT(DebugDrawPhysics2D)
+
+} // namespace sc
 
 #endif // _PhysicsDebugDraw_H_

@@ -1,6 +1,8 @@
 #include "core/Script.h"
 #include "editor/UnknownScript.h"
 
+namespace sc {
+
 std::unordered_map<std::string, std::function<std::shared_ptr<Script>()>>* Script::sCreater;
 
 std::shared_ptr<Script> Script::create(const ScriptData& data) {
@@ -14,3 +16,5 @@ std::shared_ptr<Script> Script::create(const ScriptData& data) {
         return script;
     }
 }
+
+} // namespace sc

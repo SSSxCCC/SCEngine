@@ -3,6 +3,8 @@
 
 #include <functional>
 
+namespace sc {
+
 // Store callback function pointers
 // We can't use function pointer here because 'a lambda can only be converted to a function pointer if it does not capture'
 class CallbackPointer {
@@ -20,5 +22,7 @@ public:
         mScrollCallback = nullptr;
     }
 };
+
+} // namespace sc
 
 #endif // _CallbackPointer_H_

@@ -6,6 +6,8 @@
 #include "core/Camera.h"
 #include "utility/Window.h"
 
+namespace sc {
+
 class EditorCameraController : public Script {
 public:
 	SCRIPT_BODY(EditorCameraController)
@@ -30,5 +32,7 @@ private:
 };
 
 REGISTER_SCRIPT(EditorCameraController)
+
+} // namespace sc
 
 #endif // _EditorCameraController_H_

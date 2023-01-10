@@ -4,6 +4,8 @@
 #include "core/Scene.h"
 #include "core/Transform2D.h"
 
+namespace sc {
+
 void RigidBody2D::onCreate() {
 	auto transform2D = mGameObject->getScript<Transform2D>();
 	if (transform2D) {
@@ -46,3 +48,5 @@ ScriptData RigidBody2D::getData() {
 	data.add<int>("mBodyDef.type", mBodyDef.type, std::make_shared<EnumLimit>(enumNames, enumValues));
 	return data;
 }
+
+} // namespace sc

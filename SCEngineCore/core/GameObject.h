@@ -6,6 +6,8 @@
 #include "core/Script.h"
 #include "data/GameObjectData.h"
 
+namespace sc {
+
 // Predefine Scene here to solve circular reference problem
 class Scene;
 
@@ -74,5 +76,7 @@ private:
 
 friend class SceneEditor;
 };
+
+} // namespace sc
 
 #endif // _GameObject_H_

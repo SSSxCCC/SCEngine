@@ -6,6 +6,8 @@
 #include "core/Script.h"
 #include "utility/Window.h"
 
+namespace sc {
+
 // Predefine Scene here to solve circular reference problem
 class Scene;
 
@@ -28,5 +30,7 @@ private:
 };
 
 REGISTER_SCRIPT(Camera)
+
+} // namespace sc
 
 #endif // _Camera_H_

@@ -7,6 +7,8 @@
 #include "data/ScriptData.h"
 #include "graphics/DrawData.h"
 
+namespace sc {
+
 // Predefine GameObject here to solve circular reference problem
 class GameObject;
 
@@ -71,5 +73,7 @@ public:
 	(*Script::sCreater)[ScriptClass::name()] = []() { return std::make_shared<ScriptClass>(); }; \
 	return 0; \
 }();
+
+} // namespace sc
 
 #endif // _Script_H_

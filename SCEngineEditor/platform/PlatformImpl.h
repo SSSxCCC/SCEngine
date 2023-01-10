@@ -31,6 +31,8 @@ private:
 };
 #endif
 
+namespace sc {
+
 class PlatformImpl {
 public:
 #if defined(WINDOWS)
@@ -56,5 +58,7 @@ private:
     AndroidOut mAndroidOut;
 #endif
 };
+
+} // namespace sc
 
 #endif // _PlatformImpl_H_

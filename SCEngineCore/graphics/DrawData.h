@@ -3,11 +3,15 @@
 
 #include <vulkan/vulkan.h>
 
+namespace sc {
+
 struct DrawData {
     bool forEditor;
     VkCommandBuffer commandBuffer;
     glm::mat4 projectionViewMatrix;
     VkExtent2D extent;
 };
+
+} // namespace sc
 
 #endif // _DrawData_H_

@@ -4,6 +4,8 @@
 #include "box2d/box2d.h"
 #include "core/script.h"
 
+namespace sc {
+
 class RigidBody2D : public Script {
 public:
 	SCRIPT_BODY(RigidBody2D)
@@ -18,7 +20,8 @@ public:
 private:
 	b2Body* mBody = nullptr;
 };
-
 REGISTER_SCRIPT(RigidBody2D)
+
+} // namespace sc
 
 #endif // _RigidBody2D_H_

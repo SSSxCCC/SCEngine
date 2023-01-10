@@ -5,6 +5,8 @@
 #include "core/Transform2D.h"
 #include <iostream>
 
+namespace sc {
+
 void EditorCameraController::onCreate() {
 	mCamera = mGameObject->getScript<Camera>();
 	assert(mCamera);
@@ -96,3 +98,5 @@ ScriptData EditorCameraController::getData() {
 	data.add("mMoveSpeed", mMoveSpeed);
 	return data;
 }
+
+} // namespace sc

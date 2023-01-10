@@ -3,6 +3,8 @@
 
 #include "core/Script.h"
 
+namespace sc {
+
 // UnknownScript is created when we create a name-not-found script.
 class UnknownScript : public Script {
 public:
@@ -15,5 +17,7 @@ public:
     }
 };
 REGISTER_SCRIPT(UnknownScript)
+
+} // namespace sc
 
 #endif // _UnknownScript_H_

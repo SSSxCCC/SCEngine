@@ -14,9 +14,9 @@
 #include <glm/gtx/hash.hpp>
 #include <array>
 
+namespace sc {
+
 class VulkanManager {
-friend class SCEngineEditor;
-friend class SubWindow;
 public:
     VulkanManager(Platform* platform, bool hasSubWindow) : mPlatform(platform), mHasSubWindow(hasSubWindow) { initVulkan(); }
     ~VulkanManager() { cleanup(); }
@@ -153,6 +153,11 @@ private:
     void endSingleTimeCommands(VkCommandBuffer commandBuffer);
     void beginRender(VkCommandBuffer commandBuffer, VkRenderPass renderPass, VkFramebuffer frameBuffer, VkExtent2D extent);
     void endRender(VkCommandBuffer commandBuffer, const std::vector<VkSemaphore>& waitSemaphores, const std::vector<VkPipelineStageFlags>& waitStages, const std::vector<VkSemaphore>& signalSemaphores, VkFence fence);
+
+friend class SCEngineEditor;
+friend class SubWindow;
 };
+
+} // namespace sc
 
 #endif // _VulkanManager_H_

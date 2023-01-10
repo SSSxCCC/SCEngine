@@ -4,6 +4,8 @@
 #include "core/Transform2D.h"
 #include "editor/EditorCameraController.h"
 
+namespace sc {
+
 void Camera::onCreate() {
 	auto editorCameraController = mGameObject->getScript<EditorCameraController>();
 	if (editorCameraController) {
@@ -67,3 +69,5 @@ ScriptData Camera::getData() {
 	data.add("mZoom", mZoom);
 	return data;
 }
+
+} // namespace sc

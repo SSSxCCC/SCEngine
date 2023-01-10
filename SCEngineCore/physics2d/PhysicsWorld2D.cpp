@@ -1,6 +1,8 @@
 #include "physics2d/PhysicsWorld2D.h"
 #include "core/Scene.h"
 
+namespace sc {
+
 void PhysicsWorld2D::onCreate() {
 	b2Vec2 gravity = b2Vec2(0.0f, -10.0f);
 	mWorld = new b2World(gravity);
@@ -24,3 +26,5 @@ void PhysicsWorld2D::onDestroy() {
 	delete mWorld;
 	mWorld = nullptr;
 }
+
+} // namespace sc

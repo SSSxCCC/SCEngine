@@ -1,7 +1,7 @@
 ﻿#include "SCEngineEditor.h"
 
 int main() {
-    SCEngineEditor editor;
+    sc::SCEngineEditor editor;
     editor.run();
     return 0;
 }
