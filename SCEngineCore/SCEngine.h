@@ -34,15 +34,6 @@ public:
     Platform* const mPlatform;
     VulkanManager* const mVulkanManager;
     AssetManager* const mAssetManager;
-
-    SCEngine(Platform* platform, VulkanManager* vulkanManager, CallbackPointer& callbackPointer, const fs::path& assetDir);
-    ~SCEngine();
-    SceneData& update(bool editorMode);
-    void draw(bool focus, uint32_t width, uint32_t height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer, bool forEdtor);
-    void runGame();
-    void stopGame();
-    nlohmann::json save();
-    void load(const nlohmann::json& j);
 private:
     std::shared_ptr<Scene> mScene;
     SceneData mSceneData, mTempSceneData;
@@ -52,6 +43,24 @@ private:
 
     void createEmptyGame();
     void reloadGame();
+
+    SCEngine(Platform* platform, VulkanManager* vulkanManager, CallbackPointer& callbackPointer, const fs::path& assetDir);
+    ~SCEngine();
+    SceneData& update(bool editorMode);
+    void draw(bool focus, uint32_t width, uint32_t height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer, bool forEdtor);
+    void runGame();
+    void stopGame();
+    nlohmann::json save();
+    void load(const nlohmann::json& j);
+
+friend void init(Platform*, VulkanManager*, CallbackPointer&, const fs::path&);
+friend SceneData& update(bool);
+friend void draw(bool, uint32_t, uint32_t, float, float, VkCommandBuffer, bool);
+friend void runGame();
+friend void stopGame();
+friend nlohmann::json save();
+friend void load(const nlohmann::json& j);
+friend void close();
 };
 
 } // namespace sc
