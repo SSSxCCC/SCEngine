@@ -5,7 +5,6 @@
 #include "box2d/box2d.h"
 
 #include "sc/utility/Window.h"
-#include "sc/utility/Asset.h"
 #include "sc/input/Input.h"
 #include "sc/core/Scene.h"
 #include "sc/core/Transform2D.h"
