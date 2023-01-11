@@ -12,11 +12,11 @@
 #include "imgui_backends/imgui_impl_glfw.h"
 #include "imgui_backends/imgui_impl_vulkan.h"
 #include "ImGuiFileDialog/ImGuiFileDialog.h"
-#include "editor/SceneEditor.h"
-#include "editor/SubWindow.h"
-#include "data/SceneData.h"
-#include "graphics/VulkanManager.h"
-#include "common/CallbackPointer.h"
+#include "sc_editor/SceneEditor.h"
+#include "sc_editor/SubWindow.h"
+#include "sc/data/SceneData.h"
+#include "sc/graphics/VulkanManager.h"
+#include "sc/common/CallbackPointer.h"
 #include "platform/PlatformImpl.h"
 namespace fs = std::filesystem;
 

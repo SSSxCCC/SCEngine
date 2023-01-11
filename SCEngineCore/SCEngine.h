@@ -1,12 +1,12 @@
 #ifndef _SCEngine_H_
 #define _SCEngine_H_
 
-#include "common/CallbackPointer.h"
-#include "data/SceneData.h"
-#include "common/Platform.h"
-#include "graphics/VulkanManager.h"
-#include "asset/AssetManager.h"
-#include "core/Scene.h"
+#include "sc/common/CallbackPointer.h"
+#include "sc/data/SceneData.h"
+#include "sc/common/Platform.h"
+#include "sc/graphics/VulkanManager.h"
+#include "sc/asset/AssetManager.h"
+#include "sc/core/Scene.h"
 #include <vulkan/vulkan.h>
 #include <filesystem>
 namespace fs = std::filesystem;

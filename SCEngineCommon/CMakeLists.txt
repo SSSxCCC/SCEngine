@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.12)
 
-add_library (SCEngineCommon "graphics/VulkanManager.cpp")
+add_library (SCEngineCommon "sc/graphics/VulkanManager.cpp")
 set_property (TARGET SCEngineCommon PROPERTY CXX_STANDARD 20)
 
 target_include_directories (SCEngineCommon PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

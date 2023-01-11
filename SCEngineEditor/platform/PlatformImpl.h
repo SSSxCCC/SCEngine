@@ -1,7 +1,7 @@
 #ifndef _PlatformImpl_H_
 #define _PlatformImpl_H_
 
-#include "common/Platform.h"
+#include "sc/common/Platform.h"
 
 #if defined(WINDOWS)
 #define GLFW_INCLUDE_VULKAN

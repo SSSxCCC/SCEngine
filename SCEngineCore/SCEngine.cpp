@@ -4,16 +4,16 @@
 
 #include "box2d/box2d.h"
 
-#include "utility/Window.h"
-#include "utility/Asset.h"
-#include "input/Input.h"
-#include "core/Scene.h"
-#include "core/Transform2D.h"
-#include "renderer2d/RectangleRenderer2D.h"
-#include "physics2d/RigidBody2D.h"
-#include "physics2d/RectangleCollider2D.h"
-#include "editor/EditorCameraController.h"
-#include "editor/DebugDrawPhysics2D.h"
+#include "sc/utility/Window.h"
+#include "sc/utility/Asset.h"
+#include "sc/input/Input.h"
+#include "sc/core/Scene.h"
+#include "sc/core/Transform2D.h"
+#include "sc/renderer2d/RectangleRenderer2D.h"
+#include "sc/physics2d/RigidBody2D.h"
+#include "sc/physics2d/RectangleCollider2D.h"
+#include "sc/editor/EditorCameraController.h"
+#include "sc/editor/DebugDrawPhysics2D.h"
 
 namespace sc {
 
