@@ -79,8 +79,8 @@ VkCommandBuffer SubWindow::preDrawFrame() {
     windowSize.x = std::max(windowSize.x, 1.0f);
     windowSize.y = std::max(windowSize.y - 50.0f, 1.0f);
     if (mWidth != windowSize.x || mHeight != windowSize.y) {
-        mWidth = windowSize.x;
-        mHeight = windowSize.y;
+        mWidth = static_cast<uint32_t>(windowSize.x);
+        mHeight = static_cast<uint32_t>(windowSize.y);
         vkDeviceWaitIdle(mVulkanManager->mDevice);
         cleanupRenderObjects();
         createRenderObjects();
@@ -93,7 +93,7 @@ VkCommandBuffer SubWindow::preDrawFrame() {
 void SubWindow::postDrawFrame() {
     mVulkanManager->endRender(mCommandBuffers[mVulkanManager->mCurrentFrame], {}, {}, {}, mInFlightFences[mVulkanManager->mCurrentFrame]);
 
-    ImGui::Image((ImTextureID)mResolveDescriptorSet[mVulkanManager->mCurrentFrame], ImVec2(mWidth, mHeight));
+    ImGui::Image((ImTextureID)mResolveDescriptorSet[mVulkanManager->mCurrentFrame], ImVec2(static_cast<float>(mWidth), static_cast<float>(mHeight)));
     ImGui::End();
 }
 

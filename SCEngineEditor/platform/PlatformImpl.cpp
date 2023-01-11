@@ -94,7 +94,7 @@ std::vector<const char*> PlatformImpl::getExtensions() {
     const char** glfwExtensions;
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
     std::vector<const char*> extensions;
-    for (int i = 0; i < glfwExtensionCount; i++) {
+    for (uint32_t i = 0; i < glfwExtensionCount; i++) {
         extensions.push_back(glfwExtensions[i]);
     }
     return extensions;

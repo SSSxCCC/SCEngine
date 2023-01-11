@@ -109,10 +109,10 @@ public:
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
-            int duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - mLastTime).count();
+            int64_t duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - mLastTime).count();
             mFrame++;
-            if (duration > 1000) {
-                mFps = (float) mFrame * 1000.0f / (float) duration;
+            if (duration > 1000i64) {
+                mFps = static_cast<float>(mFrame) * 1000.0f / static_cast<float>(duration);
                 mFrame = 0;
                 mLastTime = std::chrono::steady_clock::now();
             }
@@ -473,7 +473,7 @@ private:
             std::cout << "popen() failed!" << std::endl;
             //throw std::runtime_error("popen() failed!");
         }
-        while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) != nullptr) {
             result += buffer.data();
             std::cout << buffer.data();
         }

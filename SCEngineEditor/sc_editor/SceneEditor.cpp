@@ -14,7 +14,7 @@ void SceneEditor::doFrame(SceneData& sceneData) {
 	};
 	ImGui::Begin("Scene");
 	static int current = 0;
-	ImGui::ListBox("GameObjects", &current, itemsGetter, (void*)&sceneData.gameObjectsData, sceneData.gameObjectsData.size());
+	ImGui::ListBox("GameObjects", &current, itemsGetter, (void*)&sceneData.gameObjectsData, static_cast<int>(sceneData.gameObjectsData.size()));
 	ImGui::End();
 
 	if (current >= 0) {
@@ -57,12 +57,12 @@ void SceneEditor::doFrame(SceneData& sceneData) {
                     auto limit = scriptData.getLimit(dataName);
                     if (auto enumLimit = std::dynamic_pointer_cast<EnumLimit>(limit)) {
                         auto it = std::find(enumLimit->mEnumValues.begin(), enumLimit->mEnumValues.end(), intData);
-                        int index = it == enumLimit->mEnumValues.end() ? 0 : (it - enumLimit->mEnumValues.begin());
+                        int index = static_cast<int>(it == enumLimit->mEnumValues.end() ? 0 : (it - enumLimit->mEnumValues.begin()));
                         ImGui::Combo(dataName.c_str(), &index, [](void* data, int idx, const char** out_text) {
                             auto enumNames = (std::vector<std::string>*) data;
                             *out_text = (*enumNames)[idx].c_str();
                             return true;
-                        }, &enumLimit->mEnumNames, enumLimit->mEnumNames.size());
+                        }, &enumLimit->mEnumNames, static_cast<int>(enumLimit->mEnumNames.size()));
                         modify |= scriptData.set(dataName, enumLimit->mEnumValues[index]);
                     } else {
                         ImGui::InputInt(dataName.c_str(), &intData);

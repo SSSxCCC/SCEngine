@@ -26,7 +26,7 @@ public:
     std::vector<int> mEnumValues;
     explicit EnumLimit(const std::vector<std::string>& enumNames) {
         std::vector<int> enumValues;
-        for (int i = 0, size = enumNames.size(); i < size; i++) {
+        for (int i = 0, size = static_cast<int>(enumNames.size()); i < size; i++) {
             enumValues.push_back(i);
         }
         new(this) EnumLimit(enumNames, enumValues);

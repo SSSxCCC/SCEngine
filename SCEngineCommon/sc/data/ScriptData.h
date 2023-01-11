@@ -38,7 +38,7 @@ struct ScriptVar {
 
 // Make ScriptVar can be converted to json
 inline void to_json(nlohmann::json& json, const ScriptVar& scriptVar) {
-	int type = scriptVar.value.index();
+	int type = static_cast<int>(scriptVar.value.index());
 	if (type == TYPE_INT) {
 		json["value"] = std::get<int>(scriptVar.value);
 	} else if (type == TYPE_FLOAT) {
@@ -124,7 +124,7 @@ private:
 
     // get data type, editor use only
     int getType(const std::string& name) const {
-        return dataMap.at(name).value.index();
+        return static_cast<int>(dataMap.at(name).value.index());
     }
 
     // get Limit, editor use only
