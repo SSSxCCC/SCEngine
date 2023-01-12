@@ -10,13 +10,13 @@
 
 namespace sc {
 
-// Predefine SCEngine here to solve circular reference problem
-class SCEngine;
+// Predefine Engine here to solve circular reference problem
+class Engine;
 
 // Scene includes many GameObjects
 class Scene : public std::enable_shared_from_this<Scene> {
 public:
-	Scene(SCEngine* pSCEngine) : mSCEngine(pSCEngine) { };
+	Scene(Engine* engine) : mEngine(engine) { };
 	void create();
 	void update();
 	void draw(const DrawData& drawData);
@@ -27,9 +27,9 @@ public:
 	void setData(const SceneData& sceneData);
 
 	// create a instance of Scene based on SceneData
-	static std::shared_ptr<Scene> create(const SceneData& data, SCEngine* pSCEngine);
+	static std::shared_ptr<Scene> create(const SceneData& data, Engine* engine);
 
-	const SCEngine* mSCEngine; // global variables and functions
+	const Engine* mEngine; // global variables and functions
 
 	float mCurrentTime = 0.0f; // time since scene start
 	float mDeltaTime = 0.0f;   // time spent in last frame

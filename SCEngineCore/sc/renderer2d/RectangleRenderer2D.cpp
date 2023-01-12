@@ -2,13 +2,13 @@
 #include "sc/core/GameObject.h"
 #include "sc/core/Scene.h"
 #include "sc/core/Transform2D.h"
+#include "sc/core/Engine.h"
 #include "sc/asset/AssetManager.h"
-#include "SCEngine.h"
 
 namespace sc {
 
 void RectangleRenderer2D::onCreate() {
-    mVulkanManager = mGameObject->mScene->mSCEngine->mVulkanManager;
+    mVulkanManager = mGameObject->mScene->mEngine->mVulkanManager;
 
     // Create mDescriptorSetLayout
     VkDescriptorSetLayoutBinding uboLayoutBinding{};
@@ -34,7 +34,7 @@ void RectangleRenderer2D::onCreate() {
     }
 
     // Create mGraphicsPipeline
-    AssetManager* assetManager = mGameObject->mScene->mSCEngine->mAssetManager;
+    AssetManager* assetManager = mGameObject->mScene->mEngine->mAssetManager;
     mGraphicsPipeline = mVulkanManager->createGraphicsPipeline(
             assetManager->readFile("SCEngineAsset/shader/vertShader_pvm_pos2d_opaqueColor.spv"),
             assetManager->readFile("SCEngineAsset/shader/fragShader_opaqueColor.spv"),

@@ -84,8 +84,8 @@ void Scene::setData(const SceneData& sceneData) {
 	}
 }
 
-std::shared_ptr<Scene> Scene::create(const SceneData& data, SCEngine* pSCEngine) {
-	auto scene = std::make_shared<Scene>(pSCEngine);
+std::shared_ptr<Scene> Scene::create(const SceneData& data, Engine* engine) {
+	auto scene = std::make_shared<Scene>(engine);
 	for (const auto& gameObjectData : data.gameObjectsData) {
 		scene->addGameObject(GameObject::create(gameObjectData));
 	}
