@@ -7,7 +7,7 @@
 
 namespace sc {
 
-// Keep a GameObject's position, rotation and scale. Every GameObject must have a Transform
+// Keep a GameObject's position, rotation and scale in 2d space (x and y axis).
 class Transform2D : public Script {
 public:
 	SCRIPT_BODY(Transform2D)

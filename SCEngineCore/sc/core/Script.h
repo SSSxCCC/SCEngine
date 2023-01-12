@@ -13,7 +13,7 @@ namespace sc {
 class GameObject;
 
 /*
-A script attached to a GameObject to implement game logic.
+A script can be attached to a GameObject to implement game logic.
 
 Example:
 #include "core/Script.h"
