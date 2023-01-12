@@ -16,38 +16,8 @@
 
 namespace sc {
 
-SCEngine* gSCEngine;
-
-void init(Platform* platform, VulkanManager* vulkanManager, CallbackPointer& callbackPointer, const fs::path& assetDir) {
-    gSCEngine = new SCEngine(platform, vulkanManager, callbackPointer, assetDir);
-}
-
-SceneData& update(bool editorMode) {
-    return gSCEngine->update(editorMode);
-}
-
-void draw(bool focus, uint32_t width, uint32_t height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer, bool forEditor) {
-    gSCEngine->draw(focus, width, height, cursorOffsetX, cursorOffsetY, commandBuffer, forEditor);
-}
-
-void runGame() {
-    gSCEngine->runGame();
-}
-
-void stopGame() {
-    gSCEngine->stopGame();
-}
-
-nlohmann::json save() {
-    return gSCEngine->save();
-}
-
-void load(const nlohmann::json& j) {
-    gSCEngine->load(j);
-}
-
-void close() {
-    delete gSCEngine;
+IEngine* scCreate(Platform* platform, VulkanManager* vulkanManager, CallbackPointer& callbackPointer, const fs::path& assetDir) {
+    return new SCEngine(platform, vulkanManager, callbackPointer, assetDir);
 }
 
 SCEngine::SCEngine(Platform* platform, VulkanManager* vulkanManager, CallbackPointer& callbackPointer, const fs::path& assetDir) :

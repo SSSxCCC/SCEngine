@@ -4,6 +4,7 @@
 #include "sc/common/CallbackPointer.h"
 #include "sc/data/SceneData.h"
 #include "sc/common/Platform.h"
+#include "sc/common/IEngine.h"
 #include "sc/graphics/VulkanManager.h"
 #include "sc/asset/AssetManager.h"
 #include "sc/core/Scene.h"
@@ -13,27 +14,14 @@ namespace fs = std::filesystem;
 
 namespace sc {
 
-extern "C" __declspec(dllexport) void init(Platform* platform, VulkanManager* vulkanManager, CallbackPointer& callbackPointer, const fs::path& assetDir);
+extern "C" __declspec(dllexport) IEngine* scCreate(Platform* platform, VulkanManager* vulkanManager, CallbackPointer& callbackPointer, const fs::path& assetDir);
 
-extern "C" __declspec(dllexport) SceneData& update(bool editorMode);
-
-extern "C" __declspec(dllexport) void draw(bool focus, uint32_t width, uint32_t height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer, bool forEditor);
-
-extern "C" __declspec(dllexport) void runGame();
-
-extern "C" __declspec(dllexport) void stopGame();
-
-extern "C" __declspec(dllexport) nlohmann::json save();
-
-extern "C" __declspec(dllexport) void load(const nlohmann::json& j);
-
-extern "C" __declspec(dllexport) void close();
-
-class SCEngine {
+class SCEngine : public IEngine {
 public:
     Platform* const mPlatform;
     VulkanManager* const mVulkanManager;
     AssetManager* const mAssetManager;
+
 private:
     std::shared_ptr<Scene> mScene;
     SceneData mSceneData, mTempSceneData;
@@ -45,22 +33,15 @@ private:
     void reloadGame();
 
     SCEngine(Platform* platform, VulkanManager* vulkanManager, CallbackPointer& callbackPointer, const fs::path& assetDir);
-    ~SCEngine();
-    SceneData& update(bool editorMode);
-    void draw(bool focus, uint32_t width, uint32_t height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer, bool forEdtor);
-    void runGame();
-    void stopGame();
-    nlohmann::json save();
-    void load(const nlohmann::json& j);
+    ~SCEngine() override;
+    SceneData& update(bool editorMode) override;
+    void draw(bool focus, uint32_t width, uint32_t height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer, bool forEdtor) override;
+    void runGame() override;
+    void stopGame() override;
+    nlohmann::json save() override;
+    void load(const nlohmann::json& j) override;
 
-friend void init(Platform*, VulkanManager*, CallbackPointer&, const fs::path&);
-friend SceneData& update(bool);
-friend void draw(bool, uint32_t, uint32_t, float, float, VkCommandBuffer, bool);
-friend void runGame();
-friend void stopGame();
-friend nlohmann::json save();
-friend void load(const nlohmann::json& j);
-friend void close();
+friend IEngine* scCreate(Platform*, VulkanManager*, CallbackPointer&, const fs::path&);
 };
 
 } // namespace sc

@@ -17,6 +17,7 @@
 #include "sc/data/SceneData.h"
 #include "sc/graphics/VulkanManager.h"
 #include "sc/common/CallbackPointer.h"
+#include "sc/common/IEngine.h"
 #include "platform/PlatformImpl.h"
 namespace fs = std::filesystem;
 
@@ -25,22 +26,8 @@ namespace sc {
 // This is the class which stores function pointers of SCEngine.dll
 class SCEnginePointer {
 public:
-    using SCEngine_init_fn = void (*)(Platform*, VulkanManager*, CallbackPointer&, const fs::path&);
-    using SCEngine_update_fn = SceneData& (*)(bool);
-    using SCEngine_draw_fn = void (*)(bool, uint32_t, uint32_t, float, float, VkCommandBuffer, bool);
-    using SCEngine_runGame_fn = void (*)();
-    using SCEngine_stopGame_fn = void (*)();
-    using SCEngine_save_fn = nlohmann::json (*)();
-    using SCEngine_load_fn = void (*)(const nlohmann::json&);
-    using SCEngine_close_fn = void (*)();
-    SCEngine_init_fn init;
-    SCEngine_update_fn update;
-    SCEngine_draw_fn draw;
-    SCEngine_runGame_fn runGame;
-    SCEngine_stopGame_fn stopGame;
-    SCEngine_save_fn save;
-    SCEngine_load_fn load;
-    SCEngine_close_fn close;
+    using scCreate_fn = IEngine* (*)(Platform*, VulkanManager*, CallbackPointer&, const fs::path&);
+    scCreate_fn scCreate;
 
     bool loadLibrary(const fs::path& dllFile) {
         std::cout << "Load library " << dllFile << std::endl;
@@ -50,7 +37,7 @@ public:
             std::cout << "LoadLibrary Error! dll == nullptr, dllFile=" << dllFile << ", good=" << is.good() << ", error=" << error << std::endl;
             return false;
         }
-        return loadFunction(init, "init") && loadFunction(update, "update") && loadFunction(draw, "draw") && loadFunction(runGame, "runGame") && loadFunction(stopGame, "stopGame") && loadFunction(save, "save") && loadFunction(load, "load") && loadFunction(close, "close");
+        return loadFunction(scCreate, "scCreate");
     }
 
     void freeLibrary() {
@@ -157,15 +144,15 @@ public:
             }
 
             if (!mProjectDir.empty()) {
-                auto& sceneData = mSCEngine.update(mEditorMode);
+                auto& sceneData = mEngine->update(mEditorMode);
                 mSceneEditor.doFrame(sceneData);
 
                 VkCommandBuffer commandBuffer = mEditorWindow->preDrawFrame();
-                mSCEngine.draw(mEditorWindow->isFocus(), mEditorWindow->getWidth(), mEditorWindow->getHeight(), mEditorWindow->getCursorScreenPos().x, mEditorWindow->getCursorScreenPos().y, commandBuffer, true);
+                mEngine->draw(mEditorWindow->isFocus(), mEditorWindow->getWidth(), mEditorWindow->getHeight(), mEditorWindow->getCursorScreenPos().x, mEditorWindow->getCursorScreenPos().y, commandBuffer, true);
                 mEditorWindow->postDrawFrame();
                 if (!mEditorMode) {
                     commandBuffer = mGameWindow->preDrawFrame();
-                    mSCEngine.draw(mGameWindow->isFocus(), mGameWindow->getWidth(), mGameWindow->getHeight(), mGameWindow->getCursorScreenPos().x, mGameWindow->getCursorScreenPos().y, commandBuffer, false);
+                    mEngine->draw(mGameWindow->isFocus(), mGameWindow->getWidth(), mGameWindow->getHeight(), mGameWindow->getCursorScreenPos().x, mGameWindow->getCursorScreenPos().y, commandBuffer, false);
                     mGameWindow->postDrawFrame();
                 }
 
@@ -173,7 +160,7 @@ public:
                 if (mEditorMode) {
                     if (ImGui::Button("Run")) {
                         mEditorMode = false;
-                        mSCEngine.runGame();
+                        mEngine->runGame();
                     } else {
                         if (ImGui::Button("Save")) {
                             saveGame();
@@ -185,7 +172,7 @@ public:
                 } else {
                     if (ImGui::Button("Stop")) {
                         mEditorMode = true;
-                        mSCEngine.stopGame();
+                        mEngine->stopGame();
                     }
                 }
                 ImGui::End();
@@ -206,7 +193,8 @@ private:
     float mScale = 1.0f;
     CallbackPointer mCallbackPointer;
     fs::path mProjectDir = "";
-    SCEnginePointer mSCEngine;
+    SCEnginePointer mSCEnginePointer;
+    IEngine* mEngine;
 
     Platform* mPlatform;
     VulkanManager* mVulkanManager;
@@ -403,12 +391,12 @@ private:
         } else {
             std::cout << "No SceneData.json" << std::endl;
         }
-        mSCEngine.load(j);
+        mEngine->load(j);
     }
 
     // Save game to SceneData.json
     void saveGame() {
-        nlohmann::json j = mSCEngine.save();
+        nlohmann::json j = mEngine->save();
         std::ofstream o(mProjectDir / "SceneData.json");
         o << std::setw(4) << j << std::endl;
     }
@@ -448,18 +436,19 @@ private:
     // Load project from SCEngine.dll.
     bool loadProject() {
         assert(!mProjectDir.empty());
-        if (!mSCEngine.loadLibrary(mProjectDir / "build" / "install" / "bin" / "SCEngine.dll")) {
+        if (!mSCEnginePointer.loadLibrary(mProjectDir / "build" / "install" / "bin" / "SCEngine.dll")) {
             return false;
         }
-        mSCEngine.init(mPlatform, mVulkanManager, mCallbackPointer, mProjectDir / "build" / "install" / "asset");
+        mEngine = mSCEnginePointer.scCreate(mPlatform, mVulkanManager, mCallbackPointer, mProjectDir / "build" / "install" / "asset");
         loadGame();
         return true;
     }
 
     // Close SCEngine.dll.
     void closeProject() {
-        mSCEngine.close();
-        mSCEngine.freeLibrary();
+        delete mEngine;
+        mEngine = nullptr;
+        mSCEnginePointer.freeLibrary();
     }
 
     // Help function: execute exe program in windows and return console output.
