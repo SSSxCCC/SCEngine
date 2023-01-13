@@ -1,62 +1,36 @@
 #ifndef _Input_H_
 #define _Input_H_
 
-#include <functional>
 #include "sc/input/InputConstants.h"
 
 namespace sc {
 
+// Predefine InputManager here to solve circular reference problem
+class InputManager;
+
 // handle input in game
 class Input {
 public:
-    static std::function<int(int)> sGetKey;
-    static std::function<int(int)> sGetMouseButton;
-    static std::function<void(float&,float&)> sGetCursorPos;
+	Input(InputManager* inputManager);
+	int getKey(int key);
+	int getMouseButton(int button);
+	void getScroll(float& scrollX, float& scrollY);
+	void getCursorPosition(float& x, float& y);
 
-	void reset() {
-		mScrollX = 0.0f;
-		mScrollY = 0.0f;
-	}
-
-	int getKey(int key) {
-		return mFocus ? sGetKey(key) : RELEASE;
-	}
-
-	int getMouseButton(int button) {
-		return mFocus ? sGetMouseButton(button) : RELEASE;
-	}
-
-	void getScroll(float& scrollX, float& scrollY) {
-		scrollX = mFocus ? mScrollX : 0;
-		scrollY = mFocus ? mScrollY : 0;
-	}
-
-	void getCursorPosition(float& x, float& y) {
-        sGetCursorPos(x, y);
-		x -= mCursorOffsetX;
-		y -= mCursorOffsetY;
-	}
-
-	void setFocus(bool focus) {
-		mFocus = focus;
-	}
-
-	void setScroll(float scrollX, float scrollY) {
-		mScrollX = scrollX;
-		mScrollY = scrollY;
-	}
-
-	void setCursorOffset(float offsetX, float offsetY) {
-		mCursorOffsetX = offsetX;
-		mCursorOffsetY = offsetY;
-	}
 private:
+    InputManager* mInputManager;
 	bool mFocus;
 	float mScrollX, mScrollY;
 	float mCursorOffsetX, mCursorOffsetY;
-};
 
-extern Input gInput, gEditorInput;
+	void setFocus(bool focus);
+	void setScroll(float scrollX, float scrollY);
+	void setCursorOffset(float offsetX, float offsetY);
+	void reset();
+
+friend class InputManager;
+friend class Engine;
+};
 
 } // namespace sc
 

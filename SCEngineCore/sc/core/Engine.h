@@ -6,6 +6,7 @@
 #include "sc/common/CallbackPointer.h"
 #include "sc/graphics/VulkanManager.h"
 #include "sc/asset/AssetManager.h"
+#include "sc/input/InputManager.h"
 #include "sc/data/SceneData.h"
 #include "sc/core/Scene.h"
 #include "nlohmann/json.hpp"
@@ -22,6 +23,7 @@ public:
     Platform* const mPlatform;
     VulkanManager* const mVulkanManager;
     AssetManager* const mAssetManager;
+    InputManager* const mInputManager;
 
 private:
     std::shared_ptr<Scene> mScene;

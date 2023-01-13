@@ -5,6 +5,7 @@
 #include "sc/core/Script.h"
 #include "sc/core/Camera.h"
 #include "sc/utility/Window.h"
+#include "sc/input/Input.h"
 
 namespace sc {
 
@@ -27,6 +28,7 @@ public:
 	float mMoveSpeed = 1000.0f;
 private:
 	std::shared_ptr<Camera> mCamera;
+	Input* mEditorInput;
 	float mLastWorldX, mLastWorldY;
 	bool mDragging = false;
 };

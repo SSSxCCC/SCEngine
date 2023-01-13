@@ -14,14 +14,8 @@
 namespace sc {
 
 Engine::Engine(Platform* platform, VulkanManager* vulkanManager, CallbackPointer& callbackPointer, const fs::path& assetDir) :
-        mPlatform(platform), mVulkanManager(vulkanManager), mCallbackPointer(callbackPointer), mAssetManager(new AssetManager(mPlatform, assetDir)) {
-    mCallbackPointer.mScrollCallback = [](double dx, double dy) {
-        gEditorInput.setScroll((float)dx, (float)dy);
-        gInput.setScroll((float)dx, (float)dy);
-    };
-    Input::sGetKey = callbackPointer.mGetKey;
-    Input::sGetMouseButton = callbackPointer.mGetMouseButton;
-    Input::sGetCursorPos = callbackPointer.mGetCursorPos;
+        mPlatform(platform), mVulkanManager(vulkanManager), mCallbackPointer(callbackPointer),
+        mAssetManager(new AssetManager(mPlatform, assetDir)), mInputManager(new InputManager(callbackPointer)) {
     std::cout << "Box2D Version " << b2_version.major << "." << b2_version.minor << "." << b2_version.revision << std::endl;
 }
 
@@ -30,6 +24,7 @@ Engine::~Engine() {
     mScene->destroy();
     mScene = nullptr;
     delete mAssetManager;
+    delete mInputManager;
 }
 
 void Engine::createEmptyGame() {
@@ -135,19 +130,19 @@ SceneData& Engine::update(bool editorMode) {
 
 void Engine::draw(bool focus, uint32_t width, uint32_t height, float cursorOffsetX, float cursorOffsetY, VkCommandBuffer commandBuffer, bool forEditor) {
     if (forEditor) {
-        gEditorInput.setFocus(focus);
-        gEditorInput.setCursorOffset(cursorOffsetX, cursorOffsetY);
+        mInputManager->mEditorInput.setFocus(focus);
+        mInputManager->mEditorInput.setCursorOffset(cursorOffsetX, cursorOffsetY);
         mScene->mEditorCamera->setSize(width, height);
         glm::mat4 projectionView = mScene->mEditorCamera->buildProjectionMatrix();
         mScene->draw({true, commandBuffer, projectionView, {width, height}});
-        gEditorInput.reset();
+        mInputManager->mEditorInput.reset();
     } else {
-        gInput.setFocus(focus);
-        gInput.setCursorOffset(cursorOffsetX, cursorOffsetY);
+        mInputManager->mInput.setFocus(focus);
+        mInputManager->mInput.setCursorOffset(cursorOffsetX, cursorOffsetY);
         mScene->mMainCamera->setSize(width, height);
         glm::mat4 projectionView = mScene->mMainCamera->buildProjectionMatrix();
         mScene->draw({false, commandBuffer, projectionView, {width, height}});
-        gInput.reset();
+        mInputManager->mInput.reset();
     }
 }
 
