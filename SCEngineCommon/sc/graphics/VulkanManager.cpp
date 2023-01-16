@@ -15,14 +15,26 @@ namespace sc {
 
 VkCommandBuffer VulkanManager::preDrawFrame() {
     mSwapChainRecreated = false;
+    if (mFramebufferResized) {
+        mFramebufferResized = false;
+        recreateSwapChain();
+    }
+
     vkWaitForFences(mDevice, 1, &mInFlightFences[mCurrentFrame], VK_TRUE, UINT64_MAX);
 
-    VkResult result = vkAcquireNextImageKHR(mDevice, mSwapChain, UINT64_MAX, mImageAvailableSemaphores[mCurrentFrame], VK_NULL_HANDLE, &mImageIndex);
-    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-        recreateSwapChain();
-        return VK_NULL_HANDLE;
-    } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-        throw std::runtime_error("failed to acquire swap chain image!");
+    while (true) {
+        VkResult result = vkAcquireNextImageKHR(mDevice, mSwapChain, UINT64_MAX, mImageAvailableSemaphores[mCurrentFrame], VK_NULL_HANDLE, &mImageIndex);
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+            VkSubmitInfo submitInfo { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+            submitInfo.waitSemaphoreCount = 1;
+            submitInfo.pWaitSemaphores = &mImageAvailableSemaphores[mCurrentFrame];
+            vkQueueSubmit(mGraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);  // reset this semaphore so that it can be used in next vkAcquireNextImageKHR
+            recreateSwapChain();
+        } else if (result != VK_SUCCESS) {
+            throw std::runtime_error("failed to acquire swap chain image!");
+        } else {
+            break;
+        }
     }
 
     // Only reset the fence if we are submitting work
@@ -48,9 +60,7 @@ void VulkanManager::postDrawFrame() {
     presentInfo.pImageIndices = &mImageIndex;
     presentInfo.pResults = nullptr;  // Optional
     VkResult result = vkQueuePresentKHR(mPresentQueue, &presentInfo);
-    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || mFramebufferResized) {
-        mSwapChainRecreated = true;
-        mFramebufferResized = false;
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
         recreateSwapChain();
     } else if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to present swap chain image!");
@@ -1150,6 +1160,8 @@ void VulkanManager::recreateSwapChain() {
     createColorResources(mSwapChainExtent.width, mSwapChainExtent.height, mColorImage, mColorImageMemory, mColorImageView);
     createDepthResources(mSwapChainExtent.width, mSwapChainExtent.height, mDepthImage, mDepthImageMemory, mDepthImageView);
     createFramebuffers(mSwapChainExtent.width, mSwapChainExtent.height, mColorImageView, mDepthImageView, mSwapChainImageViews, mRenderPass, mSwapChainFramebuffers);
+
+    mSwapChainRecreated = true;
 }
 
 void VulkanManager::cleanupSwapChain() {

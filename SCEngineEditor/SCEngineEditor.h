@@ -194,10 +194,8 @@ public:
 
             ImGui::Render();
             auto commandBuffer = mVulkanManager->preDrawFrame();
-            if (commandBuffer != VK_NULL_HANDLE) {
-                ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
-                mVulkanManager->postDrawFrame();
-            }
+            ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
+            mVulkanManager->postDrawFrame();
         }
     }
 private:
