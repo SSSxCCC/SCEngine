@@ -39,7 +39,7 @@ void SubWindow::createRenderObjects() {
     }
     mVulkanManager->createColorResources(mWidth, mHeight, mColorImage, mColorImageMemory, mColorImageView);
     mVulkanManager->createDepthResources(mWidth, mHeight, mDepthImage, mDepthImageMemory, mDepthImageView);
-    mVulkanManager->createFramebuffers(mWidth, mHeight, mColorImageView, mDepthImageView, mResovleImageViews, mVulkanManager->mSubWindowRenderPass, mFramebuffers);
+    mVulkanManager->createFramebuffers(mWidth, mHeight, mColorImageView, mDepthImageView, mResovleImageViews, mVulkanManager->mSubWindowRenderPass, mFramebuffers);  // TODO: fix VUID-VkFramebufferCreateInfo-flags-04533(ERROR / SPEC) when SubWindow resize outside of main window
 }
 
 void SubWindow::cleanupRenderObjects() {
