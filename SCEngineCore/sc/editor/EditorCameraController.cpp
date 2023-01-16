@@ -10,7 +10,7 @@ namespace sc {
 void EditorCameraController::onCreate() {
 	mCamera = mGameObject->getScript<Camera>();
 	mEditorInput = &mGameObject->mScene->mEngine->mInputManager->mEditorInput;
-	assert(mCamera);
+	if (!mCamera) throw std::runtime_error("EditorCameraController::onCreate Camera is not found");
 	reset();
 }
 

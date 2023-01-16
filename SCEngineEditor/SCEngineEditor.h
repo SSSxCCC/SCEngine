@@ -404,7 +404,7 @@ private:
 
     // Create project initial files and directories: dir 'Assets', dir 'Scenes', dir 'Scripts', file '.gitignore'
     void createProject() {
-        assert(!mProjectDir.empty());
+        if (mProjectDir.empty()) throw std::runtime_error("SCEngineEditor::createProject mProjectDir is empty!");
 
         fs::create_directory(mProjectDir / "Assets");
         fs::create_directory(mProjectDir / "Scenes");
@@ -416,7 +416,7 @@ private:
 
     // Build project source codes to SCEngine.dll.
     void buildProject() {
-        assert(!mProjectDir.empty());
+        if (mProjectDir.empty()) throw std::runtime_error("SCEngineEditor::buildProject mProjectDir is empty!");
 
         // prepare
         fs::path coreSource = getExePath().parent_path().parent_path() / "source" / "SCEngineCore";
@@ -450,7 +450,7 @@ private:
 
     // Load project from SCEngine.dll.
     bool loadProject() {
-        assert(!mProjectDir.empty());
+        if (mProjectDir.empty()) throw std::runtime_error("SCEngineEditor::loadProject mProjectDir is empty!");
         if (!mSCEnginePointer.loadLibrary(mProjectDir / "Builds" / "Install" / "bin" / "SCEngine.dll")) {
             return false;
         }
@@ -489,10 +489,7 @@ private:
     fs::path getExePath() {
         char fileName[MAX_PATH];
         DWORD r = GetModuleFileNameA(nullptr, fileName, MAX_PATH);
-        if (r == 0) {
-            std::cout << "GetModuleFileNameA error=" << GetLastError() << std::endl;
-            assert(false);
-        }
+        if (r == 0) throw std::runtime_error("SCEngineEditor::getExePath GetModuleFileNameA error: " + GetLastError());
         return fileName;
     }
 

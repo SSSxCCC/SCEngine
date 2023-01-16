@@ -28,15 +28,15 @@ void Scene::destroy() {
     while (mGameObjectIds.size() > 0) {
         removeGameObject(mGameObjectIds[mGameObjectIds.size() - 1]);
     }
-    assert(mGameObjectIds.size() == 0);
-    assert(mGameObjects.size() == 0);
+    if (mGameObjectIds.size() != 0) throw std::runtime_error("Scene::destroy mGameObjectIds.size() is not zero, it is " + mGameObjectIds.size());
+    if (mGameObjects.size() != 0) throw std::runtime_error("Scene::destroy mGameObjects.size() is not zero, it is " + mGameObjects.size());
 }
 
 void Scene::addGameObject(const std::shared_ptr<GameObject>& gameObject) {
     if (gameObject->mId < 0) {
         gameObject->mId = generateId();
-    } else {
-        assert(!mGameObjects.contains(gameObject->mId));
+    } else if (mGameObjects.contains(gameObject->mId)) {
+        throw std::runtime_error("Scene::addGameObject GameObject id already exists!");
     }
     mGameObjectIds.push_back(gameObject->mId);
     mGameObjects[gameObject->mId] = gameObject;

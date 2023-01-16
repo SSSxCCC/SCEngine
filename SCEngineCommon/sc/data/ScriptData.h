@@ -51,7 +51,7 @@ inline void to_json(nlohmann::json& json, const ScriptVar& scriptVar) {
         json["value"] = std::get<glm::vec3>(scriptVar.value);
     } else if (type == TYPE_VEC4) {
         json["value"] = std::get<glm::vec4>(scriptVar.value);
-    } else assert(false);
+    } else throw std::runtime_error("ScriptVar::to_json unknown ScriptVar data type: " + type);
 	json["type"] = type;
 }
 inline void from_json(const nlohmann::json& json, ScriptVar& scriptVar) {
@@ -68,7 +68,7 @@ inline void from_json(const nlohmann::json& json, ScriptVar& scriptVar) {
         scriptVar.value = json["value"].get<glm::vec3>();
     } else if (type == TYPE_VEC4) {
         scriptVar.value = json["value"].get<glm::vec4>();
-    } else assert(false);
+    } else throw std::runtime_error("ScriptVar::from_json unknown ScriptVar data type: " + type);
 }
 
 // Define how ScriptData/GameObjectData/SceneData was edited
@@ -108,7 +108,9 @@ private:
 
     // set data by editor, the data is not necessarily updated because Limit, return true if the data has been updated
     template<typename T> bool set(const std::string& name, const T& value) {
-        assert(dataMap.contains(name));
+        if (!dataMap.contains(name)) {
+            throw std::runtime_error("ScriptData::set unknown data name: " + name);
+        }
         T oldValue = std::get<T>(dataMap[name].value);
         T newValue = value;
         auto baseLimit = getLimit(name);

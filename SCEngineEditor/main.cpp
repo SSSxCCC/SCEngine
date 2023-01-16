@@ -1,7 +1,12 @@
 ﻿#include "SCEngineEditor.h"
 
 int main() {
-    sc::SCEngineEditor editor;
-    editor.run();
-    return 0;
+    try {
+        sc::SCEngineEditor editor;
+        editor.run();
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
 }

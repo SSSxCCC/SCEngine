@@ -98,7 +98,7 @@ void SceneEditor::doFrame(SceneData& sceneData) {
                     auto vecData = scriptData.get<glm::vec4>(dataName);
                     ImGui::DragFloat4(dataName.c_str(), &vecData.x);
                     modify |= scriptData.set(dataName, vecData);
-                } else assert(false);
+                } else throw std::runtime_error("SceneEditor::doFrame unknown ScriptVar data type: " + type);
             }
 			if (modify) {
 				scriptData.editType = EditType::Modify;
