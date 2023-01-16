@@ -6,6 +6,7 @@
 #define NOMINMAX
 #include <Windows.h>
 #include <iostream>
+#include <format>
 #include <exception>
 #include <filesystem>
 #include "imgui/imgui.h"
@@ -96,37 +97,30 @@ public:
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
-            int64_t duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - mLastTime).count();
-            mFrame++;
-            if (duration > 1000i64) {
-                mFps = static_cast<float>(mFrame) * 1000.0f / static_cast<float>(duration);
-                mFrame = 0;
-                mLastTime = std::chrono::steady_clock::now();
-            }
-
-            ImGui::Begin("Status");
-            ImGui::Text("fps: %f", mFps);
-            ImGui::End();
-
-            ImGui::Begin("Project");
-            ImGui::Text(mProjectDir.empty() ? "No project is opened" : ("Opened project: " + mProjectDir.string()).c_str());
-            if (ImGui::Button("Open/Create project")) {
-                ImGuiFileDialog::Instance()->OpenDialog("ChooseDirDialogKey", "Open/Create project", nullptr, ".");
-            }
-            if (!mProjectDir.empty()) {
-                if (ImGui::Button("Close project")) {
-                    mProjectDir = "";
-                    closeProject();
-                }
-                if (ImGui::Button("Build")) {
-                    closeProject();
-                    buildProject();
-                    if (!loadProject()) {
-                        mProjectDir = "";
+            if (ImGui::BeginMainMenuBar()) {
+                if (ImGui::BeginMenu("Project")) {
+                    ImGui::MenuItem(mProjectDir.empty() ? "No project is opened" : ("Opened project: " + mProjectDir.string()).c_str(), nullptr, nullptr, false);
+                    if (ImGui::MenuItem("Open/Create project")) {
+                        ImGuiFileDialog::Instance()->OpenDialog("ChooseDirDialogKey", "Open/Create project", nullptr, ".");
                     }
+                    if (!mProjectDir.empty()) {
+                        if (ImGui::MenuItem("Close project")) {
+                            mProjectDir = "";
+                            closeProject();
+                        }
+                        if (ImGui::MenuItem("Build")) {
+                            closeProject();
+                            buildProject();
+                            if (!loadProject()) {
+                                mProjectDir = "";
+                            }
+                        }
+                    }
+                    ImGui::EndMenu();
                 }
+                ImGui::EndMainMenuBar();
             }
-            ImGui::End();
+
             if (ImGuiFileDialog::Instance()->Display("ChooseDirDialogKey")) {
                 if (ImGuiFileDialog::Instance()->IsOk()) {
                     std::string directory = ImGuiFileDialog::Instance()->GetCurrentPath();
@@ -157,29 +151,46 @@ public:
                     mGameWindow->postDrawFrame();
                 }
 
-                ImGui::Begin("Game");
-                if (mEditorMode) {
-                    if (ImGui::Button("Run")) {
-                        mEditorMode = false;
-                        mEngine->runGame();
-                    } else {
-                        if (ImGui::Button("Save")) {
-                            saveGame();
+                if (ImGui::BeginMainMenuBar()) {
+                    if (ImGui::BeginMenu("Game")) {
+                        if (mEditorMode) {
+                            if (ImGui::MenuItem("Run")) {
+                                mEditorMode = false;
+                                mEngine->runGame();
+                            } else {
+                                if (ImGui::MenuItem("Save")) {
+                                    saveGame();
+                                }
+                                if (ImGui::MenuItem("Load")) {
+                                    loadGame();
+                                }
+                            }
+                        } else {
+                            if (ImGui::MenuItem("Stop")) {
+                                mEditorMode = true;
+                                mEngine->stopGame();
+                            }
                         }
-                        if (ImGui::Button("Load")) {
-                            loadGame();
-                        }
+                        ImGui::EndMenu();
                     }
-                } else {
-                    if (ImGui::Button("Stop")) {
-                        mEditorMode = true;
-                        mEngine->stopGame();
-                    }
+                    ImGui::EndMainMenuBar();
                 }
-                ImGui::End();
             }
 
             ImGui::ShowDemoWindow();
+
+            int64_t duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - mLastTime).count();
+            mFrame++;
+            if (duration > 1000i64) {
+                mFps = static_cast<float>(mFrame) * 1000.0f / static_cast<float>(duration);
+                mFrame = 0;
+                mLastTime = std::chrono::steady_clock::now();
+            }
+
+            if (ImGui::BeginMainMenuBar()) {
+                ImGui::BeginMenu(std::format("fps: {}", mFps).c_str(), false);
+                ImGui::EndMainMenuBar();
+            }
 
             ImGui::Render();
             auto commandBuffer = mVulkanManager->preDrawFrame();
