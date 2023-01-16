@@ -78,16 +78,17 @@ VkCommandBuffer SubWindow::preDrawFrame() {
     ImVec2 windowSize = ImGui::GetWindowSize();
     windowSize.x = std::max(windowSize.x, 1.0f);
     windowSize.y = std::max(windowSize.y - 50.0f, 1.0f);
-    if (mWidth != windowSize.x || mHeight != windowSize.y) {
+    if (mWidth != windowSize.x || mHeight != windowSize.y || mVulkanManager->mSwapChainRecreated) {
         mWidth = static_cast<uint32_t>(windowSize.x);
         mHeight = static_cast<uint32_t>(windowSize.y);
         vkDeviceWaitIdle(mVulkanManager->mDevice);
+        std::cout << "SubWindow '" << mTitle << "' recreate render objects" << std::endl;
         cleanupRenderObjects();
         createRenderObjects();
 	}
 
-	mVulkanManager->beginRender(mCommandBuffers[mVulkanManager->mCurrentFrame], mVulkanManager->mSubWindowRenderPass, mFramebuffers[mVulkanManager->mCurrentFrame], { mWidth, mHeight });
-	return mCommandBuffers[mVulkanManager->mCurrentFrame];
+    mVulkanManager->beginRender(mCommandBuffers[mVulkanManager->mCurrentFrame], mVulkanManager->mSubWindowRenderPass, mFramebuffers[mVulkanManager->mCurrentFrame], { mWidth, mHeight });
+    return mCommandBuffers[mVulkanManager->mCurrentFrame];
 }
 
 void SubWindow::postDrawFrame() {

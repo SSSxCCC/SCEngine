@@ -83,6 +83,7 @@ private:
 
     // Sub window used only vulkan objects
     VkRenderPass mSubWindowRenderPass;
+    bool mSwapChainRecreated = false;  // SubWindow must recreate render objects when SwapChain is recreated or the program will crash. TODO: find the root cause of this crash
 
     struct QueueFamilyIndices {
         std::optional<uint32_t> graphicsFamily;

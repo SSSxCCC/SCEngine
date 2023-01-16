@@ -14,6 +14,7 @@
 namespace sc {
 
 VkCommandBuffer VulkanManager::preDrawFrame() {
+    mSwapChainRecreated = false;
     vkWaitForFences(mDevice, 1, &mInFlightFences[mCurrentFrame], VK_TRUE, UINT64_MAX);
 
     VkResult result = vkAcquireNextImageKHR(mDevice, mSwapChain, UINT64_MAX, mImageAvailableSemaphores[mCurrentFrame], VK_NULL_HANDLE, &mImageIndex);
@@ -48,6 +49,7 @@ void VulkanManager::postDrawFrame() {
     presentInfo.pResults = nullptr;  // Optional
     VkResult result = vkQueuePresentKHR(mPresentQueue, &presentInfo);
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || mFramebufferResized) {
+        mSwapChainRecreated = true;
         mFramebufferResized = false;
         recreateSwapChain();
     } else if (result != VK_SUCCESS) {
