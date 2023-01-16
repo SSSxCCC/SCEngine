@@ -135,6 +135,7 @@ public:
                         closeProject();
                     }
                     mProjectDir = directory;
+                    createProject();
                     buildProject();
                     if (!loadProject()) {
                         mProjectDir = "";
@@ -382,23 +383,35 @@ private:
         };
     }
 
-    // Load game from SceneData.json
+    // Load game from Scene.json
     void loadGame() {
-        std::ifstream i(mProjectDir / "SceneData.json");
+        std::ifstream i(mProjectDir / "Scenes" / "Scene.json");
         nlohmann::json j;
         if (i.good()) {
             i >> j;
         } else {
-            std::cout << "No SceneData.json" << std::endl;
+            std::cout << "No Scene.json" << std::endl;
         }
         mEngine->load(j);
     }
 
-    // Save game to SceneData.json
+    // Save game to Scene.json
     void saveGame() {
         nlohmann::json j = mEngine->save();
-        std::ofstream o(mProjectDir / "SceneData.json");
+        std::ofstream o(mProjectDir / "Scenes" / "Scene.json");
         o << std::setw(4) << j << std::endl;
+    }
+
+    // Create project initial files and directories: dir 'Assets', dir 'Scenes', dir 'Scripts', file '.gitignore'
+    void createProject() {
+        assert(!mProjectDir.empty());
+
+        fs::create_directory(mProjectDir / "Assets");
+        fs::create_directory(mProjectDir / "Scenes");
+        fs::create_directory(mProjectDir / "Scripts");
+        std::ofstream ofs(mProjectDir / ".gitignore");
+        ofs << R"(Builds)" << std::endl;
+        ofs.close();
     }
 
     // Build project source codes to SCEngine.dll.
@@ -418,13 +431,15 @@ private:
             << R"(add_library (SCEngine SHARED ")" << cmakePath((coreSource / "SCEngine.cpp").string()) << R"("))" << std::endl
             << R"(set_property (TARGET SCEngine PROPERTY CXX_STANDARD 20))" << std::endl
             << R"(target_link_libraries (SCEngine PUBLIC SCEngineCore))" << std::endl
-            << R"(install (TARGETS SCEngine DESTINATION bin))" << std::endl;
+            << R"(install (TARGETS SCEngine DESTINATION bin))" << std::endl
+            << R"(install (DIRECTORY "Assets/." DESTINATION "Assets"))" << std::endl
+            << R"(install (DIRECTORY "Scenes" DESTINATION "Assets"))" << std::endl;
         ofs.close();
 
         // build
         fs::path sourceDir = mProjectDir;
-        fs::path buildDir = mProjectDir / "build";
-        fs::path installDir = buildDir / "install";
+        fs::path buildDir = mProjectDir / "Builds";
+        fs::path installDir = buildDir / "Install";
         std::string cmd = "cmake -S " + sourceDir.string() + " -B " + buildDir.string();
         std::string result = exec(cmd); // TODO: handle result
         cmd = "cmake --build " + buildDir.string() + " --config Debug -j8";
@@ -436,10 +451,10 @@ private:
     // Load project from SCEngine.dll.
     bool loadProject() {
         assert(!mProjectDir.empty());
-        if (!mSCEnginePointer.loadLibrary(mProjectDir / "build" / "install" / "bin" / "SCEngine.dll")) {
+        if (!mSCEnginePointer.loadLibrary(mProjectDir / "Builds" / "Install" / "bin" / "SCEngine.dll")) {
             return false;
         }
-        mEngine = mSCEnginePointer.scCreate(mPlatform, mVulkanManager, mCallbackPointer, mProjectDir / "build" / "install" / "asset");
+        mEngine = mSCEnginePointer.scCreate(mPlatform, mVulkanManager, mCallbackPointer, mProjectDir / "Builds" / "Install" / "Assets");
         loadGame();
         return true;
     }
