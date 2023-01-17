@@ -296,6 +296,7 @@ private:
         WindowContentScaleCallback(mWindow, xscale, yscale);
 
         ImGui::GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
+        ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     }
 
     static void glfwErrorCallback(int error, const char* description) {

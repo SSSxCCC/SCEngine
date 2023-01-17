@@ -34,12 +34,25 @@
 // macros in whatever way is suitable.
 //========================================================================
 
-// MODIFIED_ERIN
-#ifdef _WIN32
-	#define _GLFW_WIN32
-	#define _CRT_SECURE_NO_WARNINGS
-#elif __APPLE__
-	#define _GLFW_COCOA
-#else
-	#define _GLFW_X11
-#endif
+// Define this to 1 if building GLFW for X11
+#cmakedefine _GLFW_X11
+// Define this to 1 if building GLFW for Win32
+#cmakedefine _GLFW_WIN32
+// Define this to 1 if building GLFW for Cocoa
+#cmakedefine _GLFW_COCOA
+// Define this to 1 if building GLFW for Wayland
+#cmakedefine _GLFW_WAYLAND
+// Define this to 1 if building GLFW for OSMesa
+#cmakedefine _GLFW_OSMESA
+
+// Define this to 1 if building as a shared library / dynamic library / DLL
+#cmakedefine _GLFW_BUILD_DLL
+// Define this to 1 to use Vulkan loader linked statically into application
+#cmakedefine _GLFW_VULKAN_STATIC
+
+// Define this to 1 to force use of high-performance GPU on hybrid systems
+#cmakedefine _GLFW_USE_HYBRID_HPG
+
+// Define this to 1 if the libc supports memfd_create()
+#cmakedefine HAVE_MEMFD_CREATE
+
