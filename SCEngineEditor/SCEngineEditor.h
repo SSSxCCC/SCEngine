@@ -97,7 +97,11 @@ public:
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
+            WindowInfo windowInfo;
+            glfwGetFramebufferSize(mWindow, &windowInfo.width, &windowInfo.height);
+
             if (ImGui::BeginMainMenuBar()) {
+                windowInfo.menuBarHeight = ImGui::GetWindowSize().y;
                 if (ImGui::BeginMenu("Project")) {
                     ImGui::MenuItem(mProjectDir.empty() ? "No project is opened" : ("Opened project: " + mProjectDir.string()).c_str(), nullptr, nullptr, false);
                     if (ImGui::MenuItem("Open/Create project")) {
@@ -121,7 +125,7 @@ public:
                 ImGui::EndMainMenuBar();
             }
 
-            if (ImGuiFileDialog::Instance()->Display("ChooseDirDialogKey")) {
+            if (ImGuiFileDialog::Instance()->Display("ChooseDirDialogKey", 32, { 500.0f * mScale, 400.0f * mScale })) {
                 if (ImGuiFileDialog::Instance()->IsOk()) {
                     std::string directory = ImGuiFileDialog::Instance()->GetCurrentPath();
                     std::cout << "directory=" << directory << std::endl;
@@ -140,12 +144,16 @@ public:
 
             if (!mProjectDir.empty()) {
                 auto& sceneData = mEngine->update(mEditorMode);
-                mSceneEditor.doFrame(sceneData);
+                mSceneEditor.doFrame(sceneData, windowInfo);
 
+                ImGui::SetNextWindowPos({ windowInfo.width * 0.2f, windowInfo.menuBarHeight }, ImGuiCond_FirstUseEver);
+                ImGui::SetNextWindowSize({ windowInfo.width * 0.8f, windowInfo.height - windowInfo.menuBarHeight }, ImGuiCond_FirstUseEver);
                 VkCommandBuffer commandBuffer = mEditorWindow->preDrawFrame();
                 mEngine->draw(mEditorWindow->isFocus(), mEditorWindow->getWidth(), mEditorWindow->getHeight(), mEditorWindow->getCursorScreenPos().x, mEditorWindow->getCursorScreenPos().y, commandBuffer, true);
                 mEditorWindow->postDrawFrame();
                 if (!mEditorMode) {
+                    ImGui::SetNextWindowPos({ windowInfo.width * 0.2f, windowInfo.menuBarHeight }, ImGuiCond_FirstUseEver);
+                    ImGui::SetNextWindowSize({ windowInfo.width * 0.8f, windowInfo.height - windowInfo.menuBarHeight }, ImGuiCond_FirstUseEver);
                     commandBuffer = mGameWindow->preDrawFrame();
                     mEngine->draw(mGameWindow->isFocus(), mGameWindow->getWidth(), mGameWindow->getHeight(), mGameWindow->getCursorScreenPos().x, mGameWindow->getCursorScreenPos().y, commandBuffer, false);
                     mGameWindow->postDrawFrame();
@@ -231,6 +239,7 @@ private:
             glfwTerminate();
             throw std::runtime_error("Failed to create GLFW window.");
         }
+        glfwMaximizeWindow(mWindow);
 
         glfwSetWindowUserPointer(mWindow, this);
         glfwSetScrollCallback(mWindow, ScrollCallback);

@@ -5,9 +5,15 @@
 
 namespace sc {
 
+struct WindowInfo {
+	int width;
+	int height;
+	float menuBarHeight;
+};
+
 class SceneEditor {
 public:
-	void doFrame(SceneData& sceneData);
+	void doFrame(SceneData& sceneData, const WindowInfo& windowInfo);
 };
 
 } // namespace sc

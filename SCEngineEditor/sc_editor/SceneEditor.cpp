@@ -5,13 +5,16 @@
 
 namespace sc {
 
-void SceneEditor::doFrame(SceneData& sceneData) {
+void SceneEditor::doFrame(SceneData& sceneData, const WindowInfo& windowInfo) {
 	auto itemsGetter = [](void* data, int idx, const char** out_text) {
 		auto worldData = (std::vector<GameObjectData>*) data;
 		auto& gameObject = (*worldData)[idx];
 		*out_text = gameObject.name.c_str();
 		return true;
 	};
+    ImGui::SetNextWindowPos({ 0.f, windowInfo.menuBarHeight }, ImGuiCond_FirstUseEver);
+    float sceneHeight = (windowInfo.height - windowInfo.menuBarHeight) * 0.2f;
+    ImGui::SetNextWindowSize({ windowInfo.width * 0.2f, sceneHeight }, ImGuiCond_FirstUseEver);
 	ImGui::Begin("Scene");
 	static int current = 0;
 	ImGui::ListBox("GameObjects", &current, itemsGetter, (void*)&sceneData.gameObjectsData, static_cast<int>(sceneData.gameObjectsData.size()));
@@ -19,6 +22,8 @@ void SceneEditor::doFrame(SceneData& sceneData) {
 
 	if (current >= 0) {
 		auto& gameObjectData = sceneData.gameObjectsData[current];
+        ImGui::SetNextWindowPos({ 0.f, windowInfo.menuBarHeight + sceneHeight }, ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize({ windowInfo.width * 0.2f, windowInfo.height - sceneHeight - windowInfo.menuBarHeight }, ImGuiCond_FirstUseEver);
 		ImGui::Begin("GameObject");
         #ifdef SANITIZE
         char str[512];
