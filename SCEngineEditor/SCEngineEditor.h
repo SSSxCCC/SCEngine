@@ -296,6 +296,7 @@ private:
         WindowContentScaleCallback(mWindow, xscale, yscale);
 
         ImGui::GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
+        ImGui::GetIO().ConfigWindowsResizeFromEdges = true;
         ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     }
 
