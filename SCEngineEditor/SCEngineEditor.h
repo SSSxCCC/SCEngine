@@ -440,6 +440,12 @@ private:
 
         // prepare
         fs::path coreSource = getExePath().parent_path().parent_path() / "source" / "SCEngineCore";
+        if (!fs::exists(coreSource)) {
+            coreSource = getExePath().parent_path().parent_path().parent_path().parent_path() / "SCEngineCore";
+            if (!fs::exists(coreSource)) {
+                throw std::runtime_error("SCEngineEditor::buildProject SCEngineCore source code path is not found!");
+            }
+        }
         fs::path fileCMakeLists = mProjectDir / "CMakeLists.txt";
         std::ofstream ofs(fileCMakeLists);
         ofs << R"(cmake_minimum_required (VERSION 3.12))" << std::endl
