@@ -4,8 +4,8 @@
 cmake_minimum_required (VERSION 3.12)
 
 # Add source to this project's executable.
-add_executable (SCEngineEditor "main.cpp" "imgui_backends/imgui_impl_glfw.cpp" "imgui_backends/imgui_impl_vulkan.cpp" "sc_editor/SceneEditor.cpp" "sc_editor/SubWindow.cpp" "platform/PlatformImpl.cpp")
-target_include_directories (SCEngineEditor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+add_executable (SCEngineEditor "main.cpp" "imgui_backends/imgui_impl_glfw.cpp" "imgui_backends/imgui_impl_vulkan.cpp" "sc_editor/SceneEditor.cpp" "sc_editor/SubWindow.cpp" "../Platforms/Common/sc_platform/PlatformImpl.cpp")
+target_include_directories (SCEngineEditor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "../Platforms/Common")
 
 set_property (TARGET SCEngineEditor PROPERTY CXX_STANDARD 20)
 
@@ -20,4 +20,4 @@ target_link_libraries (SCEngineEditor PUBLIC imgui)
 target_link_libraries (SCEngineEditor PUBLIC ImGuiFileDialog)
 
 install (TARGETS SCEngineEditor DESTINATION bin)
-#install (DIRECTORY "../SCEngineCore" "../SCEngineCommon" "../Dependency" DESTINATION source)
+#install (DIRECTORY "../SCEngineCore" "../SCEngineCommon" "../Dependency" "../Platforms" DESTINATION source)

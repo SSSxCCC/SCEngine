@@ -19,7 +19,7 @@
 #include "sc/graphics/VulkanManager.h"
 #include "sc/common/CallbackPointer.h"
 #include "sc/common/IEngine.h"
-#include "platform/PlatformImpl.h"
+#include "sc_platform/PlatformImpl.h"
 namespace fs = std::filesystem;
 
 namespace sc {
@@ -66,6 +66,7 @@ public:
         initWindow();
         initVulkan();
         initImgui();
+        initSourceDir();
     }
 
     ~SCEngineEditor() {
@@ -118,6 +119,15 @@ public:
                             if (!loadProject()) {
                                 mProjectDir = "";
                             }
+                        }
+                        if (ImGui::BeginMenu("Export")) {
+                            if (ImGui::MenuItem("Windows")) {
+                                buildWindows();
+                            }
+                            if (ImGui::MenuItem("Android")) {
+                                buildAndroid();
+                            }
+                            ImGui::EndMenu();
                         }
                     }
                     ImGui::EndMenu();
@@ -210,6 +220,7 @@ private:
     GLFWwindow* mWindow;
     float mScale = 1.0f;
     CallbackPointer mCallbackPointer;
+    fs::path mSourceDir;
     fs::path mProjectDir = "";
     SCEnginePointer mSCEnginePointer;
     IEngine* mEngine;
@@ -298,6 +309,21 @@ private:
         ImGui::GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
         ImGui::GetIO().ConfigWindowsResizeFromEdges = true;
         ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    }
+
+    void initSourceDir() {
+        auto isSourceDir = [](const fs::path& dir) {
+            return fs::exists(dir / "SCEngineCore") && fs::exists(dir / "SCEngineCommon") &&
+                   fs::exists(dir / "Dependency") && fs::exists(dir / "Platforms");
+        };
+        fs::path sourceDir = getExePath().parent_path().parent_path() / "source";
+        if (!isSourceDir(sourceDir)) {
+            sourceDir = getExePath().parent_path().parent_path().parent_path().parent_path();
+            if (!isSourceDir(sourceDir)) {
+                throw std::runtime_error("SCEngineEditor source code directory is not found!");
+            }
+        }
+        mSourceDir = sourceDir;
     }
 
     static void glfwErrorCallback(int error, const char* description) {
@@ -430,7 +456,7 @@ private:
         fs::create_directory(mProjectDir / "Scenes");
         fs::create_directory(mProjectDir / "Scripts");
         std::ofstream ofs(mProjectDir / ".gitignore");
-        ofs << R"(Builds)" << std::endl;
+        ofs << R"(Builds)" << std::endl << R"(CMakeLists.txt)" << std::endl;
         ofs.close();
     }
 
@@ -438,14 +464,22 @@ private:
     void buildProject() {
         if (mProjectDir.empty()) throw std::runtime_error("SCEngineEditor::buildProject mProjectDir is empty!");
 
-        // prepare
-        fs::path coreSource = getExePath().parent_path().parent_path() / "source" / "SCEngineCore";
-        if (!fs::exists(coreSource)) {
-            coreSource = getExePath().parent_path().parent_path().parent_path().parent_path() / "SCEngineCore";
-            if (!fs::exists(coreSource)) {
-                throw std::runtime_error("SCEngineEditor::buildProject SCEngineCore source code path is not found!");
-            }
-        }
+        createProjectCmakeLists();
+
+        fs::path sourceDir = mProjectDir;
+        fs::path buildDir = mProjectDir / "Builds";
+        fs::path installDir = buildDir / "Install";
+        std::string cmd = "cmake -S " + sourceDir.string() + " -B " + buildDir.string();
+        std::string result = exec(cmd); // TODO: handle result
+        cmd = "cmake --build " + buildDir.string() + " --config Debug -j8";
+        result = exec(cmd); // TODO: handle result
+        cmd = "cmake --install " + buildDir.string() + " --config Debug --prefix " + installDir.string();
+        result = exec(cmd); // TODO: handle result
+    }
+
+    // Create CMakeLists.txt in mProjectDir
+    void createProjectCmakeLists() {
+        fs::path coreSource = mSourceDir / "SCEngineCore";
         fs::path fileCMakeLists = mProjectDir / "CMakeLists.txt";
         std::ofstream ofs(fileCMakeLists);
         ofs << R"(cmake_minimum_required (VERSION 3.12))" << std::endl
@@ -461,17 +495,6 @@ private:
             << R"(install (DIRECTORY "Assets/." DESTINATION "Assets"))" << std::endl
             << R"(install (DIRECTORY "Scenes" DESTINATION "Assets"))" << std::endl;
         ofs.close();
-
-        // build
-        fs::path sourceDir = mProjectDir;
-        fs::path buildDir = mProjectDir / "Builds";
-        fs::path installDir = buildDir / "Install";
-        std::string cmd = "cmake -S " + sourceDir.string() + " -B " + buildDir.string();
-        std::string result = exec(cmd); // TODO: handle result
-        cmd = "cmake --build " + buildDir.string() + " --config Debug -j8";
-        result = exec(cmd); // TODO: handle result
-        cmd = "cmake --install " + buildDir.string() + " --config Debug --prefix " + installDir.string();
-        result = exec(cmd); // TODO: handle result
     }
 
     // Load project from SCEngine.dll.
@@ -490,6 +513,49 @@ private:
         delete mEngine;
         mEngine = nullptr;
         mSCEnginePointer.freeLibrary();
+    }
+
+    // Build windows exe
+    void buildWindows() {
+        if (mProjectDir.empty()) throw std::runtime_error("SCEngineEditor::buildWindows mProjectDir is empty!");
+
+        createWindowsCmakeLists();
+
+        fs::path sourceDir = mSourceDir / "Platforms/Windows";
+        fs::path buildDir = mProjectDir / "Builds/Windows";
+        fs::path installDir = buildDir / "Install";
+        std::string cmd = "cmake -S " + sourceDir.string() + " -B " + buildDir.string();
+        std::string result = exec(cmd);  // TODO: handle result
+        cmd = "cmake --build " + buildDir.string() + " --config Debug -j8";
+        result = exec(cmd);  // TODO: handle result
+        cmd = "cmake --install " + buildDir.string() + " --config Debug --prefix " + installDir.string();
+        result = exec(cmd);  // TODO: handle result
+    }
+
+    void createWindowsCmakeLists() {
+        fs::path fileCMakeLists = mSourceDir / "Platforms" / "Windows" / "CMakeLists.txt";
+        std::ofstream ofs(fileCMakeLists);
+        ofs << R"(cmake_minimum_required (VERSION 3.12))" << std::endl
+            << R"(project ("SCEngineClient"))" << std::endl
+#ifdef SANITIZE
+            << R"(add_compile_options(-fsanitize=address))" << std::endl
+            #endif
+            << R"(add_executable (SCEngineClinet "main.cpp" "../Common/sc_platform/PlatformImpl.cpp"))" << std::endl
+            << R"(target_include_directories (SCEngineClinet PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "../Common"))" << std::endl
+            << R"(set_property (TARGET SCEngineClinet PROPERTY CXX_STANDARD 20))" << std::endl
+            << R"(add_subdirectory ("../../Dependency/glfw" "glfw"))" << std::endl
+            << R"(add_subdirectory (")" << cmakePath(mProjectDir.string()) << R"(" "SCEngine"))" << std::endl
+            << R"(target_link_libraries (SCEngineClinet PUBLIC glfw))" << std::endl
+            << R"(target_link_libraries (SCEngineClinet PUBLIC SCEngine))" << std::endl
+            << R"(add_compile_definitions (WINDOW_TITLE=")" << cmakePath(mProjectDir.filename().string()) << R"("))" << std::endl
+            << R"(install (TARGETS SCEngineClinet DESTINATION bin))" << std::endl;
+        ofs.close();
+    }
+
+    // Build android apk
+    void buildAndroid() {
+        if (mProjectDir.empty()) throw std::runtime_error("SCEngineEditor::buildAndroid mProjectDir is empty!");
+        // TODO: implement this
     }
 
     // Help function: execute exe program in windows and return console output.

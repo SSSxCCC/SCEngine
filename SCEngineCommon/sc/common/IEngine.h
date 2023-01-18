@@ -20,6 +20,7 @@ private:
     virtual void load(const nlohmann::json& j) = 0;
 
 friend class SCEngineEditor;
+friend class SCEngineClient;
 };
 
 } // namespace sc

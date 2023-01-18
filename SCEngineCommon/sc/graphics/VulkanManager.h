@@ -155,6 +155,7 @@ private:
     void beginRender(VkCommandBuffer commandBuffer, VkRenderPass renderPass, VkFramebuffer frameBuffer, VkExtent2D extent);
     void endRender(VkCommandBuffer commandBuffer, const std::vector<VkSemaphore>& waitSemaphores, const std::vector<VkPipelineStageFlags>& waitStages, const std::vector<VkSemaphore>& signalSemaphores, VkFence fence);
 
+friend class SCEngineClient;
 friend class SCEngineEditor;
 friend class SubWindow;
 };
