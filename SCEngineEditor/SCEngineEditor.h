@@ -521,8 +521,8 @@ private:
 
         createWindowsCmakeLists();
 
-        fs::path sourceDir = mSourceDir / "Platforms/Windows";
-        fs::path buildDir = mProjectDir / "Builds/Windows";
+        fs::path sourceDir = mSourceDir / "Platforms" / "Windows";
+        fs::path buildDir = mProjectDir / "Builds" / "Windows";
         fs::path installDir = buildDir / "Install";
         std::string cmd = "cmake -S " + sourceDir.string() + " -B " + buildDir.string();
         std::string result = exec(cmd);  // TODO: handle result
@@ -537,7 +537,7 @@ private:
         std::ofstream ofs(fileCMakeLists);
         ofs << R"(cmake_minimum_required (VERSION 3.12))" << std::endl
             << R"(project ("SCEngineClient"))" << std::endl
-#ifdef SANITIZE
+            #ifdef SANITIZE
             << R"(add_compile_options(-fsanitize=address))" << std::endl
             #endif
             << R"(add_executable (SCEngineClinet "main.cpp" "../Common/sc_platform/PlatformImpl.cpp"))" << std::endl
@@ -555,7 +555,36 @@ private:
     // Build android apk
     void buildAndroid() {
         if (mProjectDir.empty()) throw std::runtime_error("SCEngineEditor::buildAndroid mProjectDir is empty!");
-        // TODO: implement this
+
+        createAndroidCmakeLists();
+
+        //fs::path assetsDir = mSourceDir / "Platforms" / "Android" / "app" / "src" / "main" / "assets";
+        //fs::remove_all(assetsDir);
+        //fs::create_directory(assetsDir);
+
+        fs::path sourceDir = mSourceDir / "Platforms" / "Android";
+        fs::path apkFile = mSourceDir / "Platforms" / "Android" / "app" / "build" / "outputs" / "apk" / "debug" / "app-debug.apk";
+        std::string cmd = "cd " + sourceDir.string() + " && .\\gradlew.bat assembleDebug";
+        std::string result = exec(cmd);  // TODO: handle result
+        cmd = "adb install " + apkFile.string();
+        result = exec(cmd);  // TODO: handle result
+        cmd = "adb shell am start -n \"com.example.vulkanapp/com.example.vulkanapp.MainActivity\" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER";
+        result = exec(cmd);  // TODO: handle result
+    }
+
+    void createAndroidCmakeLists() {
+        fs::path fileCMakeLists = mSourceDir / "Platforms" / "Android" / "app" / "src" / "main" / "cpp" / "CMakeLists.txt";
+        std::ofstream ofs(fileCMakeLists);
+        ofs << R"(cmake_minimum_required (VERSION 3.18.1))" << std::endl
+            << R"(project ("vulkanapp"))" << std::endl
+            << R"(add_library (vulkanapp SHARED main.cpp AndroidOut.cpp "../../../../../Common/sc_platform/PlatformImpl.cpp"))" << std::endl
+            << R"(target_include_directories (vulkanapp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "../../../../../Common"))" << std::endl
+            << R"(set_property (TARGET vulkanapp PROPERTY CXX_STANDARD 20))" << std::endl
+            << R"(find_library (log-lib log))" << std::endl
+            << R"(find_package (game-activity REQUIRED CONFIG))" << std::endl
+            << R"(add_subdirectory (")" << cmakePath(mProjectDir.string()) << R"(" "SCEngine"))" << std::endl
+            << R"(target_link_libraries (vulkanapp android game-activity::game-activity jnigraphics ${log-lib} vulkan SCEngine))" << std::endl;
+        ofs.close();
     }
 
     // Help function: execute exe program in windows and return console output.

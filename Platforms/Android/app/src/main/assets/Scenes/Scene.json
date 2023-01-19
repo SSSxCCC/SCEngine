@@ -1,0 +1,262 @@
+{
+    "gameObjectsData": [
+        {
+            "id": 0,
+            "name": "PhysicsWorld2D",
+            "scriptsData": [
+                {
+                    "dataMap": {},
+                    "name": "PhysicsWorld2D"
+                },
+                {
+                    "dataMap": {},
+                    "name": "DebugDrawPhysics2D"
+                }
+            ]
+        },
+        {
+            "id": 1,
+            "name": "EditorCamera",
+            "scriptsData": [
+                {
+                    "dataMap": {
+                        "mPosition": {
+                            "type": 4,
+                            "value": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 0.0
+                            }
+                        },
+                        "mRotation": {
+                            "type": 1,
+                            "value": 0.0
+                        },
+                        "mScale": {
+                            "type": 3,
+                            "value": {
+                                "x": 0.0,
+                                "y": 0.0
+                            }
+                        }
+                    },
+                    "name": "Transform2D"
+                },
+                {
+                    "dataMap": {
+                        "mHalfHeight": {
+                            "type": 0,
+                            "value": 338
+                        },
+                        "mHalfWidth": {
+                            "type": 0,
+                            "value": 423
+                        },
+                        "mZoom": {
+                            "type": 1,
+                            "value": 1.100000023841858
+                        }
+                    },
+                    "name": "Camera"
+                },
+                {
+                    "dataMap": {
+                        "mMoveSpeed": {
+                            "type": 1,
+                            "value": 1000.0
+                        }
+                    },
+                    "name": "EditorCameraController"
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "name": "GameCamera",
+            "scriptsData": [
+                {
+                    "dataMap": {
+                        "mPosition": {
+                            "type": 4,
+                            "value": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 0.0
+                            }
+                        },
+                        "mRotation": {
+                            "type": 1,
+                            "value": 0.0
+                        },
+                        "mScale": {
+                            "type": 3,
+                            "value": {
+                                "x": 0.0,
+                                "y": 0.0
+                            }
+                        }
+                    },
+                    "name": "Transform2D"
+                },
+                {
+                    "dataMap": {
+                        "mHalfHeight": {
+                            "type": 0,
+                            "value": 0
+                        },
+                        "mHalfWidth": {
+                            "type": 0,
+                            "value": 0
+                        },
+                        "mZoom": {
+                            "type": 1,
+                            "value": 1.0
+                        }
+                    },
+                    "name": "Camera"
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "name": "Box1",
+            "scriptsData": [
+                {
+                    "dataMap": {
+                        "mPosition": {
+                            "type": 4,
+                            "value": {
+                                "x": 0.0,
+                                "y": 100.0,
+                                "z": 0.0
+                            }
+                        },
+                        "mRotation": {
+                            "type": 1,
+                            "value": 0.0
+                        },
+                        "mScale": {
+                            "type": 3,
+                            "value": {
+                                "x": 10.0,
+                                "y": 10.0
+                            }
+                        }
+                    },
+                    "name": "Transform2D"
+                },
+                {
+                    "dataMap": {},
+                    "name": "RectangleRenderer2D"
+                },
+                {
+                    "dataMap": {
+                        "mBodyDef.type": {
+                            "type": 0,
+                            "value": 2
+                        }
+                    },
+                    "name": "RigidBody2D"
+                },
+                {
+                    "dataMap": {},
+                    "name": "RectangleCollider2D"
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "name": "Box2",
+            "scriptsData": [
+                {
+                    "dataMap": {
+                        "mPosition": {
+                            "type": 4,
+                            "value": {
+                                "x": 5.0,
+                                "y": 120.0,
+                                "z": 0.0
+                            }
+                        },
+                        "mRotation": {
+                            "type": 1,
+                            "value": 0.0
+                        },
+                        "mScale": {
+                            "type": 3,
+                            "value": {
+                                "x": 10.0,
+                                "y": 10.0
+                            }
+                        }
+                    },
+                    "name": "Transform2D"
+                },
+                {
+                    "dataMap": {},
+                    "name": "RectangleRenderer2D"
+                },
+                {
+                    "dataMap": {
+                        "mBodyDef.type": {
+                            "type": 0,
+                            "value": 2
+                        }
+                    },
+                    "name": "RigidBody2D"
+                },
+                {
+                    "dataMap": {},
+                    "name": "RectangleCollider2D"
+                }
+            ]
+        },
+        {
+            "id": 5,
+            "name": "Ground",
+            "scriptsData": [
+                {
+                    "dataMap": {
+                        "mPosition": {
+                            "type": 4,
+                            "value": {
+                                "x": 0.0,
+                                "y": -100.0,
+                                "z": 0.0
+                            }
+                        },
+                        "mRotation": {
+                            "type": 1,
+                            "value": 0.0
+                        },
+                        "mScale": {
+                            "type": 3,
+                            "value": {
+                                "x": 400.0,
+                                "y": 80.0
+                            }
+                        }
+                    },
+                    "name": "Transform2D"
+                },
+                {
+                    "dataMap": {},
+                    "name": "RectangleRenderer2D"
+                },
+                {
+                    "dataMap": {
+                        "mBodyDef.type": {
+                            "type": 0,
+                            "value": 0
+                        }
+                    },
+                    "name": "RigidBody2D"
+                },
+                {
+                    "dataMap": {},
+                    "name": "RectangleCollider2D"
+                }
+            ]
+        }
+    ]
+}

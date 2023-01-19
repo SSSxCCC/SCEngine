@@ -6,21 +6,21 @@
 namespace sc {
 
 void Scene::create() {
-    for (const auto& [_, gameObject] : mGameObjects) {
-        gameObject->create();
+    for (int id : mGameObjectIds) {
+        mGameObjects[id]->create();
     }
     mCreated = true;
 }
 
 void Scene::update() {
-    for (const auto& [_, gameObject] : mGameObjects) {
-        gameObject->update();
+    for (int id : mGameObjectIds) {
+        mGameObjects[id]->update();
     }
 }
 
 void Scene::draw(const DrawData& drawData) {
-    for (const auto& [_, gameObject] : mGameObjects) {
-        gameObject->draw(drawData);
+    for (int id : mGameObjectIds) {
+        mGameObjects[id]->draw(drawData);
     }
 }
 

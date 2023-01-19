@@ -7,7 +7,6 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #elif defined(ANDROID)
-#define VK_USE_PLATFORM_ANDROID_KHR
 #include <android/log.h>
 #include <game-activity/native_app_glue/android_native_app_glue.h>
 /*!
