@@ -5,7 +5,7 @@ int main() {
         sc::SCEngineEditor editor;
         editor.run();
     } catch (const std::exception& e) {
-        std::cerr << e.what() << std::endl;
+        std::cerr << "SC FATAL EXCEPTION: " << e.what() << std::endl;
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
