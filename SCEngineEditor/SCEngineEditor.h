@@ -558,15 +558,25 @@ private:
 
         createAndroidCmakeLists();
 
-        //fs::path assetsDir = mSourceDir / "Platforms" / "Android" / "app" / "src" / "main" / "assets";
-        //fs::remove_all(assetsDir);
-        //fs::create_directory(assetsDir);
+        fs::path assetsDir = mSourceDir / "Platforms" / "Android" / "app" / "src" / "main" / "assets";
+        fs::path engineAssetDir = mSourceDir / "SCEngineCore" / "sc" / "asset" / "SCEngineAsset";
+        fs::path projectAssetDir = mProjectDir / "Assets";
+        fs::path projectSceneDir = mProjectDir / "Scenes";
+        fs::remove_all(assetsDir);
+        fs::create_directory(assetsDir);
+        fs::copy(engineAssetDir, assetsDir / engineAssetDir.filename(), fs::copy_options::recursive);
+        fs::copy(projectSceneDir, assetsDir / projectSceneDir.filename(), fs::copy_options::recursive);
+        fs::copy(projectAssetDir, assetsDir, fs::copy_options::recursive);  // TODO: handle copy error
 
         fs::path sourceDir = mSourceDir / "Platforms" / "Android";
-        fs::path apkFile = mSourceDir / "Platforms" / "Android" / "app" / "build" / "outputs" / "apk" / "debug" / "app-debug.apk";
         std::string cmd = "cd " + sourceDir.string() + " && .\\gradlew.bat assembleDebug";
         std::string result = exec(cmd);  // TODO: handle result
-        cmd = "adb install " + apkFile.string();
+
+        fs::path apkFile = mSourceDir / "Platforms" / "Android" / "app" / "build" / "outputs" / "apk" / "debug" / "app-debug.apk";
+        fs::path dstApkFile = mProjectDir / "Builds" / "Android" / apkFile.filename();
+        fs::create_directory(dstApkFile.parent_path());
+        fs::copy(apkFile, dstApkFile, fs::copy_options::overwrite_existing);
+        cmd = "adb install " + dstApkFile.string();
         result = exec(cmd);  // TODO: handle result
         cmd = "adb shell am start -n \"com.example.vulkanapp/com.example.vulkanapp.MainActivity\" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER";
         result = exec(cmd);  // TODO: handle result
