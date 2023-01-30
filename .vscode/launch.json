@@ -10,7 +10,7 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build/install/bin/",
             "environment": [],
-            "console": "internalConsole",
+            "console": "integratedTerminal",
             "preLaunchTask": "cmake install"
         }
     ]
