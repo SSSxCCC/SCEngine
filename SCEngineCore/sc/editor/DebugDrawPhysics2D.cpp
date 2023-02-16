@@ -1,238 +1,391 @@
 #include "sc/editor/DebugDrawPhysics2D.h"
-#include "sc/core/Scene.h"
+#include "sc/core/Engine.h"
+#include "sc/core/Transform2D.h"
+#include "sc/graphics/VulkanManager.h"
+#include "sc/graphics/DrawData.h"
+#include "sc/asset/AssetManager.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "imgui/imgui.h"
+#include <array>
 
 namespace sc {
 
-struct GLRenderPoints {
-	void Create() {
-		m_count = 0;
-	}
+class RenderBase {
+public:
+    struct Vertex {
+        b2Vec2 position;
+        b2Color color;
 
-	void Destroy() {
-	}
+        static VkVertexInputBindingDescription getBindingDescription() {
+            VkVertexInputBindingDescription bindingDescription{};
+            bindingDescription.binding = 0;
+            bindingDescription.stride = sizeof(Vertex);
+            bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+            return bindingDescription;
+        }
 
-	void Vertex(const b2Vec2& v, const b2Color& c, float size) {
-		if (m_count == e_maxVertices)
-			Flush();
+        static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions() {
+            std::vector<VkVertexInputAttributeDescription> attributeDescriptions(2);
+            attributeDescriptions[0].binding = 0;
+            attributeDescriptions[0].location = 0;
+            attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+            attributeDescriptions[0].offset = offsetof(Vertex, position);
+            attributeDescriptions[1].binding = 0;
+            attributeDescriptions[1].location = 1;
+            attributeDescriptions[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+            attributeDescriptions[1].offset = offsetof(Vertex, color);
+            return attributeDescriptions;
+        }
+    };
 
-		m_vertices[m_count] = v;
-		m_colors[m_count] = c;
-		m_sizes[m_count] = size;
-		++m_count;
-	}
+    RenderBase(VulkanManager* vulkanManager) : mVulkanManager(vulkanManager) { }
 
-	void setProjectionMatrix(float* pm) {
-		mProjectionMatrix = pm;
-	}
+    virtual ~RenderBase() { }
 
-	void Flush() {
-		if (m_count == 0)
-			return;
+    void setDrawData(const DrawData& drawData) {
+        mDrawData = drawData;
+    }
 
-		/*m_shader.use();
-		m_shader.setMat4("projectionMatrix", mProjectionMatrix);
+    void flush() {
+        if (mCount == 0) {
+            return;
+        }
+        onFlush();
+        mCount = 0;
+    }
 
-		glBindVertexArray(m_vaoId);
-
-		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[0]);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, m_count * sizeof(b2Vec2), m_vertices);
-
-		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[1]);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, m_count * sizeof(b2Color), m_colors);
-
-		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[2]);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, m_count * sizeof(float), m_sizes);
-
-		glEnable(GL_PROGRAM_POINT_SIZE);
-		glDrawArrays(GL_POINTS, 0, m_count);
-		glDisable(GL_PROGRAM_POINT_SIZE);
-
-		sCheckGLError();
-
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
-		glUseProgram(0);*/
-
-		m_count = 0;
-	}
-
-	enum { e_maxVertices = 512 };
-	b2Vec2 m_vertices[e_maxVertices];
-	b2Color m_colors[e_maxVertices];
-	float m_sizes[e_maxVertices];
-
-	int32 m_count;
-
-	float* mProjectionMatrix;
+protected:
+    VulkanManager* const mVulkanManager;
+    DrawData mDrawData;
+    int mCount = 0;
+    
+    virtual void onFlush() = 0;
 };
 
 
-struct GLRenderLines {
-	void Create() {
-		m_count = 0;
-	}
+class RenderPoints : public RenderBase {
+public:
+    struct Vertex {
+        b2Vec2 position;
+        b2Color color;
+        float size;
 
-	void Destroy() {
-	}
+        static VkVertexInputBindingDescription getBindingDescription() {
+            VkVertexInputBindingDescription bindingDescription{};
+            bindingDescription.binding = 0;
+            bindingDescription.stride = sizeof(Vertex);
+            bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+            return bindingDescription;
+        }
 
-	void Vertex(const b2Vec2& v, const b2Color& c) {
-		if (m_count == e_maxVertices)
-			Flush();
+        static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions() {
+            std::vector<VkVertexInputAttributeDescription> attributeDescriptions(3);
+            attributeDescriptions[0].binding = 0;
+            attributeDescriptions[0].location = 0;
+            attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+            attributeDescriptions[0].offset = offsetof(Vertex, position);
+            attributeDescriptions[1].binding = 0;
+            attributeDescriptions[1].location = 1;
+            attributeDescriptions[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+            attributeDescriptions[1].offset = offsetof(Vertex, color);
+            attributeDescriptions[2].binding = 0;
+            attributeDescriptions[2].location = 2;
+            attributeDescriptions[2].format = VK_FORMAT_R32_SFLOAT;
+            attributeDescriptions[2].offset = offsetof(Vertex, size);
+            return attributeDescriptions;
+        }
+    };
 
-		m_vertices[m_count] = v;
-		m_colors[m_count] = c;
-		++m_count;
-	}
+    RenderPoints(VulkanManager* vulkanManager, AssetManager* assetManager) : RenderBase(vulkanManager) {
+        // Create pushConstant
+        VkPushConstantRange pushConstant{};
+        pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        pushConstant.offset = 0;
+        pushConstant.size = sizeof(glm::mat4);
 
-	void setProjectionMatrix(float* pm) {
-		mProjectionMatrix = pm;
-	}
+        // Create mPipelineLayout
+        VkPipelineLayoutCreateInfo pipelineLayoutInfo { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+        pipelineLayoutInfo.setLayoutCount = 0;
+        pipelineLayoutInfo.pSetLayouts = nullptr;
+        pipelineLayoutInfo.pushConstantRangeCount = 1;
+        pipelineLayoutInfo.pPushConstantRanges = &pushConstant;
+        if (vkCreatePipelineLayout(mVulkanManager->getDevice(), &pipelineLayoutInfo, nullptr, &mPipelineLayout) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create pipeline layout!");
+        }
 
-	void Flush() {
-		if (m_count == 0)
-			return;
+        // Create mGraphicsPipeline
+        mGraphicsPipeline = mVulkanManager->createGraphicsPipeline(
+            assetManager->readFile("SCEngineAssets/Shaders/vertShader_pvm_pos2d_color_size.spv"),
+            assetManager->readFile("SCEngineAssets/Shaders/fragShader_color.spv"),
+            Vertex::getBindingDescription(), Vertex::getAttributeDescriptions(), mPipelineLayout, mVulkanManager->getRenderPass(), VK_PRIMITIVE_TOPOLOGY_POINT_LIST);
 
-		/*m_shader.use();
-		m_shader.setMat4("projectionMatrix", mProjectionMatrix);
+        // Create mVertexBuffers
+        mVertexBuffers.resize(mVulkanManager->getMaxFrames());
+        mVertexBufferMemory.resize(mVulkanManager->getMaxFrames());
+        mVertexBuffersMapped.resize(mVulkanManager->getMaxFrames());
+        for (size_t i = 0; i < mVulkanManager->getMaxFrames(); i++) {
+            mVulkanManager->createBuffer(mVertices.size() * sizeof(Vertex), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, mVertexBuffers[i], mVertexBufferMemory[i]);
+            vkMapMemory(mVulkanManager->getDevice(), mVertexBufferMemory[i], 0, mVertices.size() * sizeof(Vertex), 0, &mVertexBuffersMapped[i]);
+        }
+    }
 
-		glBindVertexArray(m_vaoId);
+    ~RenderPoints() {
+        vkDeviceWaitIdle(mVulkanManager->getDevice());
+        vkDestroyPipeline(mVulkanManager->getDevice(), mGraphicsPipeline, nullptr);
+        vkDestroyPipelineLayout(mVulkanManager->getDevice(), mPipelineLayout, nullptr);
+        for (size_t i = 0; i < mVulkanManager->getMaxFrames(); i++) {
+            vkDestroyBuffer(mVulkanManager->getDevice(), mVertexBuffers[i], nullptr);
+            vkFreeMemory(mVulkanManager->getDevice(), mVertexBufferMemory[i], nullptr);
+        }
+    }
 
-		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[0]);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, m_count * sizeof(b2Vec2), m_vertices);
+    void add(const Vertex&& v) {
+        if (mCount == mVertices.size()) {
+            flush();
+        }
+        mVertices[mCount++] = v;
+    }
 
-		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[1]);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, m_count * sizeof(b2Color), m_colors);
+protected:
+    void onFlush() override {
+        memcpy(mVertexBuffersMapped[mVulkanManager->getCurrentFrame(mDrawData.forEditor)], mVertices.data(), mCount * sizeof(Vertex));
 
-		glDrawArrays(GL_LINES, 0, m_count);
+        vkCmdBindPipeline(mDrawData.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mGraphicsPipeline);
 
-		sCheckGLError();
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(mDrawData.extent.width);
+        viewport.height = static_cast<float>(mDrawData.extent.height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(mDrawData.commandBuffer, 0, 1, &viewport);
 
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
-		glUseProgram(0);*/
+        VkRect2D scissor{};
+        scissor.offset = { 0, 0 };
+        scissor.extent = mDrawData.extent;
+        vkCmdSetScissor(mDrawData.commandBuffer, 0, 1, &scissor);
 
-		m_count = 0;
-	}
+        VkDeviceSize offsets[] = { 0 };
+        vkCmdBindVertexBuffers(mDrawData.commandBuffer, 0, 1, &(mVertexBuffers[mVulkanManager->getCurrentFrame(mDrawData.forEditor)]), offsets);
+        vkCmdPushConstants(mDrawData.commandBuffer, mPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &mDrawData.projectionViewMatrix);
 
-	enum { e_maxVertices = 2 * 512 };
-	b2Vec2 m_vertices[e_maxVertices];
-	b2Color m_colors[e_maxVertices];
+        vkCmdDraw(mDrawData.commandBuffer, mCount, 1, 0, 0);
+        //std::cout << "Points " << mCount << std::endl;
+    }
 
-	int32 m_count;
+private:
+    std::array<Vertex, 512> mVertices;
 
-	float* mProjectionMatrix;
+    VkPipelineLayout mPipelineLayout;
+    VkPipeline mGraphicsPipeline;
+
+    std::vector<VkBuffer> mVertexBuffers;
+    std::vector<VkDeviceMemory> mVertexBufferMemory;
+    std::vector<void*> mVertexBuffersMapped;
 };
 
 
-struct GLRenderTriangles {
-	void Create() {
-		m_count = 0;
-	}
+class RenderLines : public RenderBase {
+public:
+    RenderLines(VulkanManager* vulkanManager, AssetManager* assetManager) : RenderBase(vulkanManager) {
+        // Create pushConstant
+        VkPushConstantRange pushConstant{};
+        pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        pushConstant.offset = 0;
+        pushConstant.size = sizeof(glm::mat4);
 
-	void Destroy() {
-	}
+        // Create mPipelineLayout
+        VkPipelineLayoutCreateInfo pipelineLayoutInfo { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+        pipelineLayoutInfo.setLayoutCount = 0;
+        pipelineLayoutInfo.pSetLayouts = nullptr;
+        pipelineLayoutInfo.pushConstantRangeCount = 1;
+        pipelineLayoutInfo.pPushConstantRanges = &pushConstant;
+        if (vkCreatePipelineLayout(mVulkanManager->getDevice(), &pipelineLayoutInfo, nullptr, &mPipelineLayout) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create pipeline layout!");
+        }
 
-	void Vertex(const b2Vec2& v, const b2Color& c) {
-		if (m_count == e_maxVertices)
-			Flush();
+        // Create mGraphicsPipeline
+        mGraphicsPipeline = mVulkanManager->createGraphicsPipeline(
+            assetManager->readFile("SCEngineAssets/Shaders/vertShader_pvm_pos2d_color.spv"),
+            assetManager->readFile("SCEngineAssets/Shaders/fragShader_color.spv"),
+            Vertex::getBindingDescription(), Vertex::getAttributeDescriptions(), mPipelineLayout, mVulkanManager->getRenderPass(), VK_PRIMITIVE_TOPOLOGY_LINE_LIST);
 
-		m_vertices[m_count] = v;
-		m_colors[m_count] = c;
-		++m_count;
-	}
+        // Create mVertexBuffers
+        mVertexBuffers.resize(mVulkanManager->getMaxFrames());
+        mVertexBufferMemory.resize(mVulkanManager->getMaxFrames());
+        mVertexBuffersMapped.resize(mVulkanManager->getMaxFrames());
+        for (size_t i = 0; i < mVulkanManager->getMaxFrames(); i++) {
+            mVulkanManager->createBuffer(mVertices.size() * sizeof(Vertex), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, mVertexBuffers[i], mVertexBufferMemory[i]);
+            vkMapMemory(mVulkanManager->getDevice(), mVertexBufferMemory[i], 0, mVertices.size() * sizeof(Vertex), 0, &mVertexBuffersMapped[i]);
+        }
+    }
 
-	void setProjectionMatrix(float* pm) {
-		mProjectionMatrix = pm;
-	}
+    ~RenderLines() {
+        vkDeviceWaitIdle(mVulkanManager->getDevice());
+        vkDestroyPipeline(mVulkanManager->getDevice(), mGraphicsPipeline, nullptr);
+        vkDestroyPipelineLayout(mVulkanManager->getDevice(), mPipelineLayout, nullptr);
+        for (size_t i = 0; i < mVulkanManager->getMaxFrames(); i++) {
+            vkDestroyBuffer(mVulkanManager->getDevice(), mVertexBuffers[i], nullptr);
+            vkFreeMemory(mVulkanManager->getDevice(), mVertexBufferMemory[i], nullptr);
+        }
+    }
 
-	void Flush() {
-		if (m_count == 0)
-			return;
+    void add(const Vertex&& v1, const Vertex&& v2) {
+        if (mCount == mVertices.size()) {
+            flush();
+        }
+        mVertices[mCount++] = v1;
+        mVertices[mCount++] = v2;
+    }
 
-		/*m_shader.use();
-		m_shader.setMat4("projectionMatrix", mProjectionMatrix);
+protected:
+    void onFlush() override {
+        memcpy(mVertexBuffersMapped[mVulkanManager->getCurrentFrame(mDrawData.forEditor)], mVertices.data(), mCount * sizeof(Vertex));
 
-		glBindVertexArray(m_vaoId);
+        vkCmdBindPipeline(mDrawData.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mGraphicsPipeline);
 
-		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[0]);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, m_count * sizeof(b2Vec2), m_vertices);
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(mDrawData.extent.width);
+        viewport.height = static_cast<float>(mDrawData.extent.height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(mDrawData.commandBuffer, 0, 1, &viewport);
 
-		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[1]);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, m_count * sizeof(b2Color), m_colors);
+        VkRect2D scissor{};
+        scissor.offset = { 0, 0 };
+        scissor.extent = mDrawData.extent;
+        vkCmdSetScissor(mDrawData.commandBuffer, 0, 1, &scissor);
 
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glDrawArrays(GL_TRIANGLES, 0, m_count);
-		glDisable(GL_BLEND);
+        VkDeviceSize offsets[] = { 0 };
+        vkCmdBindVertexBuffers(mDrawData.commandBuffer, 0, 1, &(mVertexBuffers[mVulkanManager->getCurrentFrame(mDrawData.forEditor)]), offsets);
+        vkCmdPushConstants(mDrawData.commandBuffer, mPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &mDrawData.projectionViewMatrix);
 
-		sCheckGLError();
+        vkCmdDraw(mDrawData.commandBuffer, mCount, 1, 0, 0);
+        //std::cout << "Lines " << mCount << std::endl;
+    }
 
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
-		glUseProgram(0);*/
+private:
+    std::array<Vertex, 512 * 2> mVertices;
 
-		m_count = 0;
-	}
+    VkPipelineLayout mPipelineLayout;
+    VkPipeline mGraphicsPipeline;
 
-	enum { e_maxVertices = 3 * 512 };
-	b2Vec2 m_vertices[e_maxVertices];
-	b2Color m_colors[e_maxVertices];
-
-	int32 m_count;
-
-	float* mProjectionMatrix;
+    std::vector<VkBuffer> mVertexBuffers;
+    std::vector<VkDeviceMemory> mVertexBufferMemory;
+    std::vector<void*> mVertexBuffersMapped;
 };
+
+
+class RenderTriangles : public RenderBase {
+public:
+    RenderTriangles(VulkanManager* vulkanManager, AssetManager* assetManager) : RenderBase(vulkanManager) {
+        // Create pushConstant
+        VkPushConstantRange pushConstant{};
+        pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        pushConstant.offset = 0;
+        pushConstant.size = sizeof(glm::mat4);
+
+        // Create mPipelineLayout
+        VkPipelineLayoutCreateInfo pipelineLayoutInfo { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+        pipelineLayoutInfo.setLayoutCount = 0;
+        pipelineLayoutInfo.pSetLayouts = nullptr;
+        pipelineLayoutInfo.pushConstantRangeCount = 1;
+        pipelineLayoutInfo.pPushConstantRanges = &pushConstant;
+        if (vkCreatePipelineLayout(mVulkanManager->getDevice(), &pipelineLayoutInfo, nullptr, &mPipelineLayout) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create pipeline layout!");
+        }
+
+        // Create mGraphicsPipeline
+        mGraphicsPipeline = mVulkanManager->createGraphicsPipeline(
+            assetManager->readFile("SCEngineAssets/Shaders/vertShader_pvm_pos2d_color.spv"),
+            assetManager->readFile("SCEngineAssets/Shaders/fragShader_color.spv"),
+            Vertex::getBindingDescription(), Vertex::getAttributeDescriptions(), mPipelineLayout, mVulkanManager->getRenderPass());
+
+        // Create mVertexBuffers
+        mVertexBuffers.resize(mVulkanManager->getMaxFrames());
+        mVertexBufferMemory.resize(mVulkanManager->getMaxFrames());
+        mVertexBuffersMapped.resize(mVulkanManager->getMaxFrames());
+        for (size_t i = 0; i < mVulkanManager->getMaxFrames(); i++) {
+            mVulkanManager->createBuffer(mVertices.size() * sizeof(Vertex), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, mVertexBuffers[i], mVertexBufferMemory[i]);
+            vkMapMemory(mVulkanManager->getDevice(), mVertexBufferMemory[i], 0, mVertices.size() * sizeof(Vertex), 0, &mVertexBuffersMapped[i]);
+        }
+    }
+
+    ~RenderTriangles() {
+        vkDeviceWaitIdle(mVulkanManager->getDevice());
+        vkDestroyPipeline(mVulkanManager->getDevice(), mGraphicsPipeline, nullptr);
+        vkDestroyPipelineLayout(mVulkanManager->getDevice(), mPipelineLayout, nullptr);
+        for (size_t i = 0; i < mVulkanManager->getMaxFrames(); i++) {
+            vkDestroyBuffer(mVulkanManager->getDevice(), mVertexBuffers[i], nullptr);
+            vkFreeMemory(mVulkanManager->getDevice(), mVertexBufferMemory[i], nullptr);
+        }
+    }
+
+    void add(const Vertex&& v1, const Vertex&& v2, const Vertex&& v3) {
+        if (mCount == mVertices.size()) {
+            flush();
+        }
+        mVertices[mCount++] = v1;
+        mVertices[mCount++] = v2;
+        mVertices[mCount++] = v3;
+    }
+
+protected:
+    void onFlush() override {
+        memcpy(mVertexBuffersMapped[mVulkanManager->getCurrentFrame(mDrawData.forEditor)], mVertices.data(), mCount * sizeof(Vertex));
+
+        vkCmdBindPipeline(mDrawData.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mGraphicsPipeline);
+
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(mDrawData.extent.width);
+        viewport.height = static_cast<float>(mDrawData.extent.height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(mDrawData.commandBuffer, 0, 1, &viewport);
+
+        VkRect2D scissor{};
+        scissor.offset = { 0, 0 };
+        scissor.extent = mDrawData.extent;
+        vkCmdSetScissor(mDrawData.commandBuffer, 0, 1, &scissor);
+
+        VkDeviceSize offsets[] = { 0 };
+        vkCmdBindVertexBuffers(mDrawData.commandBuffer, 0, 1, &(mVertexBuffers[mVulkanManager->getCurrentFrame(mDrawData.forEditor)]), offsets);
+        vkCmdPushConstants(mDrawData.commandBuffer, mPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &mDrawData.projectionViewMatrix);
+
+        vkCmdDraw(mDrawData.commandBuffer, mCount, 1, 0, 0);
+        //std::cout << "Triangles " << mCount << std::endl;
+    }
+
+private:
+    std::array<Vertex, 512 * 3> mVertices;
+
+    VkPipelineLayout mPipelineLayout;
+    VkPipeline mGraphicsPipeline;
+
+    std::vector<VkBuffer> mVertexBuffers;
+    std::vector<VkDeviceMemory> mVertexBufferMemory;
+    std::vector<void*> mVertexBuffersMapped;
+};
+
 
 // This class implements debug drawing callbacks that are invoked
 // inside b2World::Step.
 class DebugDraw : public b2Draw {
 public:
-	DebugDraw() {
-		m_showUI = true;
-		m_points = NULL;
-		m_lines = NULL;
-		m_triangles = NULL;
-	}
-
-	~DebugDraw() {
-		b2Assert(m_points == NULL);
-		b2Assert(m_lines == NULL);
-		b2Assert(m_triangles == NULL);
-	}
-
-	void Create() {
-		m_points = new GLRenderPoints;
-		m_points->Create();
-		m_lines = new GLRenderLines;
-		m_lines->Create();
-		m_triangles = new GLRenderTriangles;
-		m_triangles->Create();
-	}
-
-	void Destroy() {
-		m_points->Destroy();
-		delete m_points;
-		m_points = NULL;
-
-		m_lines->Destroy();
-		delete m_lines;
-		m_lines = NULL;
-
-		m_triangles->Destroy();
-		delete m_triangles;
-		m_triangles = NULL;
-	}
+	DebugDraw(VulkanManager* vulkanManager, AssetManager* assetManager) : mPoints(vulkanManager, assetManager), mLines(vulkanManager, assetManager), mTriangles(vulkanManager, assetManager) { }
 
 	void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) override {
 		b2Vec2 p1 = vertices[vertexCount - 1];
 		for (int32 i = 0; i < vertexCount; ++i) {
 			b2Vec2 p2 = vertices[i];
-			m_lines->Vertex(p1, color);
-			m_lines->Vertex(p2, color);
+            mLines.add({ p1, color }, { p2, color });
 			p1 = p2;
 		}
 	}
@@ -241,16 +394,13 @@ public:
 		b2Color fillColor(0.5f * color.r, 0.5f * color.g, 0.5f * color.b, 0.5f);
 
 		for (int32 i = 1; i < vertexCount - 1; ++i) {
-			m_triangles->Vertex(vertices[0], fillColor);
-			m_triangles->Vertex(vertices[i], fillColor);
-			m_triangles->Vertex(vertices[i + 1], fillColor);
+            mTriangles.add({ vertices[0], fillColor }, { vertices[i], fillColor }, { vertices[i + 1], fillColor });
 		}
 
 		b2Vec2 p1 = vertices[vertexCount - 1];
 		for (int32 i = 0; i < vertexCount; ++i) {
 			b2Vec2 p2 = vertices[i];
-			m_lines->Vertex(p1, color);
-			m_lines->Vertex(p2, color);
+			mLines.add({ p1, color }, { p2, color });
 			p1 = p2;
 		}
 	}
@@ -268,8 +418,7 @@ public:
 			r2.x = cosInc * r1.x - sinInc * r1.y;
 			r2.y = sinInc * r1.x + cosInc * r1.y;
 			b2Vec2 v2 = center + radius * r2;
-			m_lines->Vertex(v1, color);
-			m_lines->Vertex(v2, color);
+            mLines.add({ v1, color }, { v2, color });
 			r1 = r2;
 			v1 = v2;
 		}
@@ -290,9 +439,7 @@ public:
 			r2.x = cosInc * r1.x - sinInc * r1.y;
 			r2.y = sinInc * r1.x + cosInc * r1.y;
 			b2Vec2 v2 = center + radius * r2;
-			m_triangles->Vertex(v0, fillColor);
-			m_triangles->Vertex(v1, fillColor);
-			m_triangles->Vertex(v2, fillColor);
+            mTriangles.add({ v0, fillColor }, { v1, fillColor }, { v2, fillColor });
 			r1 = r2;
 			v1 = v2;
 		}
@@ -304,21 +451,18 @@ public:
 			r2.x = cosInc * r1.x - sinInc * r1.y;
 			r2.y = sinInc * r1.x + cosInc * r1.y;
 			b2Vec2 v2 = center + radius * r2;
-			m_lines->Vertex(v1, color);
-			m_lines->Vertex(v2, color);
+            mLines.add({ v1, color }, { v2, color });
 			r1 = r2;
 			v1 = v2;
 		}
 
 		// Draw a line fixed in the circle to animate rotation.
 		b2Vec2 p = center + radius * axis;
-		m_lines->Vertex(center, color);
-		m_lines->Vertex(p, color);
+        mLines.add({ center, color }, { p, color });
 	}
 
 	void DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color) override {
-		m_lines->Vertex(p1, color);
-		m_lines->Vertex(p2, color);
+        mLines.add({ p1, color }, { p2, color });
 	}
 
 	void DrawTransform(const b2Transform& xf) override {
@@ -327,46 +471,15 @@ public:
 		b2Color green(0.0f, 1.0f, 0.0f);
 		b2Vec2 p1 = xf.p, p2;
 
-		m_lines->Vertex(p1, red);
 		p2 = p1 + k_axisScale * xf.q.GetXAxis();
-		m_lines->Vertex(p2, red);
+        mLines.add({ p1, red }, { p2, red });
 
-		m_lines->Vertex(p1, green);
 		p2 = p1 + k_axisScale * xf.q.GetYAxis();
-		m_lines->Vertex(p2, green);
+        mLines.add({ p1, green }, { p2, green });
 	}
 
 	void DrawPoint(const b2Vec2& p, float size, const b2Color& color) override {
-		m_points->Vertex(p, color, size);
-	}
-
-	void DrawString(int x, int y, const char* string, ...) {
-		if (m_showUI == false) {
-			return;
-		}
-
-		va_list arg;
-		va_start(arg, string);
-		ImGui::Begin("Overlay", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar);
-		ImGui::SetCursorPos(ImVec2(float(x), float(y)));
-		ImGui::TextColoredV(ImColor(230, 153, 153, 255), string, arg);
-		ImGui::End();
-		va_end(arg);
-	}
-
-	void DrawString(const b2Vec2& pw, const char* string, ...) {
-		float screenX, screenY;
-		// TODO: worldToScreen implement here
-		//mScene->mMainCamera->worldToScreen(pw.x, pw.y, screenX, screenY);
-		b2Vec2 ps(screenX, screenY);
-
-		va_list arg;
-		va_start(arg, string);
-		ImGui::Begin("Overlay", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar);
-		ImGui::SetCursorPos(ImVec2(ps.x, ps.y));
-		ImGui::TextColoredV(ImColor(230, 153, 153, 255), string, arg);
-		ImGui::End();
-		va_end(arg);
+        mPoints.add({ p, color, size });
 	}
 
 	void DrawAABB(b2AABB* aabb, const b2Color& c) {
@@ -375,52 +488,44 @@ public:
 		b2Vec2 p3 = aabb->upperBound;
 		b2Vec2 p4 = b2Vec2(aabb->lowerBound.x, aabb->upperBound.y);
 
-		m_lines->Vertex(p1, c);
-		m_lines->Vertex(p2, c);
-
-		m_lines->Vertex(p2, c);
-		m_lines->Vertex(p3, c);
-
-		m_lines->Vertex(p3, c);
-		m_lines->Vertex(p4, c);
-
-		m_lines->Vertex(p4, c);
-		m_lines->Vertex(p1, c);
+        mLines.add({ p1, c }, { p2, c });
+        mLines.add({ p2, c }, { p3, c });
+        mLines.add({ p3, c }, { p4, c });
+        mLines.add({ p4, c }, { p1, c });
 	}
 
-	void setProjectionMatrix(float* pm) {
-		m_triangles->setProjectionMatrix(pm);
-		m_lines->setProjectionMatrix(pm);
-		m_points->setProjectionMatrix(pm);
-	}
+    void setDrawData(const DrawData& drawData) {
+        mTriangles.setDrawData(drawData);
+        mLines.setDrawData(drawData);
+        mPoints.setDrawData(drawData);
+    }
 
 	void Flush() {
-		m_triangles->Flush();
-		m_lines->Flush();
-		m_points->Flush();
+		mTriangles.flush();
+		mLines.flush();
+		mPoints.flush();
 	}
 
-	bool m_showUI;
-	GLRenderPoints* m_points;
-	GLRenderLines* m_lines;
-	GLRenderTriangles* m_triangles;
+private:
+	RenderPoints mPoints;
+	RenderLines mLines;
+	RenderTriangles mTriangles;
 };
 
 
 void DebugDrawPhysics2D::onCreate() {
-	mDebugDraw = new DebugDraw;
-	mDebugDraw->Create();
+	mDebugDraw = new DebugDraw(mGameObject->mScene->mEngine->mVulkanManager, mGameObject->mScene->mEngine->mAssetManager);
 	mPhysicsWorld2D = mGameObject->getScript<PhysicsWorld2D>();
 	mPhysicsWorld2D->mWorld->SetDebugDraw(mDebugDraw);
 }
 
 void DebugDrawPhysics2D::onDraw(const DrawData& drawData) {
-    //if (drawData.forEditor) {
-    //    mDebugDraw->setProjectionMatrix(projectionMatrix);
-    //    mDebugDraw->SetFlags(b2Draw::e_shapeBit | b2Draw::e_jointBit | b2Draw::e_aabbBit | b2Draw::e_centerOfMassBit);
-    //    mPhysicsWorld2D->mWorld->DebugDraw();
-    //    mDebugDraw->Flush();
-    //}
+    if (drawData.forEditor) {
+        mDebugDraw->setDrawData(drawData);
+        mDebugDraw->SetFlags(b2Draw::e_shapeBit | b2Draw::e_jointBit | b2Draw::e_aabbBit | b2Draw::e_pairBit | b2Draw::e_centerOfMassBit);
+        mPhysicsWorld2D->mWorld->DebugDraw();
+        mDebugDraw->Flush();
+    }
 }
 
 void DebugDrawPhysics2D::onDestroy() {
@@ -428,7 +533,6 @@ void DebugDrawPhysics2D::onDestroy() {
         mPhysicsWorld2D->mWorld->SetDebugDraw(nullptr);
     }
     mPhysicsWorld2D = nullptr;
-    mDebugDraw->Destroy();
     delete mDebugDraw;
     mDebugDraw = nullptr;
 }

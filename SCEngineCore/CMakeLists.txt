@@ -15,5 +15,5 @@ add_subdirectory ("../Dependency/box2d/src" "box2d")
 target_link_libraries (SCEngineCore PUBLIC SCEngineCommon)
 target_link_libraries (SCEngineCore PUBLIC box2d)
 
-install (DIRECTORY "sc/asset/SCEngineAsset" DESTINATION "Assets")
+install (DIRECTORY "sc/asset/SCEngineAssets" DESTINATION "Assets")
 #install (TARGETS SCEngineCore DESTINATION bin)

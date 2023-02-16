@@ -114,6 +114,9 @@ public:
                             closeProject();
                         }
                         if (ImGui::MenuItem("Build")) {
+                            // We can't rebuild project when SCEngineEditor is running in debug mode, which is a vsdbg's known issue:
+                            // https://developercommunity.visualstudio.com/t/pdb-is-locked-even-after-dll-is-unloaded/690640
+                            // Be sure to run SCEngineEditor without debugging if you want to rebuid at runtime.
                             closeProject();
                             buildProject();
                             if (!loadProject()) {
@@ -195,7 +198,7 @@ public:
                 }
             }
 
-            ImGui::ShowDemoWindow();
+            //ImGui::ShowDemoWindow();
 
             int64_t duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - mLastTime).count();
             mFrame++;
@@ -559,7 +562,7 @@ private:
         createAndroidCmakeLists();
 
         fs::path assetsDir = mSourceDir / "Platforms" / "Android" / "app" / "src" / "main" / "assets";
-        fs::path engineAssetDir = mSourceDir / "SCEngineCore" / "sc" / "asset" / "SCEngineAsset";
+        fs::path engineAssetDir = mSourceDir / "SCEngineCore" / "sc" / "asset" / "SCEngineAssets";
         fs::path projectAssetDir = mProjectDir / "Assets";
         fs::path projectSceneDir = mProjectDir / "Scenes";
         fs::remove_all(assetsDir);

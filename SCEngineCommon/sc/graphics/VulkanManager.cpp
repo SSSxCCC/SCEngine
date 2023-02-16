@@ -542,7 +542,7 @@ VkRenderPass VulkanManager::createRenderPass(VkImageLayout resolveFinalLayout) {
     return renderPass;
 }
 
-VkPipeline VulkanManager::createGraphicsPipeline(const std::vector<char>& vertShaderSpv, const std::vector<char>& fragShaderSpv, const VkVertexInputBindingDescription& vertexInputBindingDescription, const std::vector<VkVertexInputAttributeDescription>& vertexInputAttributeDescriptions, VkPipelineLayout pipelineLayout, VkRenderPass renderPass) {
+VkPipeline VulkanManager::createGraphicsPipeline(const std::vector<char>& vertShaderSpv, const std::vector<char>& fragShaderSpv, const VkVertexInputBindingDescription& vertexInputBindingDescription, const std::vector<VkVertexInputAttributeDescription>& vertexInputAttributeDescriptions, VkPipelineLayout pipelineLayout, VkRenderPass renderPass, VkPrimitiveTopology primitiveTopology) {
     VkShaderModule vertShaderModule = createShaderModule(vertShaderSpv);
     VkShaderModule fragShaderModule = createShaderModule(fragShaderSpv);
 
@@ -570,7 +570,7 @@ VkPipeline VulkanManager::createGraphicsPipeline(const std::vector<char>& vertSh
     vertexInputInfo.pVertexAttributeDescriptions = vertexInputAttributeDescriptions.data();
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
-    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    inputAssembly.topology = primitiveTopology;
     inputAssembly.primitiveRestartEnable = VK_FALSE;
 
     VkViewport viewport{};

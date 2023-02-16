@@ -22,11 +22,12 @@ public:
     ~VulkanManager() { cleanup(); }
 
     // Used by Script
-    VkPipeline createGraphicsPipeline(const std::vector<char>& vertShaderSpv, const std::vector<char>& fragShaderSpv, const VkVertexInputBindingDescription& vertexInputBindingDescription, const std::vector<VkVertexInputAttributeDescription>& vertexInputAttributeDescriptions, VkPipelineLayout pipelineLayout, VkRenderPass renderPass);
+    VkPipeline createGraphicsPipeline(const std::vector<char>& vertShaderSpv, const std::vector<char>& fragShaderSpv, const VkVertexInputBindingDescription& vertexInputBindingDescription, const std::vector<VkVertexInputAttributeDescription>& vertexInputAttributeDescriptions, VkPipelineLayout pipelineLayout, VkRenderPass renderPass, VkPrimitiveTopology primitiveTopology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
     VkShaderModule createShaderModule(const std::vector<char>& code);
     void createVertexBuffer(void const* vertexData, VkDeviceSize bufferSize, VkBuffer& vertexBuffer, VkDeviceMemory& vertexBufferMemory);
     void createIndexBuffer(void const* indexData, VkDeviceSize bufferSize, VkBuffer& indexBuffer, VkDeviceMemory& indexBufferMemory);
     void createUniformBuffers(VkDeviceSize bufferSize, std::vector<VkBuffer>& uniformBuffers, std::vector<VkDeviceMemory>& uniformBuffersMemory, std::vector<void*>& uniformBuffersMapped);
+    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 
     VkDevice getDevice() { return mDevice; }
     VkFormat getImageFormat() { return mSwapChainImageFormat; }
@@ -147,7 +148,6 @@ private:
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
     void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
     void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
-    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
     VkCommandBuffer beginSingleTimeCommands();

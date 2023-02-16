@@ -36,8 +36,8 @@ void RectangleRenderer2D::onCreate() {
     // Create mGraphicsPipeline
     AssetManager* assetManager = mGameObject->mScene->mEngine->mAssetManager;
     mGraphicsPipeline = mVulkanManager->createGraphicsPipeline(
-            assetManager->readFile("SCEngineAsset/shader/vertShader_pvm_pos2d_opaqueColor.spv"),
-            assetManager->readFile("SCEngineAsset/shader/fragShader_opaqueColor.spv"),
+            assetManager->readFile("SCEngineAssets/Shaders/vertShader_pvm_pos2d_opaqueColor.spv"),
+            assetManager->readFile("SCEngineAssets/Shaders/fragShader_opaqueColor.spv"),
             Vertex::getBindingDescription(), Vertex::getAttributeDescriptions(), mPipelineLayout, mVulkanManager->getRenderPass());
 
     // Create mVertexBuffer, mIndexBuffer, mUniformBuffers
