@@ -1,3 +1,5 @@
+Note: SCEngine is renamed to 'The Steel Game Engine' and rewritten in rust, see https://github.com/SSSxCCC/steel
+
 # SCEngine
 
 SC engine is an open source cross-platform C++ game engine with the following features:
